@@ -1,0 +1,45 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin
+.kotlin/
+*.kotlin_module
+
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Android
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Compose Desktop / JVM
+hs_err_pid*
+replay_pid*
+
+# iOS / Xcode / CocoaPods
+**/Pods/
+**/DerivedData/
+**/xcuserdata/
+**/*.xcuserstate
+**/*.xcworkspace/
+**/.symlinks/
+**/podfile.lock
+
+# Kotlin/Native / Konan
+.konan/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
