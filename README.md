@@ -14,6 +14,7 @@ Kotlin multi-module Compose project with a modular architecture for:
 - `apps/desktop` Desktop app entry point
 - `apps/web` Web app entry point
 - `shared/app` Shared app shell, iOS framework export, and composition root
+- `feature/onboarding` Shared onboarding flow (state + adaptive UI)
 - `feature/home` Home feature UI
 - `core/designsystem` Theme and design primitives
 
@@ -36,3 +37,9 @@ Generate iOS framework/pod artifacts from shared module:
 Then follow setup notes in `apps/ios/README.md`.
 
 Android phone/tablet behavior is handled in shared Compose UI with width-based adaptive layouts.
+
+## Rules and Documentation
+
+- Project rules for contributors and coding agents: `AGENTS.md`
+- Kotlin MPP + Compose best practices: `docs/kmp-compose-best-practices.md`
+- Includes adaptive generation rules for desktop/tablet/mobile/foldables with touch + mouse support

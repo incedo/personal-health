@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    id("org.jetbrains.kotlin.native.cocoapods")
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
@@ -17,33 +16,23 @@ kotlin {
         browser()
     }
 
-    cocoapods {
-        version = "1.0.0"
-        summary = "Shared Compose app module for Personal Health"
-        homepage = "https://github.com/incedo/personal-health"
-        ios.deploymentTarget = "15.0"
-
-        framework {
-            baseName = "SharedApp"
-            isStatic = true
-        }
-    }
-
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":feature:home"))
-            implementation(project(":feature:onboarding"))
             implementation(project(":core:designsystem"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
         }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 }
 
 android {
-    namespace = "com.incedo.personalhealth.shared"
+    namespace = "com.incedo.personalhealth.feature.onboarding"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {

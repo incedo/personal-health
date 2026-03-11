@@ -1,0 +1,8 @@
+platform :ios, '15.0'
+use_frameworks!
+
+project 'PersonalHealthIOS.xcodeproj'
+
+target 'PersonalHealthIOS' do
+  pod 'app', :path => '../../../shared/app'
+end

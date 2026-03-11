@@ -1,19 +1,29 @@
+//
+//  ContentView.swift
+//  PersonalHealthIOS
+//
+//  Created by kees on 11/03/2026.
+//
+
 import SwiftUI
 import SharedApp
 
-struct ComposeViewControllerHost: UIViewControllerRepresentable {
+struct ContentView: View {
+    var body: some View {
+        ComposeView()
+            .ignoresSafeArea()
+    }
+}
+
+struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        MainViewControllerKt.MainViewController()
+        if let controller = IOSSharedUiBridge().makeRootViewController() as? UIViewController {
+            return controller
+        }
+        return UIViewController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-}
-
-struct ContentView: View {
-    var body: some View {
-        ComposeViewControllerHost()
-            .ignoresSafeArea()
-    }
 }
 
 #Preview {

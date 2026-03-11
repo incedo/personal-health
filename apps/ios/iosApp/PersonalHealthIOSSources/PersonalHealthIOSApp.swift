@@ -1,10 +1,3 @@
-//
-//  PersonalHealthIOSApp.swift
-//  PersonalHealthIOS
-//
-//  Created by kees on 11/03/2026.
-//
-
 import SwiftUI
 
 @main
