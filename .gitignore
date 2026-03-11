@@ -32,7 +32,10 @@ replay_pid*
 **/*.xcuserstate
 **/*.xcworkspace/
 **/.symlinks/
-**/podfile.lock
+**/Podfile.lock
+**/*.xccheckout
+**/*.moved-aside
+**/*.xcscmblueprint
 
 # Kotlin/Native / Konan
 .konan/
