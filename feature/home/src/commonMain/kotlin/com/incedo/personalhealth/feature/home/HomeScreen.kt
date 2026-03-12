@@ -2,6 +2,7 @@ package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 fun HomeScreen(
     fitScore: Int,
     steps: Int,
+    stepsTimeline: List<StepTimelinePoint>,
     heartRateBpm: Int,
     profileName: String,
     syncContent: @Composable ColumnScope.() -> Unit,
@@ -71,6 +73,7 @@ fun HomeScreen(
                 HomeTab.DASHBOARD -> DashboardContent(
                     fitScore = fitScore,
                     steps = steps,
+                    stepsTimeline = stepsTimeline,
                     heartRateBpm = heartRateBpm,
                     profileName = profileName
                 )
@@ -103,9 +106,11 @@ fun HomeScreen(
 private fun DashboardContent(
     fitScore: Int,
     steps: Int,
+    stepsTimeline: List<StepTimelinePoint>,
     heartRateBpm: Int,
     profileName: String
 ) {
+    var isStepsGraphVisible by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val expanded = maxWidth >= 840.dp
         if (expanded) {
@@ -128,8 +133,15 @@ private fun DashboardContent(
                     MetricCard(
                         title = "Stappen",
                         value = formatSteps(steps),
-                        subtitle = "Doel: 10.000 stappen"
+                        subtitle = "Doel: 10.000 stappen (tik voor grafiek)",
+                        onClick = { isStepsGraphVisible = !isStepsGraphVisible }
                     )
+                    if (isStepsGraphVisible) {
+                        StepsTodayGraphCard(
+                            stepsTimeline = stepsTimeline,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     MetricCard(
                         title = "Hartslag",
                         value = "$heartRateBpm bpm",
@@ -163,8 +175,15 @@ private fun DashboardContent(
                 MetricCard(
                     title = "Stappen",
                     value = formatSteps(steps),
-                    subtitle = "Doel: 10.000 stappen"
+                    subtitle = "Doel: 10.000 stappen (tik voor grafiek)",
+                    onClick = { isStepsGraphVisible = !isStepsGraphVisible }
                 )
+                if (isStepsGraphVisible) {
+                    StepsTodayGraphCard(
+                        stepsTimeline = stepsTimeline,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 MetricCard(
                     title = "Hartslag",
                     value = "$heartRateBpm bpm",
@@ -180,10 +199,19 @@ private fun MetricCard(
     title: String,
     value: String,
     subtitle: String,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
@@ -195,6 +223,68 @@ private fun MetricCard(
             Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
             Text(
                 subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun StepsTodayGraphCard(
+    stepsTimeline: List<StepTimelinePoint>,
+    modifier: Modifier = Modifier
+) {
+    val maxValue = (stepsTimeline.maxOfOrNull { it.steps } ?: 0).coerceAtLeast(1)
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "Stappen vandaag",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                stepsTimeline.forEach { point ->
+                    val ratio = (point.steps.toFloat() / maxValue.toFloat()).coerceIn(0f, 1f)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = point.steps.toString(),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height((78.dp * ratio).coerceAtLeast(4.dp))
+                                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                        Text(
+                            text = point.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            Text(
+                text = "Totaal: ${formatSteps(stepsTimeline.sumOf { it.steps })}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

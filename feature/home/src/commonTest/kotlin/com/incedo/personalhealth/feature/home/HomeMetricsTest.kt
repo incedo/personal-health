@@ -25,4 +25,12 @@ class HomeMetricsTest {
         assertEquals("12.345", formatSteps(12_345))
         assertEquals("1.000.000", formatSteps(1_000_000))
     }
+
+    @Test
+    fun fallbackStepTimeline_returnsSingleNonNegativePoint() {
+        val timeline = fallbackStepTimeline(-50)
+        assertEquals(1, timeline.size)
+        assertEquals("Nu", timeline[0].label)
+        assertEquals(0, timeline[0].steps)
+    }
 }

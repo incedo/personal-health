@@ -22,6 +22,8 @@ import com.incedo.personalhealth.core.events.SyncState
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
 import com.incedo.personalhealth.feature.home.HomeScreen
+import com.incedo.personalhealth.feature.home.StepTimelinePoint
+import com.incedo.personalhealth.feature.home.fallbackStepTimeline
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
 import kotlinx.coroutines.launch
 
@@ -33,6 +35,8 @@ fun PersonalHealthApp() {
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
     var lastReadSummary by remember { mutableStateOf("Nog geen health records gelezen") }
     var latestUiMessage by remember { mutableStateOf("Nog geen acties uitgevoerd") }
+    var todaySteps by remember { mutableStateOf<Int?>(null) }
+    var todayStepsTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
     var importRequestCount by remember { mutableStateOf(0) }
     var intentReceivedCount by remember { mutableStateOf(0) }
     var intentSkippedCount by remember { mutableStateOf(0) }
@@ -62,6 +66,16 @@ fun PersonalHealthApp() {
 
                 is FrontendEvent.UiFeedbackRequested -> {
                     latestUiMessage = event.message
+                }
+
+                is FrontendEvent.TodayStepsUpdated -> {
+                    todaySteps = event.totalSteps
+                    todayStepsTimeline = event.buckets.map { bucket ->
+                        StepTimelinePoint(
+                            label = bucket.label,
+                            steps = bucket.steps
+                        )
+                    }
                 }
 
                 is HealthEvent.RecordsRead -> {
@@ -118,14 +132,17 @@ fun PersonalHealthApp() {
     }
 
     val derivedSteps = 4500 + (metricEventCounts[HealthMetricType.STEPS] ?: 0) * 250
+    val dashboardSteps = todaySteps ?: derivedSteps
+    val dashboardTimeline = todayStepsTimeline.ifEmpty { fallbackStepTimeline(stepCount = dashboardSteps) }
     val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90)
-    val fitScore = (35 + (derivedSteps / 180) - ((derivedHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
+    val fitScore = (35 + (dashboardSteps / 180) - ((derivedHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
 
     PersonalHealthTheme {
         if (onboardingComplete) {
             HomeScreen(
                 fitScore = fitScore,
-                steps = derivedSteps,
+                steps = dashboardSteps,
+                stepsTimeline = dashboardTimeline,
                 heartRateBpm = derivedHeartRate,
                 profileName = "Kees",
                 syncContent = {

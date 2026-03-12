@@ -17,6 +17,17 @@ sealed interface FrontendEvent : AppEvent {
         val state: SyncState,
         override val emittedAtEpochMillis: Long
     ) : FrontendEvent
+
+    data class TodayStepsUpdated(
+        val totalSteps: Int,
+        val buckets: List<StepBucket>,
+        override val emittedAtEpochMillis: Long
+    ) : FrontendEvent
+
+    data class StepBucket(
+        val label: String,
+        val steps: Int
+    )
 }
 
 enum class SyncState {

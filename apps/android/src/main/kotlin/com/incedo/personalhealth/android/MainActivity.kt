@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
                 startAndroidHealthSync(metrics = pendingHistoryMetrics)
             } else {
                 publishUiFeedback("Health Connect permissies verleend.")
+                refreshTodayStepsForDashboard()
             }
         } else {
             publishUiFeedback("Health Connect permissies niet verleend.")
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
             PersonalHealthApp()
         }
         observeUiHealthSyncRequests()
+        refreshTodayStepsForDashboard()
         publishUiFeedback("Klaar. Gebruik 'Geef permissies' of 'Importeer historie' om te starten.")
     }
 
@@ -174,6 +176,7 @@ class MainActivity : ComponentActivity() {
                         endEpochMillis = nowEpochMillis
                     )
                 )
+                publishTodayStepsFromHealthConnect(gateway)
                 publishUiFeedback("Historie import klaar: ${records.size} records.")
             }
                 .onFailure { error ->
@@ -215,12 +218,48 @@ class MainActivity : ComponentActivity() {
                     metrics = SYNC_METRICS,
                     lookbackMillis = LIVE_SYNC_LOOKBACK_MILLIS
                 )
+                val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
+                publishTodayStepsFromHealthConnect(gateway)
             }
                 .onFailure { error ->
                     Log.e(TAG, "Live sync processing failed", error)
                     publishUiFeedback("Live sync fout: ${error.message ?: "onbekende fout"}")
                 }
         }
+    }
+
+    private fun refreshTodayStepsForDashboard() {
+        lifecycleScope.launch {
+            if (!HealthConnectGateway.isAvailable(this@MainActivity)) return@launch
+
+            val client = HealthConnectClient.getOrCreate(this@MainActivity)
+            val granted = runCatching {
+                client.permissionController.getGrantedPermissions()
+            }.getOrNull() ?: return@launch
+
+            if (!granted.containsAll(requiredPermissions)) return@launch
+
+            val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
+            publishTodayStepsFromHealthConnect(gateway)
+        }
+    }
+
+    private suspend fun publishTodayStepsFromHealthConnect(
+        gateway: HealthConnectGateway
+    ) {
+        val snapshot = gateway.readTodayStepsSnapshot()
+        AppBus.events.publish(
+            FrontendEvent.TodayStepsUpdated(
+                totalSteps = snapshot.totalSteps,
+                buckets = snapshot.buckets.map { bucket ->
+                    FrontendEvent.StepBucket(
+                        label = bucket.label,
+                        steps = bucket.steps
+                    )
+                },
+                emittedAtEpochMillis = System.currentTimeMillis()
+            )
+        )
     }
 
     private fun publishUiFeedback(message: String) {

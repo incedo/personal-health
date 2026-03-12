@@ -81,6 +81,11 @@ Android phone/tablet behavior is handled in shared Compose UI with width-based a
 - Unified Health Connect + HealthKit mapping: `docs/unified-health-model-mapping.md`
 - Testing + coverage strategy: `docs/testing-coverage-strategy.md`
 
+## Git Workflow
+
+- Use one branch per request, with branch name prefix `codex/`.
+- Use one PR per request/branch, scoped to that request only.
+
 ## Coverage
 
 - Generate coverage reports:

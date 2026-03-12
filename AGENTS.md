@@ -97,6 +97,12 @@ Project rules for contributors and coding agents working in this repository.
 - Use `./gradlew` wrapper, not system Gradle, for project tasks.
 - Keep JDK target at 17 unless explicitly changed across the repository.
 
+## Git Workflow Rules
+- For every new user request, create and use a separate branch with prefix `codex/`.
+- Open one pull request per request/branch.
+- Keep each PR scoped to that single request; avoid mixing unrelated changes.
+- Ensure required checks pass before merge.
+
 ## Documentation Rules
 - Update `/docs/kmp-compose-best-practices.md` and `/README.md` when architecture or module boundaries change.
 - Keep `/docs/kmp-compose-best-practices.md` aligned with adaptive-layout and multimodal-input generation rules.
