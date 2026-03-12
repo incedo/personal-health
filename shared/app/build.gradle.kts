@@ -8,7 +8,11 @@ plugins {
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_19)
+        }
+    }
     jvm("desktop")
     iosX64()
     iosArm64()
@@ -31,6 +35,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:events"))
+            implementation(project(":core:health"))
             implementation(project(":feature:home"))
             implementation(project(":feature:onboarding"))
             implementation(project(":core:designsystem"))
@@ -38,6 +44,12 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+        }
+        androidMain.dependencies {
+            implementation(project(":integration:health-connect"))
+        }
+        iosMain.dependencies {
+            implementation(project(":integration:healthkit"))
         }
     }
 }
@@ -51,7 +63,7 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
     }
 }

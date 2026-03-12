@@ -1,0 +1,28 @@
+package com.incedo.personalhealth.feature.home
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class HomeMetricsTest {
+
+    @Test
+    fun estimateFitScore_staysWithinBounds() {
+        assertEquals(10, estimateFitScore(stepCount = 0, heartRateBpm = 180))
+        assertEquals(100, estimateFitScore(stepCount = 20_000, heartRateBpm = 50))
+    }
+
+    @Test
+    fun estimateFitScore_increasesWithStepCount() {
+        val low = estimateFitScore(stepCount = 3_000, heartRateBpm = 65)
+        val high = estimateFitScore(stepCount = 9_000, heartRateBpm = 65)
+        assertTrue(high > low)
+    }
+
+    @Test
+    fun formatSteps_appliesThousandsSeparator() {
+        assertEquals("950", formatSteps(950))
+        assertEquals("12.345", formatSteps(12_345))
+        assertEquals("1.000.000", formatSteps(1_000_000))
+    }
+}

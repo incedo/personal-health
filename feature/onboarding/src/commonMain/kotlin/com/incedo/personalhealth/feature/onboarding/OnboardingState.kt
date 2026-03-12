@@ -1,5 +1,6 @@
 package com.incedo.personalhealth.feature.onboarding
 
+import androidx.compose.runtime.saveable.Saver
 import kotlin.math.max
 import kotlin.math.min
 
@@ -24,6 +25,26 @@ data class OnboardingUiState(
     val stepIndex: Int = 0,
     val selectedGoal: OnboardingGoal? = null,
     val completed: Boolean = false
+)
+
+val OnboardingUiStateSaver: Saver<OnboardingUiState, List<Any?>> = Saver(
+    save = { state ->
+        listOf(
+            state.stepIndex,
+            state.selectedGoal?.name,
+            state.completed
+        )
+    },
+    restore = { saved ->
+        val stepIndex = saved.getOrNull(0) as? Int ?: 0
+        val selectedGoal = (saved.getOrNull(1) as? String)?.let(OnboardingGoal::valueOf)
+        val completed = saved.getOrNull(2) as? Boolean ?: false
+        OnboardingUiState(
+            stepIndex = stepIndex,
+            selectedGoal = selectedGoal,
+            completed = completed
+        )
+    }
 )
 
 sealed interface OnboardingEvent {

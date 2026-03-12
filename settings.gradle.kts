@@ -7,7 +7,7 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
         google()
         mavenCentral()
@@ -21,5 +21,11 @@ include(":apps:desktop")
 include(":apps:web")
 include(":shared:app")
 include(":core:designsystem")
+include(":core:events")
+include(":core:health")
 include(":feature:home")
+include(":feature:home-test")
 include(":feature:onboarding")
+include(":feature:onboarding-test")
+include(":integration:health-connect")
+include(":integration:healthkit")

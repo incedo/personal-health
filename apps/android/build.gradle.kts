@@ -3,7 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.paparazzi)
 }
+
+apply(plugin = "shot")
 
 android {
     namespace = "com.incedo.personalhealth.android"
@@ -28,23 +31,37 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "19"
     }
 
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        animationsDisabled = true
+    }
 }
 
 dependencies {
     implementation(project(":shared:app"))
+    implementation(project(":core:events"))
+    implementation(project(":core:health"))
+    implementation(project(":integration:health-connect"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.health.connect.client)
     implementation(compose.ui)
     implementation(compose.material3)
+    debugImplementation(compose.uiTooling)
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.paparazzi)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

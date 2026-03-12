@@ -46,7 +46,7 @@ fun OnboardingRoute(
     onFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var state by rememberSaveable { mutableStateOf(OnboardingUiState()) }
+    var state by rememberSaveable(stateSaver = OnboardingUiStateSaver) { mutableStateOf(OnboardingUiState()) }
 
     LaunchedEffect(state.completed) {
         if (state.completed) {

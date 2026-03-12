@@ -7,7 +7,11 @@ plugins {
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_19)
+        }
+    }
     jvm("desktop")
     iosX64()
     iosArm64()
@@ -24,10 +28,10 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
         }
-
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+
     }
 }
 
@@ -40,7 +44,7 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
     }
 }

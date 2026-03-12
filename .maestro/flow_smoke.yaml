@@ -1,0 +1,4 @@
+appId: com.incedo.personalhealth.android
+---
+- launchApp
+- takeScreenshot: personal-health-smoke

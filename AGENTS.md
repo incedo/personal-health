@@ -40,14 +40,33 @@ Project rules for contributors and coding agents working in this repository.
 
 8. Testing minimum.
 - Every new feature/module must include at least one deterministic automated test.
-- Common logic should be tested in `commonTest` where possible.
+- Shared logic should use deterministic cross-platform tests from dedicated test modules.
 
-9. CI gate.
+9. Feature test code location.
+- Keep feature production code and test code in separate sibling folders/modules.
+- Use `feature/<name>` for production and `feature/<name>-test` for tests.
+- Prefer test modules over placing tests directly inside production feature module source folders.
+
+10. CI gate.
 - Pull requests must pass GitHub Actions checks before merge.
 - Do not merge with failing checks.
 
-10. Keep platform bridges thin.
+11. Keep platform bridges thin.
 - Android `Activity`, iOS `UIViewController`, Desktop/Web `main` files should only bootstrap shared UI.
+
+12. Canonical health model is required.
+- Health data from platform providers (Health Connect, HealthKit) must map to one shared canonical model in `core`.
+- Feature/UI layers must only consume the canonical model, never raw platform record types.
+
+13. Event-based module communication is required.
+- Cross-module communication must be event-driven via shared event contracts in `core` modules.
+- Producers publish events, consumers subscribe; avoid direct feature-to-feature calls.
+- Realtime in-app sync should use events first, not database polling.
+- Use explicit event categories:
+  - UI feedback events
+  - navigation events
+  - domain events (for example health records/sync)
+  - sync lifecycle events (idle/syncing/up_to_date/error)
 
 ## App Generation Rules (Required)
 1. Generate one adaptive UI code path, not separate per-device screens.

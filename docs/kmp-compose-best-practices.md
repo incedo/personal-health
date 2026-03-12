@@ -58,8 +58,27 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Prefer adding dependencies to the narrowest module that needs them.
 - Avoid cyclic dependencies and large cross-feature coupling.
 
-## 9. Testing strategy
-- Test shared logic in `commonTest` first.
+## 9. Canonical cross-platform data model
+- Use one shared canonical model for domain data in `core/*` modules.
+- Platform integrations (for example Android Health Connect and iOS HealthKit) must map into that canonical model.
+- UI/features must consume only canonical models, never raw platform framework types.
+
+## 10. Event-based communication
+- Use event-based communication between modules as the default integration mechanism.
+- Keep event contracts in `core/*` modules and expose them via interfaces/flows.
+- Publish domain events from integrations/features and subscribe in consumers for realtime state sync.
+- Prefer event streams over direct database polling for in-app synchronization.
+- Standardize event taxonomy at minimum:
+  - UI feedback events
+  - navigation events
+  - domain events
+  - sync lifecycle events
+
+## 11. Testing strategy
+- Keep production and test code in separate sibling modules for features:
+  - production: `feature/<name>`
+  - tests: `feature/<name>-test`
+- Use test modules as the default for feature-level tests; use in-module `commonTest` only when technically required.
 - Keep platform tests focused on platform behavior.
 - Add at least one smoke test per new feature/module.
 - Validate UI behavior with a size/input matrix:
@@ -69,16 +88,16 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
   - expanded + mouse+keyboard
   - fold/unfold transition with state preserved
 
-## 10. CI policy
+## 12. CI policy
 - Run automated checks on each PR and push to `main`.
 - Minimum baseline: compile and test at least one target.
 - Expand checks as modules/features grow.
 
-## 11. iOS integration notes
+## 13. iOS integration notes
 - Shared iOS framework is exported via CocoaPods from `shared/app`.
 - Keep Swift wrapper code minimal and delegate UI to shared Compose.
 
-## 12. Documentation maintenance
+## 14. Documentation maintenance
 - Update README module layout when adding, removing, or renaming modules.
 - Keep this guide aligned with actual build configuration.
 - Current feature modules in this repository include `feature/home` and `feature/onboarding`.

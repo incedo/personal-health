@@ -19,6 +19,7 @@ kotlin {
     sourceSets {
         wasmJsMain.dependencies {
             implementation(project(":shared:app"))
+            implementation(compose.ui)
         }
     }
 }
