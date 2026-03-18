@@ -26,12 +26,16 @@ import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
 import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.core.health.currentEpochMillis
+import com.incedo.personalhealth.feature.home.HomeDetailDestination
 import com.incedo.personalhealth.feature.home.HomeScreen
+import com.incedo.personalhealth.feature.home.PersistedFitnessActivityStore
+import com.incedo.personalhealth.feature.home.PlatformFitnessActivityPersistenceDriver
 import com.incedo.personalhealth.feature.home.QuickActivityEntry
 import com.incedo.personalhealth.feature.home.QuickActivityType
 import com.incedo.personalhealth.feature.home.StepTimelinePoint
 import com.incedo.personalhealth.feature.home.HomeThemeMode
 import com.incedo.personalhealth.feature.home.fallbackStepTimeline
+import com.incedo.personalhealth.feature.home.fitnessSessionToQuickActivityEntry
 import com.incedo.personalhealth.feature.home.logQuickActivity
 import com.incedo.personalhealth.feature.home.summarizeStepTimeline
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
@@ -41,6 +45,7 @@ import kotlinx.coroutines.launch
 fun PersonalHealthApp() {
     val appScope = rememberCoroutineScope()
     val importStrategy = remember { currentHealthImportStrategy() }
+    val fitnessActivityStore = remember { PersistedFitnessActivityStore(PlatformFitnessActivityPersistenceDriver) }
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
     var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
@@ -48,9 +53,10 @@ fun PersonalHealthApp() {
     var latestUiMessage by remember { mutableStateOf("Nog geen acties uitgevoerd") }
     var todaySteps by remember { mutableStateOf<Int?>(null) }
     var todayStepsHourlyTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
-    var activityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var quickActivityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var fitnessSessions by remember { mutableStateOf(fitnessActivityStore.readSessions()) }
     var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
-    var showStepsDetail by rememberSaveable { mutableStateOf(false) }
+    var activeDetailDestination by rememberSaveable { mutableStateOf<HomeDetailDestination?>(null) }
     var importRequestCount by remember { mutableStateOf(0) }
     var intentReceivedCount by remember { mutableStateOf(0) }
     var intentSkippedCount by remember { mutableStateOf(0) }
@@ -160,6 +166,7 @@ fun PersonalHealthApp() {
         HomeThemeMode.DARK -> true
         HomeThemeMode.LIGHT -> false
     }
+    val activityEntries = fitnessSessions.map(::fitnessSessionToQuickActivityEntry) + quickActivityEntries
 
     PersonalHealthTheme(darkTheme = darkTheme) {
         if (onboardingComplete) {
@@ -168,13 +175,14 @@ fun PersonalHealthApp() {
                 steps = dashboardSteps,
                 stepsTimeline = dashboardTimeline,
                 detailStepsTimeline = detailStepsTimeline,
+                fitnessSessions = fitnessSessions,
                 heartRateBpm = derivedHeartRate,
                 profileName = "Kees",
                 themeMode = themeMode,
-                showStepsDetail = showStepsDetail,
+                activeDetailDestination = activeDetailDestination,
                 onThemeModeSelected = { themeMode = it },
                 onOpenStepsDetail = {
-                    showStepsDetail = true
+                    activeDetailDestination = HomeDetailDestination.STEPS
                     appScope.launch {
                         AppBus.events.publish(
                             FrontendEvent.NavigationChanged(
@@ -185,22 +193,44 @@ fun PersonalHealthApp() {
                         )
                     }
                 },
-                onCloseStepsDetail = {
-                    showStepsDetail = false
+                onOpenFitnessDetail = {
+                    activeDetailDestination = HomeDetailDestination.FITNESS
                     appScope.launch {
                         AppBus.events.publish(
                             FrontendEvent.NavigationChanged(
-                                fromRoute = "steps-detail",
+                                fromRoute = "home",
+                                toRoute = "fitness-detail",
+                                emittedAtEpochMillis = currentEpochMillis()
+                            )
+                        )
+                    }
+                },
+                onCloseDetail = {
+                    val fromRoute = when (activeDetailDestination) {
+                        HomeDetailDestination.STEPS -> "steps-detail"
+                        HomeDetailDestination.FITNESS -> "fitness-detail"
+                        null -> "home"
+                    }
+                    activeDetailDestination = null
+                    appScope.launch {
+                        AppBus.events.publish(
+                            FrontendEvent.NavigationChanged(
+                                fromRoute = fromRoute,
                                 toRoute = "home",
                                 emittedAtEpochMillis = currentEpochMillis()
                             )
                         )
                     }
                 },
+                onSaveFitnessSession = { session ->
+                    fitnessActivityStore.upsertSession(session)
+                    fitnessSessions = fitnessActivityStore.readSessions()
+                    latestUiMessage = "${session.title} lokaal opgeslagen met ${session.exercises.size} oefeningen."
+                },
                 activityOptions = QuickActivityType.entries,
                 activityEntries = activityEntries,
                 onLogActivity = { activityType ->
-                    activityEntries = logQuickActivity(activityEntries, activityType)
+                    quickActivityEntries = logQuickActivity(quickActivityEntries, activityType)
                     latestUiMessage = "${activityType.label} toegevoegd aan je activiteiten."
                 },
                 syncContent = {
