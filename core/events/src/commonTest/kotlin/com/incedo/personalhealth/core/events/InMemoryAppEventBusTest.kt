@@ -50,4 +50,23 @@ class InMemoryAppEventBusTest {
         bus.publish(second)
         assertEquals(second, receivedSecond.await())
     }
+
+    @Test
+    fun publish_supportsTodayStepsUpdatedEvent() = runTest {
+        val bus = InMemoryAppEventBus()
+        val event = FrontendEvent.TodayStepsUpdated(
+            totalSteps = 1243,
+            buckets = listOf(
+                FrontendEvent.StepBucket(label = "08:00", steps = 320),
+                FrontendEvent.StepBucket(label = "10:00", steps = 923)
+            ),
+            emittedAtEpochMillis = 10L
+        )
+
+        val received = async { bus.events.first() }
+        runCurrent()
+        bus.publish(event)
+
+        assertEquals(event, received.await())
+    }
 }

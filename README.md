@@ -24,6 +24,11 @@ Kotlin multi-module Compose project with a modular architecture for:
 - `integration/health-connect` Android-only Health Connect integration
 - `integration/healthkit` iOS-only HealthKit integration
 
+Local activity persistence direction:
+- shared storage contract lives in `core/health`
+- native targets should use one shared SQLite schema
+- web should prefer SQLite WASM with IndexedDB fallback behind the same repository contract
+
 Health live sync architecture:
 - platform modules detect changes (`polling` on Health Connect, `observer` on HealthKit)
 - shared `core/health` normalizes this via `HealthChangeSignalSource` + `HealthLiveSyncProcessor`
@@ -32,6 +37,15 @@ Health live sync architecture:
   - `HealthEvent.LiveSyncIntentSkippedDuplicate`
   - `HealthEvent.LiveSyncIntentApplied`
   - `HealthEvent.LiveSyncIntentFailed`
+
+Optional body capture direction:
+- future optional feature for `2D` and `3D` body capture
+- `2D` flow uses standard device cameras for guided front/side/back body capture
+- `3D` flow can use supported depth cameras or body-tracker sensors where hardware is available
+- intended outputs are normalized shared body posture / measurement data instead of raw vendor SDK types
+- reference products:
+  - [OpenCap](https://www.opencap.ai/get-started)
+  - [Moverse](https://moverse.ai/)
 
 ## Run
 
@@ -76,10 +90,18 @@ Android phone/tablet behavior is handled in shared Compose UI with width-based a
 - Project rules for contributors and coding agents: `AGENTS.md`
 - Kotlin MPP + Compose best practices: `docs/kmp-compose-best-practices.md`
 - Includes adaptive generation rules for desktop/tablet/mobile/foldables with touch + mouse support
+- Canonical navigation guidance: `docs/navigation-principles.md`
 - Requirements: `docs/requirements.md`
 - Health integration overview: `docs/health-integrations.md`
+- Local activity persistence plan: `docs/local-activity-storage.md`
+- Canonical browser import format: `docs/canonical-health-import-format.md`
 - Unified Health Connect + HealthKit mapping: `docs/unified-health-model-mapping.md`
 - Testing + coverage strategy: `docs/testing-coverage-strategy.md`
+
+## Git Workflow
+
+- Use one branch per request, with branch name prefix `codex/`.
+- Use one PR per request/branch, scoped to that request only.
 
 ## Coverage
 

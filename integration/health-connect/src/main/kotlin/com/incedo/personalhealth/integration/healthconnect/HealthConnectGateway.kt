@@ -20,6 +20,8 @@ import com.incedo.personalhealth.core.health.HealthReadRequest
 import com.incedo.personalhealth.core.health.HealthRecord
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
 
 class HealthConnectGateway(
@@ -28,6 +30,7 @@ class HealthConnectGateway(
 ) : HealthDataGateway {
 
     private val client: HealthConnectClient = HealthConnectClient.getOrCreate(context)
+    private val labelFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     override suspend fun readRecords(request: HealthReadRequest): List<HealthRecord> {
         val records = mutableListOf<HealthRecord>()
@@ -67,6 +70,45 @@ class HealthConnectGateway(
         )
 
         return result
+    }
+
+    suspend fun readTodayStepsSnapshot(
+        bucketSizeHours: Int = DEFAULT_BUCKET_SIZE_HOURS
+    ): TodayStepsSnapshot {
+        val safeBucketHours = bucketSizeHours.coerceIn(1, 24)
+        val now = Instant.now()
+        val zoneId = ZoneId.systemDefault()
+        val startOfDay = now.atZone(zoneId).toLocalDate().atStartOfDay(zoneId).toInstant()
+        val startEpochMillis = startOfDay.toEpochMilli()
+        val nowEpochMillis = now.toEpochMilli()
+        val bucketSizeMillis = safeBucketHours * 60L * 60L * 1000L
+        val elapsedMillis = (nowEpochMillis - startEpochMillis).coerceAtLeast(1L)
+        val bucketCount = ((elapsedMillis + bucketSizeMillis - 1L) / bucketSizeMillis).toInt()
+            .coerceAtLeast(1)
+
+        val bucketValues = MutableList(bucketCount) { 0 }
+        val range = TimeRangeFilter.between(startOfDay, now)
+        val records = readStepsRecords(range = range)
+        records.forEach { record ->
+            val bucketIndex = ((record.endTime.toEpochMilli() - startEpochMillis) / bucketSizeMillis)
+                .toInt()
+                .coerceIn(0, bucketValues.lastIndex)
+            bucketValues[bucketIndex] += record.count.toInt()
+        }
+
+        val buckets = bucketValues.mapIndexed { index, value ->
+            val bucketStart = Instant.ofEpochMilli(startEpochMillis + (index * bucketSizeMillis))
+                .atZone(zoneId)
+            TodayStepBucket(
+                label = bucketStart.format(labelFormatter),
+                steps = value
+            )
+        }
+
+        return TodayStepsSnapshot(
+            totalSteps = bucketValues.sum(),
+            buckets = buckets
+        )
     }
 
     private suspend fun readSteps(
@@ -226,9 +268,43 @@ class HealthConnectGateway(
         return records
     }
 
+    private suspend fun readStepsRecords(range: TimeRangeFilter): List<StepsRecord> {
+        val records = mutableListOf<StepsRecord>()
+        var pageToken: String? = null
+
+        while (true) {
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = StepsRecord::class,
+                    timeRangeFilter = range,
+                    pageSize = PAGE_SIZE,
+                    pageToken = pageToken
+                )
+            )
+            records += response.records
+            pageToken = response.pageToken
+            if (pageToken == null || response.records.isEmpty()) {
+                break
+            }
+        }
+
+        return records
+    }
+
+    data class TodayStepsSnapshot(
+        val totalSteps: Int,
+        val buckets: List<TodayStepBucket>
+    )
+
+    data class TodayStepBucket(
+        val label: String,
+        val steps: Int
+    )
+
     companion object {
         private const val HEALTH_CONNECT_PROVIDER_PACKAGE = "com.google.android.apps.healthdata"
         private const val PAGE_SIZE = 500
+        private const val DEFAULT_BUCKET_SIZE_HOURS = 2
 
         fun requiredPermissions(): Set<String> = setOf(
             HealthPermission.getReadPermission(StepsRecord::class),

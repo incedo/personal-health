@@ -18,12 +18,16 @@ import com.incedo.personalhealth.core.health.HealthHistoryImporter
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthLiveSyncProcessor
 import com.incedo.personalhealth.core.health.HealthMetricType
+import com.incedo.personalhealth.core.health.HealthReadRequest
 import com.incedo.personalhealth.core.health.HealthSignalSubscription
+import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectGateway
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectPollingSignalSource
 import com.incedo.personalhealth.shared.AppBus
 import com.incedo.personalhealth.shared.PersonalHealthApp
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 
 class MainActivity : ComponentActivity() {
     private val requiredPermissions: Set<String> by lazy { HealthConnectGateway.requiredPermissions() }
@@ -40,6 +44,7 @@ class MainActivity : ComponentActivity() {
                 startAndroidHealthSync(metrics = pendingHistoryMetrics)
             } else {
                 publishUiFeedback("Health Connect permissies verleend.")
+                refreshTodayStepsForDashboard()
             }
         } else {
             publishUiFeedback("Health Connect permissies niet verleend.")
@@ -52,6 +57,7 @@ class MainActivity : ComponentActivity() {
             PersonalHealthApp()
         }
         observeUiHealthSyncRequests()
+        refreshTodayStepsForDashboard()
         publishUiFeedback("Klaar. Gebruik 'Geef permissies' of 'Importeer historie' om te starten.")
     }
 
@@ -174,6 +180,7 @@ class MainActivity : ComponentActivity() {
                         endEpochMillis = nowEpochMillis
                     )
                 )
+                publishTodayStepsFromHealthConnect(gateway)
                 publishUiFeedback("Historie import klaar: ${records.size} records.")
             }
                 .onFailure { error ->
@@ -215,12 +222,63 @@ class MainActivity : ComponentActivity() {
                     metrics = SYNC_METRICS,
                     lookbackMillis = LIVE_SYNC_LOOKBACK_MILLIS
                 )
+                val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
+                publishTodayStepsFromHealthConnect(gateway)
             }
                 .onFailure { error ->
                     Log.e(TAG, "Live sync processing failed", error)
                     publishUiFeedback("Live sync fout: ${error.message ?: "onbekende fout"}")
                 }
         }
+    }
+
+    private fun refreshTodayStepsForDashboard() {
+        lifecycleScope.launch {
+            if (!HealthConnectGateway.isAvailable(this@MainActivity)) return@launch
+
+            val client = HealthConnectClient.getOrCreate(this@MainActivity)
+            val granted = runCatching {
+                client.permissionController.getGrantedPermissions()
+            }.getOrNull() ?: return@launch
+
+            if (!granted.containsAll(requiredPermissions)) return@launch
+
+            val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
+            publishTodayStepsFromHealthConnect(gateway)
+        }
+    }
+
+    private suspend fun publishTodayStepsFromHealthConnect(
+        gateway: HealthConnectGateway
+    ) {
+        val zoneId = ZoneId.systemDefault()
+        val now = Instant.now()
+        val startOfDay = now.atZone(zoneId).toLocalDate().atStartOfDay(zoneId).toInstant()
+        val snapshot = buildTodayStepsSnapshot(
+            records = gateway.readRecords(
+                HealthReadRequest(
+                    metrics = setOf(HealthMetricType.STEPS),
+                    startEpochMillis = startOfDay.toEpochMilli(),
+                    endEpochMillis = now.toEpochMilli(),
+                    limit = 10_000
+                )
+            ),
+            dayStartEpochMillis = startOfDay.toEpochMilli(),
+            dayEndEpochMillis = now.toEpochMilli(),
+            bucketSizeHours = 1
+        )
+        AppBus.events.publish(
+            FrontendEvent.TodayStepsUpdated(
+                totalSteps = snapshot.totalSteps,
+                buckets = snapshot.buckets.map { bucket ->
+                    FrontendEvent.StepBucket(
+                        label = bucket.label,
+                        steps = bucket.steps
+                    )
+                },
+                emittedAtEpochMillis = System.currentTimeMillis()
+            )
+        )
     }
 
     private fun publishUiFeedback(message: String) {
