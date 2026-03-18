@@ -46,6 +46,7 @@ internal fun DashboardContent(
     activityOptions: List<QuickActivityType>,
     activityEntries: List<QuickActivityEntry>,
     onLogActivity: (QuickActivityType) -> Unit,
+    onOpenFitnessDetail: () -> Unit,
     onOpenStepsDetail: () -> Unit,
     compact: Boolean
 ) {
@@ -106,6 +107,7 @@ internal fun DashboardContent(
                             activityOptions = activityOptions,
                             activityEntries = activityEntries,
                             onLogActivity = onLogActivity,
+                            onOpenFitnessDetail = onOpenFitnessDetail,
                             modifier = Modifier.fillMaxWidth()
                         )
                         GuidanceCard(
@@ -130,6 +132,7 @@ internal fun DashboardContent(
                     activityOptions = activityOptions,
                     activityEntries = activityEntries,
                     onLogActivity = onLogActivity,
+                    onOpenFitnessDetail = onOpenFitnessDetail,
                     modifier = Modifier.fillMaxWidth()
                 )
                 GuidanceCard(
@@ -310,6 +313,7 @@ private fun QuickActivityLogCard(
     activityOptions: List<QuickActivityType>,
     activityEntries: List<QuickActivityEntry>,
     onLogActivity: (QuickActivityType) -> Unit,
+    onOpenFitnessDetail: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
@@ -361,7 +365,13 @@ private fun QuickActivityLogCard(
             Spacer(modifier = Modifier.height(10.dp))
         }
         Button(
-            onClick = { onLogActivity(selectedType) },
+            onClick = {
+                if (selectedType == QuickActivityType.FITNESS) {
+                    onOpenFitnessDetail()
+                } else {
+                    onLogActivity(selectedType)
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = palette.accent,
@@ -370,7 +380,11 @@ private fun QuickActivityLogCard(
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
-                text = "Log ${selectedType.label.lowercase()}",
+                text = if (selectedType == QuickActivityType.FITNESS) {
+                    "Open fitness detail"
+                } else {
+                    "Log ${selectedType.label.lowercase()}"
+                },
                 modifier = Modifier.padding(vertical = 4.dp),
                 fontWeight = FontWeight.SemiBold
             )

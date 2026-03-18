@@ -21,20 +21,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
-
 @Composable
 fun HomeScreen(
     fitScore: Int,
     steps: Int,
     stepsTimeline: List<StepTimelinePoint>,
     detailStepsTimeline: List<StepTimelinePoint>,
+    fitnessSessions: List<FitnessActivitySession>,
     heartRateBpm: Int,
     profileName: String,
     themeMode: HomeThemeMode,
-    showStepsDetail: Boolean,
+    activeDetailDestination: HomeDetailDestination?,
     onThemeModeSelected: (HomeThemeMode) -> Unit,
     onOpenStepsDetail: () -> Unit,
-    onCloseStepsDetail: () -> Unit,
+    onOpenFitnessDetail: () -> Unit,
+    onCloseDetail: () -> Unit,
+    onSaveFitnessSession: (FitnessActivitySession) -> Unit,
     activityOptions: List<QuickActivityType>,
     activityEntries: List<QuickActivityEntry>,
     onLogActivity: (QuickActivityType) -> Unit,
@@ -65,31 +67,41 @@ fun HomeScreen(
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
-                    if (showStepsDetail) {
-                        StepDetailScreen(
+                    when (activeDetailDestination) {
+                        HomeDetailDestination.STEPS -> StepDetailScreen(
                             steps = steps,
                             stepsTimeline = detailStepsTimeline,
-                            onBack = onCloseStepsDetail,
+                            onBack = onCloseDetail,
                             compact = true
                         )
-                    } else {
-                        HomeTabContent(
-                            selectedTab = selectedTab,
-                            fitScore = fitScore,
-                            steps = steps,
-                            stepsTimeline = stepsTimeline,
-                            heartRateBpm = heartRateBpm,
-                            profileName = profileName,
-                            themeMode = themeMode,
-                            onThemeModeSelected = onThemeModeSelected,
-                            activityOptions = activityOptions,
-                            activityEntries = activityEntries,
-                            onLogActivity = onLogActivity,
-                            onOpenStepsDetail = onOpenStepsDetail,
-                            syncContent = syncContent,
-                            profileContent = profileContent,
+
+                        HomeDetailDestination.FITNESS -> FitnessActivityDetailScreen(
+                            sessions = fitnessSessions,
+                            onBack = onCloseDetail,
+                            onSaveSession = onSaveFitnessSession,
                             compact = true
                         )
+
+                        null -> {
+                            HomeTabContent(
+                                selectedTab = selectedTab,
+                                fitScore = fitScore,
+                                steps = steps,
+                                stepsTimeline = stepsTimeline,
+                                heartRateBpm = heartRateBpm,
+                                profileName = profileName,
+                                themeMode = themeMode,
+                                onThemeModeSelected = onThemeModeSelected,
+                                activityOptions = activityOptions,
+                                activityEntries = activityEntries,
+                                onLogActivity = onLogActivity,
+                                onOpenFitnessDetail = onOpenFitnessDetail,
+                                onOpenStepsDetail = onOpenStepsDetail,
+                                syncContent = syncContent,
+                                profileContent = profileContent,
+                                compact = true
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -115,31 +127,41 @@ fun HomeScreen(
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    if (showStepsDetail) {
-                        StepDetailScreen(
+                    when (activeDetailDestination) {
+                        HomeDetailDestination.STEPS -> StepDetailScreen(
                             steps = steps,
                             stepsTimeline = detailStepsTimeline,
-                            onBack = onCloseStepsDetail,
+                            onBack = onCloseDetail,
                             compact = false
                         )
-                    } else {
-                        HomeTabContent(
-                            selectedTab = selectedTab,
-                            fitScore = fitScore,
-                            steps = steps,
-                            stepsTimeline = stepsTimeline,
-                            heartRateBpm = heartRateBpm,
-                            profileName = profileName,
-                            themeMode = themeMode,
-                            onThemeModeSelected = onThemeModeSelected,
-                            activityOptions = activityOptions,
-                            activityEntries = activityEntries,
-                            onLogActivity = onLogActivity,
-                            onOpenStepsDetail = onOpenStepsDetail,
-                            syncContent = syncContent,
-                            profileContent = profileContent,
+
+                        HomeDetailDestination.FITNESS -> FitnessActivityDetailScreen(
+                            sessions = fitnessSessions,
+                            onBack = onCloseDetail,
+                            onSaveSession = onSaveFitnessSession,
                             compact = false
                         )
+
+                        null -> {
+                            HomeTabContent(
+                                selectedTab = selectedTab,
+                                fitScore = fitScore,
+                                steps = steps,
+                                stepsTimeline = stepsTimeline,
+                                heartRateBpm = heartRateBpm,
+                                profileName = profileName,
+                                themeMode = themeMode,
+                                onThemeModeSelected = onThemeModeSelected,
+                                activityOptions = activityOptions,
+                                activityEntries = activityEntries,
+                                onLogActivity = onLogActivity,
+                                onOpenFitnessDetail = onOpenFitnessDetail,
+                                onOpenStepsDetail = onOpenStepsDetail,
+                                syncContent = syncContent,
+                                profileContent = profileContent,
+                                compact = false
+                            )
+                        }
                     }
                 }
             }
@@ -160,6 +182,7 @@ private fun HomeTabContent(
     activityOptions: List<QuickActivityType>,
     activityEntries: List<QuickActivityEntry>,
     onLogActivity: (QuickActivityType) -> Unit,
+    onOpenFitnessDetail: () -> Unit,
     onOpenStepsDetail: () -> Unit,
     syncContent: @Composable ColumnScope.() -> Unit,
     profileContent: @Composable ColumnScope.() -> Unit,
@@ -175,6 +198,7 @@ private fun HomeTabContent(
             activityOptions = activityOptions,
             activityEntries = activityEntries,
             onLogActivity = onLogActivity,
+            onOpenFitnessDetail = onOpenFitnessDetail,
             onOpenStepsDetail = onOpenStepsDetail,
             compact = compact
         )
