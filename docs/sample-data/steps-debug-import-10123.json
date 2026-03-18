@@ -1,0 +1,325 @@
+{
+  "version": "1",
+  "exportedAtEpochMillis": 1773878400000,
+  "window": {
+    "startEpochMillis": 1773792000000,
+    "endEpochMillis": 1773878399999
+  },
+  "records": [
+    {
+      "id": "steps-2026-03-18-00",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773792000000,
+      "endEpochMillis": 1773795599999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "00:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-01",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773795600000,
+      "endEpochMillis": 1773799199999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "01:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-02",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773799200000,
+      "endEpochMillis": 1773802799999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "02:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-03",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773802800000,
+      "endEpochMillis": 1773806399999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "03:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-04",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773806400000,
+      "endEpochMillis": 1773809999999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "04:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-05",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773810000000,
+      "endEpochMillis": 1773813599999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "05:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-06",
+      "metric": "STEPS",
+      "value": 180,
+      "unit": "count",
+      "startEpochMillis": 1773813600000,
+      "endEpochMillis": 1773817199999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "06:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-07",
+      "metric": "STEPS",
+      "value": 420,
+      "unit": "count",
+      "startEpochMillis": 1773817200000,
+      "endEpochMillis": 1773820799999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "07:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-08",
+      "metric": "STEPS",
+      "value": 650,
+      "unit": "count",
+      "startEpochMillis": 1773820800000,
+      "endEpochMillis": 1773824399999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "08:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-09",
+      "metric": "STEPS",
+      "value": 540,
+      "unit": "count",
+      "startEpochMillis": 1773824400000,
+      "endEpochMillis": 1773827999999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "09:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-10",
+      "metric": "STEPS",
+      "value": 710,
+      "unit": "count",
+      "startEpochMillis": 1773828000000,
+      "endEpochMillis": 1773831599999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "10:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-11",
+      "metric": "STEPS",
+      "value": 820,
+      "unit": "count",
+      "startEpochMillis": 1773831600000,
+      "endEpochMillis": 1773835199999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "11:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-12",
+      "metric": "STEPS",
+      "value": 1650,
+      "unit": "count",
+      "startEpochMillis": 1773835200000,
+      "endEpochMillis": 1773838799999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "12:00",
+        "note": "lunch-burst"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-13",
+      "metric": "STEPS",
+      "value": 1420,
+      "unit": "count",
+      "startEpochMillis": 1773838800000,
+      "endEpochMillis": 1773842399999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "13:00",
+        "note": "after-lunch-burst"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-14",
+      "metric": "STEPS",
+      "value": 1260,
+      "unit": "count",
+      "startEpochMillis": 1773842400000,
+      "endEpochMillis": 1773845999999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "14:00",
+        "note": "after-lunch-burst"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-15",
+      "metric": "STEPS",
+      "value": 980,
+      "unit": "count",
+      "startEpochMillis": 1773846000000,
+      "endEpochMillis": 1773849599999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "15:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-16",
+      "metric": "STEPS",
+      "value": 540,
+      "unit": "count",
+      "startEpochMillis": 1773849600000,
+      "endEpochMillis": 1773853199999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "16:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-17",
+      "metric": "STEPS",
+      "value": 390,
+      "unit": "count",
+      "startEpochMillis": 1773853200000,
+      "endEpochMillis": 1773856799999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "17:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-18",
+      "metric": "STEPS",
+      "value": 310,
+      "unit": "count",
+      "startEpochMillis": 1773856800000,
+      "endEpochMillis": 1773860399999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "18:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-19",
+      "metric": "STEPS",
+      "value": 180,
+      "unit": "count",
+      "startEpochMillis": 1773860400000,
+      "endEpochMillis": 1773863999999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "19:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-20",
+      "metric": "STEPS",
+      "value": 73,
+      "unit": "count",
+      "startEpochMillis": 1773864000000,
+      "endEpochMillis": 1773867599999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "20:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-21",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773867600000,
+      "endEpochMillis": 1773871199999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "21:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-22",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773871200000,
+      "endEpochMillis": 1773874799999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "22:00"
+      }
+    },
+    {
+      "id": "steps-2026-03-18-23",
+      "metric": "STEPS",
+      "value": 0,
+      "unit": "count",
+      "startEpochMillis": 1773874800000,
+      "endEpochMillis": 1773878399999,
+      "source": "UNKNOWN",
+      "metadata": {
+        "origin": "debug-sample",
+        "label": "23:00"
+      }
+    }
+  ]
+}

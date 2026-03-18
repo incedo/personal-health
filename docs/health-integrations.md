@@ -12,6 +12,8 @@
   - `docs/unified-health-model-mapping.md`
 - Local persistence contract and platform storage plan:
   - `docs/local-activity-storage.md`
+- Canonical browser import document shape:
+  - `docs/canonical-health-import-format.md`
 
 ## Optional body capture direction
 - Planned as an optional capability, separate from Health Connect / HealthKit ingestion.
@@ -244,6 +246,14 @@
   - iOS: shared SQLite schema with native iOS driver
   - Desktop: shared SQLite schema with JVM driver
   - Web: SQLite WASM first, IndexedDB fallback behind the same repository contract
+
+## Web import direction
+- Web has no direct access to Health Connect or HealthKit.
+- Web import should use a canonical JSON document that represents shared model parts instead of raw platform records.
+- The current browser import flow is designed around:
+  - one import window
+  - canonical `HealthRecord` entries
+  - step imports that can be rebuilt into hourly charts
 
 ## Android: Health Connect
 - Module: `integration/health-connect` (Android-only)
