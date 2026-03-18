@@ -18,12 +18,16 @@ import com.incedo.personalhealth.core.health.HealthHistoryImporter
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthLiveSyncProcessor
 import com.incedo.personalhealth.core.health.HealthMetricType
+import com.incedo.personalhealth.core.health.HealthReadRequest
 import com.incedo.personalhealth.core.health.HealthSignalSubscription
+import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectGateway
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectPollingSignalSource
 import com.incedo.personalhealth.shared.AppBus
 import com.incedo.personalhealth.shared.PersonalHealthApp
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 
 class MainActivity : ComponentActivity() {
     private val requiredPermissions: Set<String> by lazy { HealthConnectGateway.requiredPermissions() }
@@ -247,7 +251,22 @@ class MainActivity : ComponentActivity() {
     private suspend fun publishTodayStepsFromHealthConnect(
         gateway: HealthConnectGateway
     ) {
-        val snapshot = gateway.readTodayStepsSnapshot()
+        val zoneId = ZoneId.systemDefault()
+        val now = Instant.now()
+        val startOfDay = now.atZone(zoneId).toLocalDate().atStartOfDay(zoneId).toInstant()
+        val snapshot = buildTodayStepsSnapshot(
+            records = gateway.readRecords(
+                HealthReadRequest(
+                    metrics = setOf(HealthMetricType.STEPS),
+                    startEpochMillis = startOfDay.toEpochMilli(),
+                    endEpochMillis = now.toEpochMilli(),
+                    limit = 10_000
+                )
+            ),
+            dayStartEpochMillis = startOfDay.toEpochMilli(),
+            dayEndEpochMillis = now.toEpochMilli(),
+            bucketSizeHours = 1
+        )
         AppBus.events.publish(
             FrontendEvent.TodayStepsUpdated(
                 totalSteps = snapshot.totalSteps,

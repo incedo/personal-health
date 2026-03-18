@@ -21,16 +21,23 @@ import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.designsystem.PersonalHealthTheme
 import com.incedo.personalhealth.core.events.FrontendEvent
 import com.incedo.personalhealth.core.events.SyncState
+import com.incedo.personalhealth.core.health.CanonicalHealthImportDocument
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
+import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.core.health.currentEpochMillis
+import com.incedo.personalhealth.feature.home.HomeDetailDestination
 import com.incedo.personalhealth.feature.home.HomeScreen
+import com.incedo.personalhealth.feature.home.PersistedFitnessActivityStore
+import com.incedo.personalhealth.feature.home.PlatformFitnessActivityPersistenceDriver
 import com.incedo.personalhealth.feature.home.QuickActivityEntry
 import com.incedo.personalhealth.feature.home.QuickActivityType
 import com.incedo.personalhealth.feature.home.StepTimelinePoint
 import com.incedo.personalhealth.feature.home.HomeThemeMode
 import com.incedo.personalhealth.feature.home.fallbackStepTimeline
+import com.incedo.personalhealth.feature.home.fitnessSessionToQuickActivityEntry
 import com.incedo.personalhealth.feature.home.logQuickActivity
+import com.incedo.personalhealth.feature.home.summarizeStepTimeline
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
 import kotlinx.coroutines.launch
 
@@ -38,15 +45,18 @@ import kotlinx.coroutines.launch
 fun PersonalHealthApp() {
     val appScope = rememberCoroutineScope()
     val importStrategy = remember { currentHealthImportStrategy() }
+    val fitnessActivityStore = remember { PersistedFitnessActivityStore(PlatformFitnessActivityPersistenceDriver) }
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
     var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
     var lastReadSummary by remember { mutableStateOf("Nog geen health records gelezen") }
     var latestUiMessage by remember { mutableStateOf("Nog geen acties uitgevoerd") }
     var todaySteps by remember { mutableStateOf<Int?>(null) }
-    var todayStepsTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
-    var activityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var todayStepsHourlyTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
+    var quickActivityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var fitnessSessions by remember { mutableStateOf(fitnessActivityStore.readSessions()) }
     var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
+    var activeDetailDestination by rememberSaveable { mutableStateOf<HomeDetailDestination?>(null) }
     var importRequestCount by remember { mutableStateOf(0) }
     var intentReceivedCount by remember { mutableStateOf(0) }
     var intentSkippedCount by remember { mutableStateOf(0) }
@@ -80,7 +90,7 @@ fun PersonalHealthApp() {
 
                 is FrontendEvent.TodayStepsUpdated -> {
                     todaySteps = event.totalSteps
-                    todayStepsTimeline = event.buckets.map { bucket ->
+                    todayStepsHourlyTimeline = event.buckets.map { bucket ->
                         StepTimelinePoint(
                             label = bucket.label,
                             steps = bucket.steps
@@ -143,7 +153,12 @@ fun PersonalHealthApp() {
 
     val derivedSteps = 4500 + (metricEventCounts[HealthMetricType.STEPS] ?: 0) * 250
     val dashboardSteps = todaySteps ?: derivedSteps
-    val dashboardTimeline = todayStepsTimeline.ifEmpty { fallbackStepTimeline(stepCount = dashboardSteps) }
+    val detailStepsTimeline = todayStepsHourlyTimeline.ifEmpty { fallbackStepTimeline(stepCount = dashboardSteps) }
+    val dashboardTimeline = if (todayStepsHourlyTimeline.isEmpty()) {
+        detailStepsTimeline
+    } else {
+        summarizeStepTimeline(detailStepsTimeline, pointsPerBucket = 3)
+    }
     val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90)
     val fitScore = (35 + (dashboardSteps / 180) - ((derivedHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
     val darkTheme = when (themeMode) {
@@ -151,6 +166,7 @@ fun PersonalHealthApp() {
         HomeThemeMode.DARK -> true
         HomeThemeMode.LIGHT -> false
     }
+    val activityEntries = fitnessSessions.map(::fitnessSessionToQuickActivityEntry) + quickActivityEntries
 
     PersonalHealthTheme(darkTheme = darkTheme) {
         if (onboardingComplete) {
@@ -158,14 +174,63 @@ fun PersonalHealthApp() {
                 fitScore = fitScore,
                 steps = dashboardSteps,
                 stepsTimeline = dashboardTimeline,
+                detailStepsTimeline = detailStepsTimeline,
+                fitnessSessions = fitnessSessions,
                 heartRateBpm = derivedHeartRate,
                 profileName = "Kees",
                 themeMode = themeMode,
+                activeDetailDestination = activeDetailDestination,
                 onThemeModeSelected = { themeMode = it },
+                onOpenStepsDetail = {
+                    activeDetailDestination = HomeDetailDestination.STEPS
+                    appScope.launch {
+                        AppBus.events.publish(
+                            FrontendEvent.NavigationChanged(
+                                fromRoute = "home",
+                                toRoute = "steps-detail",
+                                emittedAtEpochMillis = currentEpochMillis()
+                            )
+                        )
+                    }
+                },
+                onOpenFitnessDetail = {
+                    activeDetailDestination = HomeDetailDestination.FITNESS
+                    appScope.launch {
+                        AppBus.events.publish(
+                            FrontendEvent.NavigationChanged(
+                                fromRoute = "home",
+                                toRoute = "fitness-detail",
+                                emittedAtEpochMillis = currentEpochMillis()
+                            )
+                        )
+                    }
+                },
+                onCloseDetail = {
+                    val fromRoute = when (activeDetailDestination) {
+                        HomeDetailDestination.STEPS -> "steps-detail"
+                        HomeDetailDestination.FITNESS -> "fitness-detail"
+                        null -> "home"
+                    }
+                    activeDetailDestination = null
+                    appScope.launch {
+                        AppBus.events.publish(
+                            FrontendEvent.NavigationChanged(
+                                fromRoute = fromRoute,
+                                toRoute = "home",
+                                emittedAtEpochMillis = currentEpochMillis()
+                            )
+                        )
+                    }
+                },
+                onSaveFitnessSession = { session ->
+                    fitnessActivityStore.upsertSession(session)
+                    fitnessSessions = fitnessActivityStore.readSessions()
+                    latestUiMessage = "${session.title} lokaal opgeslagen met ${session.exercises.size} oefeningen."
+                },
                 activityOptions = QuickActivityType.entries,
                 activityEntries = activityEntries,
                 onLogActivity = { activityType ->
-                    activityEntries = logQuickActivity(activityEntries, activityType)
+                    quickActivityEntries = logQuickActivity(quickActivityEntries, activityType)
                     latestUiMessage = "${activityType.label} toegevoegd aan je activiteiten."
                 },
                 syncContent = {
@@ -203,6 +268,19 @@ fun PersonalHealthApp() {
                         importRequestCount = importRequestCount,
                         importInProgress = healthSyncState == SyncState.SYNCING
                     )
+                    PlatformHealthImportPanel(
+                        onImportDocument = { document ->
+                            applyImportedHealthDocument(document)
+                        },
+                        onImportMessage = { message ->
+                            AppBus.events.publish(
+                                FrontendEvent.UiFeedbackRequested(
+                                    message = message,
+                                    emittedAtEpochMillis = currentEpochMillis()
+                                )
+                            )
+                        }
+                    )
                 },
                 profileContent = {
                     Surface(
@@ -226,6 +304,29 @@ fun PersonalHealthApp() {
             )
         }
     }
+}
+
+private suspend fun applyImportedHealthDocument(
+    document: CanonicalHealthImportDocument
+) {
+    val snapshot = buildTodayStepsSnapshot(
+        records = document.records,
+        dayStartEpochMillis = document.window.startEpochMillis,
+        dayEndEpochMillis = document.window.endEpochMillis,
+        bucketSizeHours = 1
+    )
+    AppBus.events.publish(
+        FrontendEvent.TodayStepsUpdated(
+            totalSteps = snapshot.totalSteps,
+            buckets = snapshot.buckets.map { bucket ->
+                FrontendEvent.StepBucket(
+                    label = bucket.label,
+                    steps = bucket.steps
+                )
+            },
+            emittedAtEpochMillis = document.exportedAtEpochMillis ?: currentEpochMillis()
+        )
+    )
 }
 
 @Composable

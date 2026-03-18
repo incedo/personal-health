@@ -5,6 +5,13 @@ data class StepTimelinePoint(
     val steps: Int
 )
 
+data class StepDetailStats(
+    val totalSteps: Int,
+    val peakHourLabel: String,
+    val peakHourSteps: Int,
+    val activeHours: Int
+)
+
 enum class QuickActivityType(val label: String) {
     RUNNING("Hardlopen"),
     WALKING("Wandelen"),
@@ -45,6 +52,33 @@ fun fallbackStepTimeline(stepCount: Int): List<StepTimelinePoint> = listOf(
         steps = stepCount.coerceAtLeast(0)
     )
 )
+
+fun summarizeStepTimeline(
+    points: List<StepTimelinePoint>,
+    pointsPerBucket: Int = 3
+): List<StepTimelinePoint> {
+    val safeBucketSize = pointsPerBucket.coerceAtLeast(1)
+    return points
+        .chunked(safeBucketSize)
+        .map { chunk ->
+            val startLabel = chunk.first().label
+            val endLabel = chunk.last().label
+            StepTimelinePoint(
+                label = if (startLabel == endLabel) startLabel else "$startLabel-$endLabel",
+                steps = chunk.sumOf { it.steps }
+            )
+        }
+}
+
+fun stepDetailStats(points: List<StepTimelinePoint>): StepDetailStats {
+    val peakPoint = points.maxByOrNull { it.steps } ?: StepTimelinePoint(label = "Geen data", steps = 0)
+    return StepDetailStats(
+        totalSteps = points.sumOf { it.steps },
+        peakHourLabel = peakPoint.label,
+        peakHourSteps = peakPoint.steps,
+        activeHours = points.count { it.steps > 0 }
+    )
+}
 
 fun logQuickActivity(
     entries: List<QuickActivityEntry>,

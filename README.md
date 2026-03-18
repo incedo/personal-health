@@ -94,6 +94,7 @@ Android phone/tablet behavior is handled in shared Compose UI with width-based a
 - Requirements: `docs/requirements.md`
 - Health integration overview: `docs/health-integrations.md`
 - Local activity persistence plan: `docs/local-activity-storage.md`
+- Canonical browser import format: `docs/canonical-health-import-format.md`
 - Unified Health Connect + HealthKit mapping: `docs/unified-health-model-mapping.md`
 - Testing + coverage strategy: `docs/testing-coverage-strategy.md`
 

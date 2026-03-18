@@ -35,6 +35,41 @@ class HomeMetricsTest {
     }
 
     @Test
+    fun summarizeStepTimeline_groupsPointsIntoLargerBuckets() {
+        val summary = summarizeStepTimeline(
+            points = listOf(
+                StepTimelinePoint("00:00", 100),
+                StepTimelinePoint("01:00", 120),
+                StepTimelinePoint("02:00", 80),
+                StepTimelinePoint("03:00", 60)
+            ),
+            pointsPerBucket = 2
+        )
+
+        assertEquals(2, summary.size)
+        assertEquals("00:00-01:00", summary[0].label)
+        assertEquals(220, summary[0].steps)
+        assertEquals("02:00-03:00", summary[1].label)
+        assertEquals(140, summary[1].steps)
+    }
+
+    @Test
+    fun stepDetailStats_returnsDailySummary() {
+        val stats = stepDetailStats(
+            listOf(
+                StepTimelinePoint("09:00", 400),
+                StepTimelinePoint("10:00", 1_250),
+                StepTimelinePoint("11:00", 0)
+            )
+        )
+
+        assertEquals(1_650, stats.totalSteps)
+        assertEquals("10:00", stats.peakHourLabel)
+        assertEquals(1_250, stats.peakHourSteps)
+        assertEquals(2, stats.activeHours)
+    }
+
+    @Test
     fun logQuickActivity_prependsNewEntryWithIncrementedId() {
         val first = logQuickActivity(emptyList(), QuickActivityType.RUNNING)
         val second = logQuickActivity(first, QuickActivityType.SWIMMING)
