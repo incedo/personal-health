@@ -33,4 +33,33 @@ class HomeMetricsTest {
         assertEquals("Nu", timeline[0].label)
         assertEquals(0, timeline[0].steps)
     }
+
+    @Test
+    fun logQuickActivity_prependsNewEntryWithIncrementedId() {
+        val first = logQuickActivity(emptyList(), QuickActivityType.RUNNING)
+        val second = logQuickActivity(first, QuickActivityType.SWIMMING)
+
+        assertEquals("running-01", first.first().id)
+        assertEquals(QuickActivityType.SWIMMING, second.first().type)
+        assertEquals("swimming-02", second.first().id)
+        assertEquals("running-01", second.last().id)
+    }
+
+    @Test
+    fun quickActivitySummary_formatsEmptySingleAndPluralStates() {
+        assertEquals("Nog geen activiteiten gelogd", quickActivitySummary(emptyList()))
+        assertEquals(
+            "1 activiteit gelogd",
+            quickActivitySummary(logQuickActivity(emptyList(), QuickActivityType.FITNESS))
+        )
+        assertEquals(
+            "2 activiteiten gelogd",
+            quickActivitySummary(
+                logQuickActivity(
+                    logQuickActivity(emptyList(), QuickActivityType.FITNESS),
+                    QuickActivityType.CYCLING
+                )
+            )
+        )
+    }
 }

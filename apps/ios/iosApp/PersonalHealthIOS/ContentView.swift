@@ -12,6 +12,7 @@ import SharedApp
 struct ContentView: View {
     @State private var didRequestHealthPermissions = false
     @State private var healthKitStatusMessage: String?
+    private let healthStore = HKHealthStore()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,12 +33,16 @@ struct ContentView: View {
     }
 
     private func requestHealthKitReadAccess() {
+        #if targetEnvironment(simulator)
+        healthKitStatusMessage = "HealthKit import is disabled in the iOS Simulator."
+        return
+        #endif
+
         guard HKHealthStore.isHealthDataAvailable() else {
             healthKitStatusMessage = "HealthKit not available on this device."
             return
         }
 
-        let healthStore = HKHealthStore()
         var readTypes = Set<HKObjectType>()
         if let step = HKObjectType.quantityType(forIdentifier: .stepCount) { readTypes.insert(step) }
         if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) { readTypes.insert(heartRate) }

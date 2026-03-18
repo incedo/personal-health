@@ -18,11 +18,15 @@
     <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-    <key>UIApplicationSceneManifest</key>
-    <dict>
-        <key>UIApplicationSupportsMultipleScenes</key>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Personal Health gebruikt HealthKit om stappen, hartslag, slaap, energie en gewicht te lezen voor je dashboard en trends.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Personal Health kan gezondheidsdata synchroniseren wanneer je zelf koppelingen of importflows gebruikt.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
         <true/>
     </dict>
     <key>UIApplicationSupportsIndirectInputEvents</key>

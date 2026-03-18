@@ -1,3 +1,6 @@
 package com.incedo.personalhealth.core.health
 
-internal actual fun currentEpochMillis(): Long = 0L
+@JsFun("() => Date.now()")
+external fun dateNowEpochMillis(): Double
+
+actual fun currentEpochMillis(): Long = dateNowEpochMillis().toLong()

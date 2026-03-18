@@ -48,6 +48,10 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Preserve navigation and feature state across posture changes.
 - Avoid placing critical controls/content across hinge or seam regions.
 
+## 6a. Adaptive navigation
+- Treat `docs/navigation-principles.md` as the canonical navigation source.
+- Keep implementation aligned with that document instead of redefining navigation rules here.
+
 ## 7. Platform boundaries
 - Android/iOS/Desktop/Web entrypoints should only start shared UI.
 - Wrap platform services behind interfaces and inject implementations.
@@ -101,3 +105,19 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Update README module layout when adding, removing, or renaming modules.
 - Keep this guide aligned with actual build configuration.
 - Current feature modules in this repository include `feature/home` and `feature/onboarding`.
+
+## 15. Sports and training feature direction
+- Keep `activity tracking`, `strength logging`, and `training recommendations` as separate concerns even when they appear in one user flow.
+- Recommended domain split:
+  - GPS and endurance activity domain in `core/*`
+  - exercise taxonomy, muscle groups, and workout logging in `core/*`
+  - recommendation logic in shared `core/*` or dedicated `feature/*` state modules
+- Recommended feature split when implementation starts:
+  - `feature/today` for daily summary, quick actions, and recommendations
+  - `feature/track` for outdoor, pool, gym, and manual logging flows
+  - `feature/plan` for workout suggestions and recovery guidance
+  - `feature/progress` for trends, volume, and muscle balance
+- Keep social sharing optional and downstream from completed activities/workouts:
+  - the canonical activity or workout record should exist first
+  - shareable summary models should be derived from canonical records, not stored as the source of truth
+- Guidance and recommendation systems should start deterministic and explainable before introducing ML ranking or AI-generated suggestions.

@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -21,15 +23,21 @@ import com.incedo.personalhealth.core.events.FrontendEvent
 import com.incedo.personalhealth.core.events.SyncState
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
+import com.incedo.personalhealth.core.health.currentEpochMillis
 import com.incedo.personalhealth.feature.home.HomeScreen
+import com.incedo.personalhealth.feature.home.QuickActivityEntry
+import com.incedo.personalhealth.feature.home.QuickActivityType
 import com.incedo.personalhealth.feature.home.StepTimelinePoint
+import com.incedo.personalhealth.feature.home.HomeThemeMode
 import com.incedo.personalhealth.feature.home.fallbackStepTimeline
+import com.incedo.personalhealth.feature.home.logQuickActivity
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
 import kotlinx.coroutines.launch
 
 @Composable
 fun PersonalHealthApp() {
     val appScope = rememberCoroutineScope()
+    val importStrategy = remember { currentHealthImportStrategy() }
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
     var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
@@ -37,6 +45,8 @@ fun PersonalHealthApp() {
     var latestUiMessage by remember { mutableStateOf("Nog geen acties uitgevoerd") }
     var todaySteps by remember { mutableStateOf<Int?>(null) }
     var todayStepsTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
+    var activityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
     var importRequestCount by remember { mutableStateOf(0) }
     var intentReceivedCount by remember { mutableStateOf(0) }
     var intentSkippedCount by remember { mutableStateOf(0) }
@@ -136,8 +146,13 @@ fun PersonalHealthApp() {
     val dashboardTimeline = todayStepsTimeline.ifEmpty { fallbackStepTimeline(stepCount = dashboardSteps) }
     val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90)
     val fitScore = (35 + (dashboardSteps / 180) - ((derivedHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
+    val darkTheme = when (themeMode) {
+        HomeThemeMode.SYSTEM -> isSystemInDarkTheme()
+        HomeThemeMode.DARK -> true
+        HomeThemeMode.LIGHT -> false
+    }
 
-    PersonalHealthTheme {
+    PersonalHealthTheme(darkTheme = darkTheme) {
         if (onboardingComplete) {
             HomeScreen(
                 fitScore = fitScore,
@@ -145,6 +160,14 @@ fun PersonalHealthApp() {
                 stepsTimeline = dashboardTimeline,
                 heartRateBpm = derivedHeartRate,
                 profileName = "Kees",
+                themeMode = themeMode,
+                onThemeModeSelected = { themeMode = it },
+                activityOptions = QuickActivityType.entries,
+                activityEntries = activityEntries,
+                onLogActivity = { activityType ->
+                    activityEntries = logQuickActivity(activityEntries, activityType)
+                    latestUiMessage = "${activityType.label} toegevoegd aan je activiteiten."
+                },
                 syncContent = {
                     HealthSyncStatusCard(
                         syncState = healthSyncState,
@@ -152,42 +175,27 @@ fun PersonalHealthApp() {
                         lastReadSummary = lastReadSummary
                     )
                     HealthSyncStatsCard(
+                        strategy = importStrategy,
                         intentReceivedCount = intentReceivedCount,
                         intentSkippedCount = intentSkippedCount,
                         intentAppliedCount = intentAppliedCount,
                         intentFailedCount = intentFailedCount,
                         metricEventCounts = metricEventCounts,
-                        onRequestHistoryImport = {
+                        onAction = { actionId ->
                             appScope.launch {
-                                AppBus.events.publish(
-                                    HealthEvent.SyncRequested(
-                                        metrics = setOf(
-                                            HealthMetricType.STEPS,
-                                            HealthMetricType.HEART_RATE_BPM,
-                                            HealthMetricType.SLEEP_DURATION_MINUTES,
-                                            HealthMetricType.ACTIVE_ENERGY_KCAL,
-                                            HealthMetricType.BODY_WEIGHT_KG
-                                        ),
-                                        emittedAtEpochMillis = System.currentTimeMillis()
-                                    )
-                                )
-                            }
-                        },
-                        onRequestPermissions = {
-                            appScope.launch {
-                                AppBus.events.publish(
-                                    HealthEvent.PermissionsRequested(
-                                        emittedAtEpochMillis = System.currentTimeMillis()
-                                    )
-                                )
-                            }
-                        },
-                        onOpenHealthConnectSettings = {
-                            appScope.launch {
-                                AppBus.events.publish(
-                                    HealthEvent.HealthConnectSettingsRequested(
-                                        emittedAtEpochMillis = System.currentTimeMillis()
-                                    )
+                                executeHealthImportAction(
+                                    actionId = actionId,
+                                    publishHealthEvent = { event ->
+                                        AppBus.events.publish(event)
+                                    },
+                                    publishUiMessage = { message ->
+                                        AppBus.events.publish(
+                                            FrontendEvent.UiFeedbackRequested(
+                                                message = message,
+                                                emittedAtEpochMillis = currentEpochMillis()
+                                            )
+                                        )
+                                    }
                                 )
                             }
                         },
@@ -264,14 +272,13 @@ private fun HealthSyncStatusCard(
 
 @Composable
 private fun HealthSyncStatsCard(
+    strategy: HealthImportStrategy,
     intentReceivedCount: Int,
     intentSkippedCount: Int,
     intentAppliedCount: Int,
     intentFailedCount: Int,
     metricEventCounts: Map<HealthMetricType, Int>,
-    onRequestHistoryImport: () -> Unit,
-    onRequestPermissions: () -> Unit,
-    onOpenHealthConnectSettings: () -> Unit,
+    onAction: (HealthImportActionId) -> Unit,
     latestUiMessage: String,
     importRequestCount: Int,
     importInProgress: Boolean
@@ -286,7 +293,11 @@ private fun HealthSyncStatsCard(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
-            Text("Health Sync", style = MaterialTheme.typography.titleSmall)
+            Text(strategy.title, style = MaterialTheme.typography.titleSmall)
+            Text(
+                "${strategy.platformName}: ${strategy.summary}",
+                style = MaterialTheme.typography.bodySmall
+            )
             Text(
                 "import clicks=$importRequestCount status=${if (importInProgress) "bezig" else "idle"}",
                 style = MaterialTheme.typography.bodySmall
@@ -304,24 +315,21 @@ private fun HealthSyncStatsCard(
                 style = MaterialTheme.typography.bodySmall
             )
             Text("Laatste melding: $latestUiMessage", style = MaterialTheme.typography.bodySmall)
-            Button(
-                onClick = onRequestPermissions,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("Geef permissies")
-            }
-            Button(
-                onClick = onOpenHealthConnectSettings,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("Open Health Connect")
-            }
-            Button(
-                onClick = onRequestHistoryImport,
-                enabled = !importInProgress,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text(if (importInProgress) "Import bezig..." else "Importeer historie")
+            strategy.actions.forEach { action ->
+                val importAction = action.id == HealthImportActionId.IMPORT_HISTORY
+                Button(
+                    onClick = { onAction(action.id) },
+                    enabled = !importInProgress || !importAction,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text(
+                        if (importAction && importInProgress) {
+                            "Import bezig..."
+                        } else {
+                            action.label
+                        }
+                    )
+                }
             }
         }
     }
