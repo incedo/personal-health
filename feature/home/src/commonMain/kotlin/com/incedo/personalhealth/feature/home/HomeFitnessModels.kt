@@ -2,40 +2,8 @@ package com.incedo.personalhealth.feature.home
 
 enum class HomeDetailDestination {
     STEPS,
-    FITNESS
-}
-
-enum class FitnessMuscleGroup(
-    val label: String,
-    val region: MuscleGroupRegion
-) {
-    CHEST("Borst", MuscleGroupRegion.FRONT),
-    SHOULDERS_FRONT("Schouders", MuscleGroupRegion.FRONT),
-    BICEPS("Biceps", MuscleGroupRegion.FRONT),
-    CORE("Core", MuscleGroupRegion.FRONT),
-    QUADS("Quadriceps", MuscleGroupRegion.FRONT),
-    CALVES("Kuiten", MuscleGroupRegion.FRONT),
-    UPPER_BACK("Bovenrug", MuscleGroupRegion.BACK),
-    LATS("Lats", MuscleGroupRegion.BACK),
-    TRICEPS("Triceps", MuscleGroupRegion.BACK),
-    GLUTES("Billen", MuscleGroupRegion.BACK),
-    HAMSTRINGS("Hamstrings", MuscleGroupRegion.BACK),
-    CALVES_BACK("Kuiten achter", MuscleGroupRegion.BACK)
-}
-
-enum class FitnessExerciseTemplate(
-    val label: String,
-    val defaultSets: Int,
-    val defaultReps: Int,
-    val defaultWeightKg: Int,
-    val primaryMuscleGroup: FitnessMuscleGroup
-) {
-    SQUAT("Squat", 4, 6, 80, FitnessMuscleGroup.QUADS),
-    BENCH_PRESS("Bench press", 4, 8, 60, FitnessMuscleGroup.CHEST),
-    DEADLIFT("Deadlift", 4, 5, 100, FitnessMuscleGroup.HAMSTRINGS),
-    SHOULDER_PRESS("Shoulder press", 3, 10, 22, FitnessMuscleGroup.SHOULDERS_FRONT),
-    BARBELL_ROW("Barbell row", 4, 8, 55, FitnessMuscleGroup.UPPER_BACK),
-    PLANK("Plank", 3, 1, 0, FitnessMuscleGroup.CORE)
+    FITNESS,
+    FITNESS_EDITOR_DEBUG
 }
 
 data class FitnessExerciseDraft(
@@ -49,7 +17,8 @@ data class FitnessSessionDraft(
     val sessionId: String? = null,
     val title: String,
     val notes: String,
-    val selectedMuscleGroups: Set<FitnessMuscleGroup>,
+    val selectedPrimaryGroup: FitnessPrimaryMuscleGroup? = null,
+    val selectedMuscleDetails: Set<FitnessMuscleDetail>,
     val exercises: List<FitnessExerciseDraft>
 )
 
@@ -61,31 +30,87 @@ data class FitnessLibrarySummary(
 
 fun newFitnessSessionDraft(sessionOrdinal: Int): FitnessSessionDraft = FitnessSessionDraft(
     sessionId = null,
-    title = "Fitness sessie $sessionOrdinal",
+    title = "",
     notes = "",
-    selectedMuscleGroups = emptySet(),
+    selectedPrimaryGroup = null,
+    selectedMuscleDetails = emptySet(),
     exercises = emptyList()
 )
 
-fun fitnessSessionDraftFromSession(session: FitnessActivitySession): FitnessSessionDraft = FitnessSessionDraft(
-    sessionId = session.id,
-    title = session.title,
-    notes = session.notes,
-    selectedMuscleGroups = session.muscleGroups.mapNotNull { stored ->
-        FitnessMuscleGroup.entries.firstOrNull { it.name == stored.id }
-    }.toSet(),
-    exercises = session.exercises.map { exercise ->
-        val template = FitnessExerciseTemplate.entries.firstOrNull { it.label == exercise.name }
-            ?: FitnessExerciseTemplate.entries.firstOrNull { it.primaryMuscleGroup.name == exercise.primaryMuscleGroupId }
-            ?: FitnessExerciseTemplate.PLANK
-        FitnessExerciseDraft(
-            template = template,
-            setCount = exercise.setCount,
-            repsPerSet = exercise.repsPerSet,
-            weightKg = exercise.weightKg
-        )
+fun fitnessSessionDraftFromSession(session: FitnessActivitySession): FitnessSessionDraft {
+    val selectedPrimaryGroup = session.primaryMuscleGroupId
+        ?.let { stored -> FitnessPrimaryMuscleGroup.entries.firstOrNull { it.name == stored } }
+        ?: session.muscleGroups.firstNotNullOfOrNull { stored ->
+            FitnessMuscleDetail.entries.firstOrNull { it.name == stored.id }?.primaryGroup
+        }
+        ?: session.exercises.firstNotNullOfOrNull { exercise ->
+            exercise.detailMuscleId?.let { detailId ->
+                FitnessMuscleDetail.entries.firstOrNull { it.name == detailId }?.primaryGroup
+            }
+        }
+
+    return FitnessSessionDraft(
+        sessionId = session.id,
+        title = session.title,
+        notes = session.notes,
+        selectedPrimaryGroup = selectedPrimaryGroup,
+        selectedMuscleDetails = session.muscleGroups.mapNotNull { stored ->
+            FitnessMuscleDetail.entries.firstOrNull { it.name == stored.id }
+        }.toSet(),
+        exercises = session.exercises.map { exercise ->
+            val template = FitnessExerciseTemplate.entries.firstOrNull { it.label == exercise.name }
+                ?: exercise.detailMuscleId?.let { detailId ->
+                    FitnessExerciseTemplate.entries.firstOrNull { it.detailMuscle.name == detailId }
+                }
+                ?: selectedPrimaryGroup?.let { group ->
+                    FitnessExerciseTemplate.entries.firstOrNull { it.primaryMuscleGroup == group }
+                }
+                ?: FitnessExerciseTemplate.BENCH_PRESS
+            FitnessExerciseDraft(
+                template = template,
+                setCount = exercise.setCount,
+                repsPerSet = exercise.repsPerSet,
+                weightKg = exercise.weightKg
+            )
+        }
+    )
+}
+
+fun selectFitnessPrimaryGroup(
+    draft: FitnessSessionDraft,
+    primaryGroup: FitnessPrimaryMuscleGroup
+): FitnessSessionDraft {
+    val currentSelection = if (draft.selectedPrimaryGroup == primaryGroup) null else primaryGroup
+    val keptDetails = draft.selectedMuscleDetails.filterTo(mutableSetOf()) { it.primaryGroup == currentSelection }
+    val keptExercises = draft.exercises.filter { exercise ->
+        exercise.template.primaryMuscleGroup == currentSelection &&
+            (keptDetails.isEmpty() || exercise.template.detailMuscle in keptDetails)
     }
-)
+    return draft.copy(
+        selectedPrimaryGroup = currentSelection,
+        selectedMuscleDetails = keptDetails,
+        exercises = keptExercises
+    )
+}
+
+fun toggleFitnessMuscleDetail(
+    draft: FitnessSessionDraft,
+    detail: FitnessMuscleDetail
+): FitnessSessionDraft {
+    val updatedDetails = if (detail in draft.selectedMuscleDetails) {
+        draft.selectedMuscleDetails - detail
+    } else {
+        draft.selectedMuscleDetails + detail
+    }
+    val filteredExercises = draft.exercises.filter { exercise ->
+        updatedDetails.isEmpty() || exercise.template.detailMuscle in updatedDetails
+    }
+    return draft.copy(
+        selectedPrimaryGroup = detail.primaryGroup,
+        selectedMuscleDetails = updatedDetails,
+        exercises = filteredExercises
+    )
+}
 
 fun toggleFitnessExercise(
     draft: FitnessSessionDraft,
@@ -102,7 +127,12 @@ fun toggleFitnessExercise(
     } else {
         draft.exercises.filterNot { it.template == template }
     }
-    return draft.copy(exercises = updatedExercises)
+    val updatedDetails = draft.selectedMuscleDetails + template.detailMuscle
+    return draft.copy(
+        selectedPrimaryGroup = template.primaryMuscleGroup,
+        selectedMuscleDetails = updatedDetails,
+        exercises = updatedExercises
+    )
 }
 
 fun updateFitnessDraftTitle(
@@ -115,18 +145,6 @@ fun updateFitnessDraftNotes(
     notes: String
 ): FitnessSessionDraft = draft.copy(notes = notes)
 
-fun toggleFitnessMuscleGroup(
-    draft: FitnessSessionDraft,
-    muscleGroup: FitnessMuscleGroup
-): FitnessSessionDraft {
-    val updated = if (muscleGroup in draft.selectedMuscleGroups) {
-        draft.selectedMuscleGroups - muscleGroup
-    } else {
-        draft.selectedMuscleGroups + muscleGroup
-    }
-    return draft.copy(selectedMuscleGroups = updated)
-}
-
 fun updateFitnessExerciseDraft(
     draft: FitnessSessionDraft,
     template: FitnessExerciseTemplate,
@@ -138,7 +156,18 @@ fun updateFitnessExerciseDraft(
 )
 
 fun fitnessDraftCanSave(draft: FitnessSessionDraft): Boolean =
-    draft.title.isNotBlank() && draft.exercises.isNotEmpty()
+    draft.selectedPrimaryGroup != null &&
+        draft.selectedMuscleDetails.isNotEmpty() &&
+        draft.exercises.isNotEmpty()
+
+fun generatedFitnessSessionTitle(draft: FitnessSessionDraft): String {
+    val primaryLabel = draft.selectedPrimaryGroup?.label ?: "Fitness"
+    val detailSummary = draft.selectedMuscleDetails
+        .take(2)
+        .joinToString(" + ") { it.label }
+        .ifBlank { "sessie" }
+    return "$primaryLabel • $detailSummary"
+}
 
 fun buildFitnessSession(
     draft: FitnessSessionDraft,
@@ -147,15 +176,18 @@ fun buildFitnessSession(
     completedAtEpochMillis: Long
 ): FitnessActivitySession = FitnessActivitySession(
     id = sessionId,
-    title = draft.title.trim(),
+    title = draft.title.trim().ifBlank { generatedFitnessSessionTitle(draft) },
     startedAtEpochMillis = startedAtEpochMillis,
     completedAtEpochMillis = completedAtEpochMillis,
     notes = draft.notes.trim(),
-    muscleGroups = draft.selectedMuscleGroups.map { group ->
+    primaryMuscleGroupId = draft.selectedPrimaryGroup?.name,
+    muscleGroups = draft.selectedMuscleDetails.map { detail ->
         MuscleGroup(
-            id = group.name,
-            label = group.label,
-            region = group.region
+            id = detail.name,
+            label = detail.label,
+            region = detail.region,
+            primaryGroupId = detail.primaryGroup.name,
+            focusCue = detail.focusCue
         )
     },
     exercises = draft.exercises.map { exercise ->
@@ -165,7 +197,8 @@ fun buildFitnessSession(
             setCount = exercise.setCount,
             repsPerSet = exercise.repsPerSet,
             weightKg = exercise.weightKg,
-            primaryMuscleGroupId = exercise.template.primaryMuscleGroup.name
+            primaryMuscleGroupId = exercise.template.primaryMuscleGroup.name,
+            detailMuscleId = exercise.template.detailMuscle.name
         )
     }
 )
@@ -184,19 +217,16 @@ fun fitnessSessionVolumeKg(session: FitnessActivitySession): Int =
 
 fun fitnessSessionExerciseCount(session: FitnessActivitySession): Int = session.exercises.size
 
-fun availableExerciseTemplates(
-    selectedMuscleGroups: Set<FitnessMuscleGroup>
-): List<FitnessExerciseTemplate> = if (selectedMuscleGroups.isEmpty()) {
-    FitnessExerciseTemplate.entries
-} else {
-    FitnessExerciseTemplate.entries.filter { it.primaryMuscleGroup in selectedMuscleGroups }
-}
-
 fun formatMuscleGroupSummary(muscleGroups: List<MuscleGroup>): String = when {
-    muscleGroups.isEmpty() -> "Geen spiergroepen gekozen"
+    muscleGroups.isEmpty() -> "Geen spierfocus gekozen"
     muscleGroups.size == 1 -> muscleGroups.single().label
     else -> muscleGroups.joinToString(", ") { it.label }
 }
+
+fun fitnessPrimaryGroupLabel(primaryGroupId: String?): String =
+    primaryGroupId
+        ?.let { id -> FitnessPrimaryMuscleGroup.entries.firstOrNull { it.name == id }?.label }
+        ?: "Onbekende focus"
 
 fun fitnessSessionToQuickActivityEntry(session: FitnessActivitySession): QuickActivityEntry =
     QuickActivityEntry(

@@ -28,13 +28,16 @@ fun HomeScreen(
     stepsTimeline: List<StepTimelinePoint>,
     detailStepsTimeline: List<StepTimelinePoint>,
     fitnessSessions: List<FitnessActivitySession>,
+    fitnessBodyProfile: FitnessBodyProfile,
     heartRateBpm: Int,
     profileName: String,
     themeMode: HomeThemeMode,
     activeDetailDestination: HomeDetailDestination?,
     onThemeModeSelected: (HomeThemeMode) -> Unit,
+    onFitnessBodyProfileSelected: (FitnessBodyProfile) -> Unit,
     onOpenStepsDetail: () -> Unit,
     onOpenFitnessDetail: () -> Unit,
+    onOpenFitnessEditorDebug: () -> Unit,
     onCloseDetail: () -> Unit,
     onSaveFitnessSession: (FitnessActivitySession) -> Unit,
     activityOptions: List<QuickActivityType>,
@@ -77,8 +80,16 @@ fun HomeScreen(
 
                         HomeDetailDestination.FITNESS -> FitnessActivityDetailScreen(
                             sessions = fitnessSessions,
+                            bodyProfile = fitnessBodyProfile,
                             onBack = onCloseDetail,
+                            onOpenDebugEditor = onOpenFitnessEditorDebug,
                             onSaveSession = onSaveFitnessSession,
+                            compact = true
+                        )
+
+                        HomeDetailDestination.FITNESS_EDITOR_DEBUG -> FitnessAnatomyEditorScreen(
+                            bodyProfile = fitnessBodyProfile,
+                            onBack = onCloseDetail,
                             compact = true
                         )
 
@@ -92,6 +103,8 @@ fun HomeScreen(
                                 profileName = profileName,
                                 themeMode = themeMode,
                                 onThemeModeSelected = onThemeModeSelected,
+                                fitnessBodyProfile = fitnessBodyProfile,
+                                onFitnessBodyProfileSelected = onFitnessBodyProfileSelected,
                                 activityOptions = activityOptions,
                                 activityEntries = activityEntries,
                                 onLogActivity = onLogActivity,
@@ -137,8 +150,16 @@ fun HomeScreen(
 
                         HomeDetailDestination.FITNESS -> FitnessActivityDetailScreen(
                             sessions = fitnessSessions,
+                            bodyProfile = fitnessBodyProfile,
                             onBack = onCloseDetail,
+                            onOpenDebugEditor = onOpenFitnessEditorDebug,
                             onSaveSession = onSaveFitnessSession,
+                            compact = false
+                        )
+
+                        HomeDetailDestination.FITNESS_EDITOR_DEBUG -> FitnessAnatomyEditorScreen(
+                            bodyProfile = fitnessBodyProfile,
+                            onBack = onCloseDetail,
                             compact = false
                         )
 
@@ -152,6 +173,8 @@ fun HomeScreen(
                                 profileName = profileName,
                                 themeMode = themeMode,
                                 onThemeModeSelected = onThemeModeSelected,
+                                fitnessBodyProfile = fitnessBodyProfile,
+                                onFitnessBodyProfileSelected = onFitnessBodyProfileSelected,
                                 activityOptions = activityOptions,
                                 activityEntries = activityEntries,
                                 onLogActivity = onLogActivity,
@@ -179,6 +202,8 @@ private fun HomeTabContent(
     profileName: String,
     themeMode: HomeThemeMode,
     onThemeModeSelected: (HomeThemeMode) -> Unit,
+    fitnessBodyProfile: FitnessBodyProfile,
+    onFitnessBodyProfileSelected: (FitnessBodyProfile) -> Unit,
     activityOptions: List<QuickActivityType>,
     activityEntries: List<QuickActivityEntry>,
     onLogActivity: (QuickActivityType) -> Unit,
@@ -246,6 +271,11 @@ private fun HomeTabContent(
                 ThemeModeCard(
                     selectedMode = themeMode,
                     onThemeModeSelected = onThemeModeSelected
+                )
+                Spacer(modifier = Modifier.height(18.dp))
+                FitnessBodyProfileCard(
+                    selectedProfile = fitnessBodyProfile,
+                    onProfileSelected = onFitnessBodyProfileSelected
                 )
                 Spacer(modifier = Modifier.height(18.dp))
                 ProfileFitScoreCard(
