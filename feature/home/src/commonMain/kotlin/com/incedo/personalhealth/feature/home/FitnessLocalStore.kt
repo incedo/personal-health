@@ -13,7 +13,9 @@ enum class MuscleGroupRegion {
 data class MuscleGroup(
     val id: String,
     val label: String,
-    val region: MuscleGroupRegion
+    val region: MuscleGroupRegion,
+    val primaryGroupId: String? = null,
+    val focusCue: String? = null
 )
 
 @Serializable
@@ -23,7 +25,8 @@ data class FitnessExercise(
     val setCount: Int,
     val repsPerSet: Int,
     val weightKg: Int,
-    val primaryMuscleGroupId: String? = null
+    val primaryMuscleGroupId: String? = null,
+    val detailMuscleId: String? = null
 )
 
 @Serializable
@@ -33,6 +36,7 @@ data class FitnessActivitySession(
     val startedAtEpochMillis: Long,
     val completedAtEpochMillis: Long,
     val notes: String = "",
+    val primaryMuscleGroupId: String? = null,
     val muscleGroups: List<MuscleGroup> = emptyList(),
     val exercises: List<FitnessExercise>
 )

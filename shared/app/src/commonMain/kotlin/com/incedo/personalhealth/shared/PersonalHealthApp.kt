@@ -28,6 +28,7 @@ import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.core.health.currentEpochMillis
 import com.incedo.personalhealth.feature.home.HomeDetailDestination
 import com.incedo.personalhealth.feature.home.HomeScreen
+import com.incedo.personalhealth.feature.home.FitnessBodyProfile
 import com.incedo.personalhealth.feature.home.PersistedFitnessActivityStore
 import com.incedo.personalhealth.feature.home.PlatformFitnessActivityPersistenceDriver
 import com.incedo.personalhealth.feature.home.QuickActivityEntry
@@ -56,6 +57,13 @@ fun PersonalHealthApp() {
     var quickActivityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
     var fitnessSessions by remember { mutableStateOf(fitnessActivityStore.readSessions()) }
     var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
+    var fitnessBodyProfile by rememberSaveable {
+        mutableStateOf(
+            ProfilePreferenceStore.fitnessBodyProfileId()
+                ?.let { stored -> FitnessBodyProfile.entries.firstOrNull { it.name == stored } }
+                ?: FitnessBodyProfile.MALE
+        )
+    }
     var activeDetailDestination by rememberSaveable { mutableStateOf<HomeDetailDestination?>(null) }
     var importRequestCount by remember { mutableStateOf(0) }
     var intentReceivedCount by remember { mutableStateOf(0) }
@@ -176,11 +184,16 @@ fun PersonalHealthApp() {
                 stepsTimeline = dashboardTimeline,
                 detailStepsTimeline = detailStepsTimeline,
                 fitnessSessions = fitnessSessions,
+                fitnessBodyProfile = fitnessBodyProfile,
                 heartRateBpm = derivedHeartRate,
                 profileName = "Kees",
                 themeMode = themeMode,
                 activeDetailDestination = activeDetailDestination,
                 onThemeModeSelected = { themeMode = it },
+                onFitnessBodyProfileSelected = { profile ->
+                    fitnessBodyProfile = profile
+                    ProfilePreferenceStore.setFitnessBodyProfileId(profile.name)
+                },
                 onOpenStepsDetail = {
                     activeDetailDestination = HomeDetailDestination.STEPS
                     appScope.launch {
@@ -205,10 +218,23 @@ fun PersonalHealthApp() {
                         )
                     }
                 },
+                onOpenFitnessEditorDebug = {
+                    activeDetailDestination = HomeDetailDestination.FITNESS_EDITOR_DEBUG
+                    appScope.launch {
+                        AppBus.events.publish(
+                            FrontendEvent.NavigationChanged(
+                                fromRoute = "fitness-detail",
+                                toRoute = "fitness-editor-debug",
+                                emittedAtEpochMillis = currentEpochMillis()
+                            )
+                        )
+                    }
+                },
                 onCloseDetail = {
                     val fromRoute = when (activeDetailDestination) {
                         HomeDetailDestination.STEPS -> "steps-detail"
                         HomeDetailDestination.FITNESS -> "fitness-detail"
+                        HomeDetailDestination.FITNESS_EDITOR_DEBUG -> "fitness-editor-debug"
                         null -> "home"
                     }
                     activeDetailDestination = null

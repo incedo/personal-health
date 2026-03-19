@@ -81,6 +81,58 @@ internal fun ThemeModeCard(
 }
 
 @Composable
+internal fun FitnessBodyProfileCard(
+    selectedProfile: FitnessBodyProfile,
+    onProfileSelected: (FitnessBodyProfile) -> Unit
+) {
+    val palette = homePalette()
+    HomePanel(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Lichaamsprofiel",
+            style = MaterialTheme.typography.titleLarge,
+            color = palette.textPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Kies welk anatomiebeeld standaard gebruikt wordt in de fitnessflow.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = palette.textSecondary
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        androidx.compose.foundation.layout.Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            FitnessBodyProfile.entries.forEach { profile ->
+                val selected = profile == selectedProfile
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable { onProfileSelected(profile) },
+                    color = if (selected) palette.accentSoft else palette.surface,
+                    shape = RoundedCornerShape(18.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (selected) 2.dp else 1.dp,
+                        color = if (selected) palette.accent else palette.surfaceMuted
+                    )
+                ) {
+                    Text(
+                        text = if (profile == FitnessBodyProfile.MALE) "Man" else "Vrouw",
+                        modifier = Modifier.padding(vertical = 14.dp, horizontal = 10.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = palette.textPrimary,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun ProfileFitScoreCard(
     fitScore: Int,
     profileName: String,
