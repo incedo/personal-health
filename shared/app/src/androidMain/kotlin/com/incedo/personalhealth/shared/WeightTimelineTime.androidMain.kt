@@ -25,7 +25,17 @@ internal actual fun yearOfEpochMillis(epochMillis: Long): Int = Instant.ofEpochM
     .toLocalDate()
     .year
 
+internal actual fun monthOfEpochMillis(epochMillis: Long): Int = Instant.ofEpochMilli(epochMillis)
+    .atZone(weightZoneId)
+    .toLocalDate()
+    .monthValue
+
 internal actual fun startOfYearEpochMillis(year: Int): Long = LocalDate.of(year, 1, 1)
+    .atStartOfDay(weightZoneId)
+    .toInstant()
+    .toEpochMilli()
+
+internal actual fun startOfMonthEpochMillis(year: Int, month: Int): Long = LocalDate.of(year, month, 1)
     .atStartOfDay(weightZoneId)
     .toInstant()
     .toEpochMilli()

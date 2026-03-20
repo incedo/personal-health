@@ -25,8 +25,14 @@ private external fun wasmFormatWeightMonthLabel(epochMillis: Double): String
 @JsFun("epochMillis => new Date(epochMillis).getFullYear()")
 private external fun wasmYearOfEpochMillis(epochMillis: Double): Int
 
+@JsFun("epochMillis => new Date(epochMillis).getMonth() + 1")
+private external fun wasmMonthOfEpochMillis(epochMillis: Double): Int
+
 @JsFun("year => new Date(year, 0, 1, 0, 0, 0, 0).getTime()")
 private external fun wasmStartOfYearEpochMillis(year: Int): Double
+
+@JsFun("(year, month) => new Date(year, month - 1, 1, 0, 0, 0, 0).getTime()")
+private external fun wasmStartOfMonthEpochMillis(year: Int, month: Int): Double
 
 internal actual fun formatWeightDayLabel(epochMillis: Long): String =
     wasmFormatWeightDayLabel(epochMillis.toDouble())
@@ -37,5 +43,11 @@ internal actual fun formatWeightMonthLabel(epochMillis: Long): String =
 internal actual fun yearOfEpochMillis(epochMillis: Long): Int =
     wasmYearOfEpochMillis(epochMillis.toDouble())
 
+internal actual fun monthOfEpochMillis(epochMillis: Long): Int =
+    wasmMonthOfEpochMillis(epochMillis.toDouble())
+
 internal actual fun startOfYearEpochMillis(year: Int): Long =
     wasmStartOfYearEpochMillis(year).toLong()
+
+internal actual fun startOfMonthEpochMillis(year: Int, month: Int): Long =
+    wasmStartOfMonthEpochMillis(year, month).toLong()

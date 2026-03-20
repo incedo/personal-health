@@ -10,8 +10,6 @@ import com.incedo.personalhealth.feature.home.WeightTimelinePoint
 private const val DAY_MILLIS = 24L * 60L * 60L * 1000L
 private const val WEEK_MILLIS = 7L * DAY_MILLIS
 private const val MONTH_MILLIS = 30L * DAY_MILLIS
-private const val YEAR_MILLIS = 365L * DAY_MILLIS
-
 internal fun buildWeightChartCatalog(
     records: List<HealthRecord>,
     dayStartEpochMillis: Long,
@@ -136,35 +134,30 @@ private fun buildAllTimeTimeline(
     }
 
     val firstEpochMillis = records.first().endEpochMillis
-    val totalDays = ((dayEndEpochMillis - firstEpochMillis) / DAY_MILLIS).coerceAtLeast(1L)
-    return if (totalDays >= YEAR_MILLIS) {
-        buildYearlyAverageTimeline(records, firstEpochMillis, dayEndEpochMillis, range)
-    } else {
-        buildAveragedTimeline(records, dayEndEpochMillis, 12, MONTH_MILLIS, range, "Maandgemiddelde")
-            .copy(title = "Alle data")
-    }
+    return buildSemesterAverageTimeline(records, firstEpochMillis, dayEndEpochMillis, range)
 }
 
-private fun buildYearlyAverageTimeline(
+private fun buildSemesterAverageTimeline(
     records: List<HealthRecord>,
     firstEpochMillis: Long,
     dayEndEpochMillis: Long,
     range: HomeWeightRange
 ): HomeWeightTimeline {
-    val startYear = yearOfEpochMillis(firstEpochMillis)
-    val endYear = yearOfEpochMillis(dayEndEpochMillis)
-    val points = (startYear..endYear).map { year ->
-        val bucketStart = startOfYearEpochMillis(year)
-        val bucketEnd = startOfYearEpochMillis(year + 1)
-        val yearRecords = records.filter { it.endEpochMillis in bucketStart until bucketEnd }
-        val average = yearRecords.takeIf { it.isNotEmpty() }?.map { it.value }?.average()
+    val startSemester = semesterStartEpochMillis(firstEpochMillis)
+    val endSemester = semesterStartEpochMillis(dayEndEpochMillis)
+    val points = generateSequence(startSemester) { current ->
+        nextSemesterStartEpochMillis(current).takeIf { current < endSemester }
+    }.map { bucketStart ->
+        val bucketEnd = nextSemesterStartEpochMillis(bucketStart)
+        val semesterRecords = records.filter { it.endEpochMillis in bucketStart until bucketEnd }
+        val average = semesterRecords.takeIf { it.isNotEmpty() }?.map { it.value }?.average()
         WeightTimelinePoint(
-            label = year.toString(),
+            label = semesterAxisLabel(bucketStart),
             weightKg = average,
-            periodLabel = "${formatWeightDayLabel(bucketStart)} - ${formatWeightDayLabel(bucketEnd - 1L)}"
+            periodLabel = semesterPeriodLabel(bucketStart)
         )
-    }
-    return HomeWeightTimeline(range = range, title = "Alle data per jaar", points = points)
+    }.toList()
+    return HomeWeightTimeline(range = range, title = "Alle data per semester", points = points)
 }
 
 private fun relativeDayLabel(
@@ -179,4 +172,41 @@ private fun averageBucketLabel(range: HomeWeightRange, index: Int): String = whe
     HomeWeightRange.QUARTER -> "W${index + 1}"
     HomeWeightRange.YEAR -> "M${index + 1}"
     else -> "${index + 1}"
+}
+
+private fun semesterStartEpochMillis(epochMillis: Long): Long {
+    val year = yearOfEpochMillis(epochMillis)
+    val month = monthOfEpochMillis(epochMillis)
+    val startMonth = if (month <= 6) 1 else 7
+    return startOfMonthEpochMillis(year, startMonth)
+}
+
+private fun nextSemesterStartEpochMillis(semesterStartEpochMillis: Long): Long {
+    val year = yearOfEpochMillis(semesterStartEpochMillis)
+    val month = monthOfEpochMillis(semesterStartEpochMillis)
+    return if (month <= 1) {
+        startOfMonthEpochMillis(year, 7)
+    } else {
+        startOfMonthEpochMillis(year + 1, 1)
+    }
+}
+
+private fun semesterAxisLabel(semesterStartEpochMillis: Long): String {
+    val year = yearOfEpochMillis(semesterStartEpochMillis)
+    val month = monthOfEpochMillis(semesterStartEpochMillis)
+    return if (month <= 1) {
+        "jan-jun\n$year"
+    } else {
+        "jul-dec\n$year"
+    }
+}
+
+private fun semesterPeriodLabel(semesterStartEpochMillis: Long): String {
+    val year = yearOfEpochMillis(semesterStartEpochMillis)
+    val month = monthOfEpochMillis(semesterStartEpochMillis)
+    return if (month <= 1) {
+        "jan-jun $year"
+    } else {
+        "jul-dec $year"
+    }
 }

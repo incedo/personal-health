@@ -1,8 +1,11 @@
 package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +53,7 @@ internal fun WeightTimelineCard(
 ) {
     val palette = homePalette()
     val axis = weightChartAxis(timeline.points)
+    val horizontalScrollState = rememberScrollState()
     var selectedPointIndex by remember(timeline.points) { mutableIntStateOf(timeline.points.indexOfLast { it.weightKg != null }) }
     val selectedPoint = timeline.points.getOrNull(selectedPointIndex)?.takeIf { it.weightKg != null }
 
@@ -141,7 +145,13 @@ internal fun WeightTimelineCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+                    .horizontalScroll(horizontalScrollState)
+                    .draggable(
+                        orientation = Orientation.Horizontal,
+                        state = rememberDraggableState { delta ->
+                            horizontalScrollState.dispatchRawDelta(-delta)
+                        }
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 Row(verticalAlignment = Alignment.Top) {
