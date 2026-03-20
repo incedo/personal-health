@@ -5,12 +5,12 @@ import com.incedo.personalhealth.core.health.currentEpochMillis
 
 actual fun currentHealthImportStrategy(): HealthImportStrategy = HealthImportStrategy(
     platformName = "Android",
-    title = "Health Connect import",
-    summary = "Android kan permissies aanvragen, Health Connect openen en historie importeren.",
+    title = "Android health import",
+    summary = "Samsung Health Data SDK krijgt voorrang voor slaap, actieve energie en gewicht. Health Connect blijft fallback voor stappen, hartslag en overige data.",
     actions = listOf(
         HealthImportAction(
             id = HealthImportActionId.REQUEST_PERMISSIONS,
-            label = "Geef permissies"
+            label = "Geef bronpermissies"
         ),
         HealthImportAction(
             id = HealthImportActionId.OPEN_SOURCE_SETTINGS,
@@ -18,7 +18,7 @@ actual fun currentHealthImportStrategy(): HealthImportStrategy = HealthImportStr
         ),
         HealthImportAction(
             id = HealthImportActionId.IMPORT_HISTORY,
-            label = "Importeer historie"
+            label = "Importeer Android health"
         )
     )
 )
@@ -55,7 +55,7 @@ actual suspend fun executeHealthImportAction(
         }
 
         HealthImportActionId.START_LIVE_SYNC -> {
-            publishUiMessage("Live sync start op Android loopt via de bestaande Health Connect flow.")
+            publishUiMessage("Android gebruikt Samsung Health als voorkeursbron waar beschikbaar en Health Connect als fallback.")
         }
     }
 }

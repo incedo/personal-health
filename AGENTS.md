@@ -96,6 +96,8 @@ Project rules for contributors and coding agents working in this repository.
 ## Tooling Rules
 - Use `./gradlew` wrapper, not system Gradle, for project tasks.
 - Keep JDK target at 17 unless explicitly changed across the repository.
+- Keep touched Kotlin and Gradle source files at or under 300 lines by splitting per responsibility where needed.
+- Existing oversized legacy files may remain temporarily, but they must not grow; enforce this with `./gradlew lineCountCheck`.
 
 ## Git Workflow Rules
 - For every new user request, create and use a separate branch with prefix `codex/`.

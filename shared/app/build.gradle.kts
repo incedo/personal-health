@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
     id("org.jetbrains.kotlin.native.cocoapods")
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.multiplatform)
@@ -40,6 +41,7 @@ kotlin {
             implementation(project(":feature:home"))
             implementation(project(":feature:onboarding"))
             implementation(project(":core:designsystem"))
+            implementation(libs.kotlinx.serialization.json)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -50,6 +52,9 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(project(":integration:healthkit"))
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

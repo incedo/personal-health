@@ -52,13 +52,20 @@ internal fun DashboardContent(
     fitScore: Int,
     steps: Int,
     stepsTimeline: List<StepTimelinePoint>,
+    weightSummary: String,
+    activityMinutesToday: Int,
     heartRateBpm: Int,
     profileName: String,
     activityOptions: List<QuickActivityType>,
-    activityEntries: List<QuickActivityEntry>,
-    onLogActivity: (QuickActivityType) -> Unit,
-    onOpenFitnessDetail: () -> Unit,
+    activeActivity: ActiveQuickActivitySession?,
+    activityClockEpochMillis: Long,
+    onStartActivity: (QuickActivityType) -> Unit,
+    onStopActivity: () -> Unit,
+    onLogNutrition: () -> Unit,
     onOpenStepsDetail: () -> Unit,
+    onOpenHeartRateDetail: () -> Unit,
+    onOpenWeightDetail: () -> Unit,
+    onOpenHealthDataDetail: () -> Unit,
     compact: Boolean
 ) {
     BoxWithConstraints(
@@ -76,18 +83,19 @@ internal fun DashboardContent(
             VitalityLandingCard(
                 fitScore = fitScore,
                 steps = steps,
+                weightSummary = weightSummary,
+                activityMinutesToday = activityMinutesToday,
                 heartRateBpm = heartRateBpm,
                 profileName = profileName,
                 activityOptions = activityOptions,
+                activeActivity = activeActivity,
+                activityClockEpochMillis = activityClockEpochMillis,
                 compact = compact,
-                onStartWorkout = { activityType ->
-                    if (activityType == QuickActivityType.FITNESS) {
-                        onOpenFitnessDetail()
-                    } else {
-                        onLogActivity(activityType)
-                    }
-                },
-                onLogNutrition = { onLogActivity(QuickActivityType.NUTRITION) }
+                onStartWorkout = onStartActivity,
+                onStopActivity = onStopActivity,
+                onOpenWeightDetail = onOpenWeightDetail,
+                onOpenHealthDataDetail = onOpenHealthDataDetail,
+                onLogNutrition = onLogNutrition
             )
 
             if (expanded) {
@@ -102,8 +110,11 @@ internal fun DashboardContent(
                         SummaryStrip(
                             steps = steps,
                             heartRateBpm = heartRateBpm,
+                            weightSummary = weightSummary,
                             fitScore = fitScore,
-                            onStepsClick = onOpenStepsDetail
+                            onStepsClick = onOpenStepsDetail,
+                            onHeartRateClick = onOpenHeartRateDetail,
+                            onWeightClick = onOpenWeightDetail
                         )
                     }
                 }
@@ -111,8 +122,11 @@ internal fun DashboardContent(
                 SummaryStrip(
                     steps = steps,
                     heartRateBpm = heartRateBpm,
+                    weightSummary = weightSummary,
                     fitScore = fitScore,
-                    onStepsClick = onOpenStepsDetail
+                    onStepsClick = onOpenStepsDetail,
+                    onHeartRateClick = onOpenHeartRateDetail,
+                    onWeightClick = onOpenWeightDetail
                 )
             }
         }
@@ -123,18 +137,26 @@ internal fun DashboardContent(
 private fun VitalityLandingCard(
     fitScore: Int,
     steps: Int,
+    weightSummary: String,
+    activityMinutesToday: Int,
     heartRateBpm: Int,
     profileName: String,
     activityOptions: List<QuickActivityType>,
+    activeActivity: ActiveQuickActivitySession?,
+    activityClockEpochMillis: Long,
     compact: Boolean,
     onStartWorkout: (QuickActivityType) -> Unit,
+    onStopActivity: () -> Unit,
+    onOpenWeightDetail: () -> Unit,
+    onOpenHealthDataDetail: () -> Unit,
     onLogNutrition: () -> Unit
 ) {
     val palette = homePalette()
     val insights = buildVitalityInsights(
         fitScore = fitScore,
         heartRateBpm = heartRateBpm,
-        steps = steps
+        steps = steps,
+        activityMinutes = activityMinutesToday
     )
 
     Card(
@@ -180,8 +202,9 @@ private fun VitalityLandingCard(
                 ) {
                     VitalityScoreRings(
                         fitScore = fitScore,
-                        steps = steps,
+                        activityMinutesToday = activityMinutesToday,
                         heartRateBpm = heartRateBpm,
+                        onOpenHealthDataDetail = onOpenHealthDataDetail,
                         modifier = Modifier.size(240.dp)
                     )
                 }
@@ -189,7 +212,10 @@ private fun VitalityLandingCard(
                 VitalityActions(
                     compact = true,
                     activityOptions = activityOptions,
+                    activeActivity = activeActivity,
+                    activityClockEpochMillis = activityClockEpochMillis,
                     onStartWorkout = onStartWorkout,
+                    onStopActivity = onStopActivity,
                     onLogNutrition = onLogNutrition
                 )
             }
@@ -222,8 +248,11 @@ private fun VitalityLandingCard(
                         SummaryStrip(
                             steps = steps,
                             heartRateBpm = heartRateBpm,
+                            weightSummary = weightSummary,
                             fitScore = fitScore,
                             onStepsClick = { },
+                            onHeartRateClick = { },
+                            onWeightClick = onOpenWeightDetail,
                             compact = false,
                             modifier = Modifier.weight(0.95f)
                         )
@@ -234,8 +263,9 @@ private fun VitalityLandingCard(
                     ) {
                         VitalityScoreRings(
                             fitScore = fitScore,
-                            steps = steps,
+                            activityMinutesToday = activityMinutesToday,
                             heartRateBpm = heartRateBpm,
+                            onOpenHealthDataDetail = onOpenHealthDataDetail,
                             modifier = Modifier.size(280.dp)
                         )
                     }
@@ -246,7 +276,10 @@ private fun VitalityLandingCard(
                     VitalityActions(
                         compact = false,
                         activityOptions = activityOptions,
+                        activeActivity = activeActivity,
+                        activityClockEpochMillis = activityClockEpochMillis,
                         onStartWorkout = onStartWorkout,
+                        onStopActivity = onStopActivity,
                         onLogNutrition = onLogNutrition
                     )
                 }
@@ -307,17 +340,20 @@ private fun VitalityHeader(
 @Composable
 private fun VitalityScoreRings(
     fitScore: Int,
-    steps: Int,
+    activityMinutesToday: Int,
     heartRateBpm: Int,
+    onOpenHealthDataDetail: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
     val vitalityProgress = fitScore.coerceIn(0, 100) / 100f
-    val movementProgress = (steps / 10_000f).coerceIn(0f, 1f)
+    val movementProgress = (activityMinutesToday / 60f).coerceIn(0f, 1f)
     val recoveryProgress = ((84 - heartRateBpm).coerceIn(0, 28) / 28f).coerceIn(0f, 1f)
 
     Box(
-        modifier = modifier,
+        modifier = modifier
+            .clip(CircleShape)
+            .clickable(onClick = onOpenHealthDataDetail),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -578,7 +614,10 @@ private fun VitalityInsightCard(
 private fun VitalityActions(
     compact: Boolean,
     activityOptions: List<QuickActivityType>,
+    activeActivity: ActiveQuickActivitySession?,
+    activityClockEpochMillis: Long,
     onStartWorkout: (QuickActivityType) -> Unit,
+    onStopActivity: () -> Unit,
     onLogNutrition: () -> Unit
 ) {
     val workoutOptions = activityOptions.filter { it != QuickActivityType.NUTRITION }
@@ -589,6 +628,13 @@ private fun VitalityActions(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            if (activeActivity != null) {
+                ActiveActivityCard(
+                    session = activeActivity,
+                    nowEpochMillis = activityClockEpochMillis,
+                    onStopActivity = onStopActivity
+                )
+            }
             ActivityCarousel(
                 options = workoutOptions,
                 accentColor = palette.accent,
@@ -607,13 +653,23 @@ private fun VitalityActions(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            ActivityCarousel(
-                modifier = Modifier.weight(1f)
-                ,
-                options = workoutOptions,
-                accentColor = palette.accent,
-                onSelected = onStartWorkout
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (activeActivity != null) {
+                    ActiveActivityCard(
+                        session = activeActivity,
+                        nowEpochMillis = activityClockEpochMillis,
+                        onStopActivity = onStopActivity
+                    )
+                }
+                ActivityCarousel(
+                    options = workoutOptions,
+                    accentColor = palette.accent,
+                    onSelected = onStartWorkout
+                )
+            }
             HomeActionButton(
                 text = "Log nutrition",
                 containerColor = palette.warm,
@@ -689,103 +745,6 @@ private fun HomeActionButton(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
-    }
-}
-
-@Composable
-private fun SummaryStrip(
-    steps: Int,
-    heartRateBpm: Int,
-    fitScore: Int,
-    onStepsClick: () -> Unit,
-    compact: Boolean = true,
-    modifier: Modifier = Modifier
-) {
-    val palette = homePalette()
-    val arrangement = if (compact) Arrangement.spacedBy(12.dp) else Arrangement.spacedBy(10.dp)
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = arrangement
-    ) {
-        SummaryMetricTile(
-            title = "Stappen",
-            value = formatSteps(steps),
-            subtitle = "Vandaag • tik voor details",
-            accent = palette.accent,
-            onClick = onStepsClick,
-            compact = compact,
-            modifier = Modifier.weight(1f)
-        )
-        SummaryMetricTile(
-            title = "Hartslag",
-            value = "$heartRateBpm bpm",
-            subtitle = "Rustgemiddelde",
-            accent = palette.warning,
-            compact = compact,
-            modifier = Modifier.weight(1f)
-        )
-        SummaryMetricTile(
-            title = "Score",
-            value = "$fitScore/100",
-            subtitle = "Dagstatus",
-            accent = palette.warm,
-            compact = compact,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun SummaryMetricTile(
-    title: String,
-    value: String,
-    subtitle: String,
-    accent: Color,
-    onClick: (() -> Unit)? = null,
-    compact: Boolean = true,
-    modifier: Modifier = Modifier
-) {
-    val palette = homePalette()
-    Card(
-        modifier = if (onClick == null) {
-            modifier
-        } else {
-            modifier
-                .clip(RoundedCornerShape(24.dp))
-                .clickable(onClick = onClick)
-        },
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = palette.surface)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = if (compact) 18.dp else 14.dp, vertical = if (compact) 18.dp else 16.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(if (compact) 12.dp else 10.dp)
-                    .clip(CircleShape)
-                    .background(accent)
-            )
-            Text(
-                text = title,
-                style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.labelLarge,
-                color = palette.textPrimary
-            )
-            Text(
-                text = value,
-                style = if (compact) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
-                color = palette.textPrimary,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = palette.textSecondary
-            )
-        }
     }
 }
 

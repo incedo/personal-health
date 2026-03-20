@@ -70,23 +70,33 @@ class HomeMetricsTest {
     }
 
     @Test
-    fun logQuickActivity_prependsNewEntryWithIncrementedId() {
-        val first = logQuickActivity(emptyList(), QuickActivityType.RUNNING, nowEpochMillis = 100L)
-        val second = logQuickActivity(first, QuickActivityType.SWIMMING, nowEpochMillis = 200L)
+    fun fallbackHeartRateTimeline_createsStableTimeline() {
+        val timeline = fallbackHeartRateTimeline(
+            averageBpm = 64,
+            sampleCount = 2
+        )
 
-        assertEquals("running-01", first.first().id)
-        assertEquals(QuickActivityType.SWIMMING, second.first().type)
-        assertEquals("swimming-02", second.first().id)
-        assertEquals(200L, second.first().createdAtEpochMillis)
-        assertEquals("running-01", second.last().id)
+        assertEquals(6, timeline.size)
+        assertEquals("06:00", timeline.first().label)
+        assertEquals("Nu", timeline.last().label)
+        assertEquals(67, timeline.first().bpm)
+        assertEquals(62, timeline.last().bpm)
     }
 
     @Test
-    fun logQuickActivity_usesNutritionSpecificEntryTitle() {
-        val entries = logQuickActivity(emptyList(), QuickActivityType.NUTRITION, nowEpochMillis = 100L)
+    fun heartRateDetailStats_summarizesTimeline() {
+        val stats = heartRateDetailStats(
+            listOf(
+                HeartRateTimelinePoint("09:00", 58),
+                HeartRateTimelinePoint("12:00", 64),
+                HeartRateTimelinePoint("15:00", 71)
+            )
+        )
 
-        assertEquals("nutrition-01", entries.first().id)
-        assertEquals("Nutrition log", entries.first().title)
+        assertEquals(64, stats.averageBpm)
+        assertEquals(58, stats.minBpm)
+        assertEquals(71, stats.maxBpm)
+        assertEquals("Stabiel herstel", stats.recoveryLabel)
     }
 
     @Test
@@ -111,15 +121,36 @@ class HomeMetricsTest {
         assertEquals("Nog geen activiteiten gelogd", quickActivitySummary(emptyList()))
         assertEquals(
             "1 activiteit gelogd",
-            quickActivitySummary(logQuickActivity(emptyList(), QuickActivityType.FITNESS, nowEpochMillis = 100L))
+            quickActivitySummary(
+                listOf(
+                    QuickActivityEntry(
+                        id = "fitness-1",
+                        type = QuickActivityType.FITNESS,
+                        title = "Fitness sessie",
+                        createdAtEpochMillis = 100L,
+                        durationMillis = 1_200_000L
+                    )
+                )
+            )
         )
         assertEquals(
             "2 activiteiten gelogd",
             quickActivitySummary(
-                logQuickActivity(
-                    logQuickActivity(emptyList(), QuickActivityType.FITNESS, nowEpochMillis = 100L),
-                    QuickActivityType.CYCLING,
-                    nowEpochMillis = 200L
+                listOf(
+                    QuickActivityEntry(
+                        id = "fitness-1",
+                        type = QuickActivityType.FITNESS,
+                        title = "Fitness sessie",
+                        createdAtEpochMillis = 100L,
+                        durationMillis = 1_200_000L
+                    ),
+                    QuickActivityEntry(
+                        id = "cycling-2",
+                        type = QuickActivityType.CYCLING,
+                        title = "Fietsen sessie",
+                        createdAtEpochMillis = 200L,
+                        durationMillis = 1_800_000L
+                    )
                 )
             )
         )
@@ -130,13 +161,14 @@ class HomeMetricsTest {
         val insights = buildVitalityInsights(
             fitScore = 72,
             heartRateBpm = 67,
-            steps = 4_800
+            steps = 4_800,
+            activityMinutes = 24
         )
 
         assertEquals(3, insights.size)
         assertEquals("Herstel in balans", insights[0].title)
         assertEquals(HomeInsightTone.ACCENT, insights[0].tone)
-        assertEquals("Beweging loopt", insights[1].title)
+        assertEquals("Activiteit bouwt op", insights[1].title)
         assertEquals("Brandstof aanvullen", insights[2].title)
     }
 
@@ -145,12 +177,55 @@ class HomeMetricsTest {
         val insights = buildVitalityInsights(
             fitScore = 54,
             heartRateBpm = 79,
-            steps = 1_800
+            steps = 1_800,
+            activityMinutes = 8
         )
 
         assertEquals("Herstel bewaken", insights[0].title)
         assertEquals(HomeInsightTone.WARNING, insights[0].tone)
-        assertEquals("Meer beweging nodig", insights[1].title)
+        assertEquals("Meer actieve tijd nodig", insights[1].title)
         assertEquals("Brandstof aanvullen", insights[2].title)
+    }
+
+    @Test
+    fun supportsDedicatedHealthMetricDetail_onlyEnablesSleepForNow() {
+        assertTrue(supportsDedicatedHealthMetricDetail("sleep"))
+        assertTrue(!supportsDedicatedHealthMetricDetail("active_energy"))
+        assertTrue(supportsDedicatedHealthMetricDetail("body_weight"))
+    }
+
+    @Test
+    fun resolveHealthMetricValue_returnsWeightValueAndFallsBackWhenMissing() {
+        val metrics = listOf(
+            HomeHealthMetricCard(
+                id = "body_weight",
+                title = "Gewicht",
+                value = "78.4 kg",
+                detail = "Laatste meting",
+                progress = 0.38f,
+                sourceSummary = "Samsung Health",
+                accent = HomeInsightTone.ACCENT
+            )
+        )
+
+        assertEquals("78.4 kg", resolveHealthMetricValue(metrics, BODY_WEIGHT_HEALTH_METRIC_ID))
+        assertEquals("Geen data", resolveHealthMetricValue(metrics, "unknown_metric"))
+    }
+
+    @Test
+    fun weightDetailStats_summarizesTimeline() {
+        val stats = weightDetailStats(
+            listOf(
+                WeightTimelinePoint("D-2", 79.4),
+                WeightTimelinePoint("D-1", null),
+                WeightTimelinePoint("Vandaag", 78.8)
+            )
+        )
+
+        assertEquals(78.8, stats.latestWeightKg)
+        assertEquals(78.8, stats.minWeightKg)
+        assertEquals(79.4, stats.maxWeightKg)
+        assertEquals(2, stats.measuredDays)
+        assertEquals(-0.6, stats.changeKg)
     }
 }

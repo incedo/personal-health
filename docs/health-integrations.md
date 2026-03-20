@@ -10,6 +10,7 @@
   - `HealthDataGateway`
 - Canonical domain/type mapping (Health Connect + HealthKit):
   - `docs/unified-health-model-mapping.md`
+- Additional Android vendor sources, such as Samsung Health Data SDK, must also map into the same canonical contracts instead of leaking vendor record types upward.
 - Local persistence contract and platform storage plan:
   - `docs/local-activity-storage.md`
 - Canonical browser import document shape:
@@ -270,6 +271,15 @@
   - Exposes `requiredPermissions()` for supported read types
   - Exposes `isAvailable(context)`
   - Publishes `HealthEvent.RecordsRead` after read operations
+
+## Android: Samsung Health Data SDK
+- Module: `integration/samsung-health` (Android-only)
+- Gateway: `SamsungHealthGateway`
+- Current scope:
+  - Detects whether Samsung Health is installed and recent enough for the Data SDK
+  - Detects whether the official Samsung Health Data SDK binary has been linked locally
+  - Reserves a supplemental `HealthDataGateway` path beside Health Connect for richer Samsung-only metrics
+  - Intended local development path is Samsung Health developer mode for read access before partner registration
 
 ## iOS: HealthKit
 - Module: `integration/healthkit` (iOS-only)

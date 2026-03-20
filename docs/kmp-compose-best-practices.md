@@ -65,6 +65,7 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 ## 9. Canonical cross-platform data model
 - Use one shared canonical model for domain data in `core/*` modules.
 - Platform integrations (for example Android Health Connect and iOS HealthKit) must map into that canonical model.
+- Additional vendor integrations, such as Samsung Health Data SDK on Android, must also map into the same canonical model and stay isolated inside dedicated integration modules.
 - UI/features must consume only canonical models, never raw platform framework types.
 
 ## 10. Event-based communication

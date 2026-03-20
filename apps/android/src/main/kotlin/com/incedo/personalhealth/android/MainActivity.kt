@@ -1,9 +1,6 @@
 package com.incedo.personalhealth.android
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,28 +10,24 @@ import androidx.lifecycle.lifecycleScope
 import com.incedo.personalhealth.core.events.FrontendEvent
 import com.incedo.personalhealth.core.health.HealthChangeSignal
 import com.incedo.personalhealth.core.health.HealthDataSource
-import com.incedo.personalhealth.core.health.HealthHistoryImportRequest
-import com.incedo.personalhealth.core.health.HealthHistoryImporter
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthLiveSyncProcessor
 import com.incedo.personalhealth.core.health.HealthMetricType
-import com.incedo.personalhealth.core.health.HealthReadRequest
 import com.incedo.personalhealth.core.health.HealthSignalSubscription
-import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
+import com.incedo.personalhealth.core.health.HealthDataGateway
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectGateway
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectPollingSignalSource
 import com.incedo.personalhealth.feature.home.NutritionImagePicker
 import com.incedo.personalhealth.shared.AppBus
 import com.incedo.personalhealth.shared.PersonalHealthApp
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
 
 class MainActivity : ComponentActivity() {
     private val requiredPermissions: Set<String> by lazy { HealthConnectGateway.requiredPermissions() }
     private var healthConnectLiveSyncSubscription: HealthSignalSubscription? = null
     private var pendingHistoryMetrics: Set<HealthMetricType> = SYNC_METRICS
     private var startImportAfterPermissionGrant: Boolean = true
+    private var samsungHealthPermissionAttempted: Boolean = false
 
     private val requestHealthConnectPermissions = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
@@ -45,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 startAndroidHealthSync(metrics = pendingHistoryMetrics)
             } else {
                 publishUiFeedback("Health Connect permissies verleend.")
-                refreshTodayStepsForDashboard()
+                refreshTodayDashboardMetrics()
             }
         } else {
             publishUiFeedback("Health Connect permissies niet verleend.")
@@ -59,81 +52,31 @@ class MainActivity : ComponentActivity() {
             PersonalHealthApp()
         }
         observeUiHealthSyncRequests()
-        refreshTodayStepsForDashboard()
+        refreshTodayDashboardMetrics()
+        samsungHealthAvailabilityMessage(this)?.let(::publishUiFeedback)
         publishUiFeedback("Klaar. Gebruik 'Geef permissies' of 'Importeer historie' om te starten.")
     }
 
-    private fun ensureHealthConnectPermissionsAndSync(
-        requestedMetrics: Set<HealthMetricType>
-    ) {
-        when (HealthConnectClient.getSdkStatus(this, HEALTH_CONNECT_PROVIDER_PACKAGE)) {
-            HealthConnectClient.SDK_UNAVAILABLE -> {
-                publishUiFeedback("Health Connect niet beschikbaar op dit toestel.")
-                return
-            }
-            HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
-                publishUiFeedback("Health Connect update/installatie vereist.")
-                openHealthConnectOnPlayStore()
-                return
-            }
-            HealthConnectClient.SDK_AVAILABLE -> Unit
-            else -> {
-                publishUiFeedback("Onbekende Health Connect status.")
-                return
-            }
-        }
-        if (!HealthConnectGateway.isAvailable(this)) {
-            publishUiFeedback("Health Connect niet beschikbaar.")
-            return
-        }
-        pendingHistoryMetrics = requestedMetrics
-        startImportAfterPermissionGrant = true
-
-        val client = HealthConnectClient.getOrCreate(this)
-        lifecycleScope.launch {
-            val granted = client.permissionController.getGrantedPermissions()
-            publishUiFeedback("Reeds verleende HC permissies: ${granted.size}/${requiredPermissions.size}")
-            if (granted.containsAll(requiredPermissions)) {
-                publishUiFeedback("Health Connect permissies OK, import start.")
-                startAndroidHealthSync(metrics = requestedMetrics)
-            } else {
-                publishUiFeedback("Vraag Health Connect permissies aan...")
-                requestHealthConnectPermissions.launch(requiredPermissions)
-            }
-        }
+    override fun onResume() {
+        super.onResume()
+        refreshTodayDashboardMetrics()
     }
 
-    private fun requestHealthConnectPermissionsOnly() {
-        when (HealthConnectClient.getSdkStatus(this, HEALTH_CONNECT_PROVIDER_PACKAGE)) {
-            HealthConnectClient.SDK_UNAVAILABLE -> {
-                publishUiFeedback("Health Connect niet beschikbaar op dit toestel.")
-                return
-            }
-            HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
-                publishUiFeedback("Health Connect update/installatie vereist.")
-                openHealthConnectOnPlayStore()
-                return
-            }
-            HealthConnectClient.SDK_AVAILABLE -> Unit
-            else -> {
-                publishUiFeedback("Onbekende Health Connect status.")
-                return
-            }
-        }
-        if (!HealthConnectGateway.isAvailable(this)) {
-            publishUiFeedback("Health Connect is niet beschikbaar op dit toestel.")
-            return
-        }
+    private fun requestAndroidHealthPermissionsOnly() {
         startImportAfterPermissionGrant = false
-        val client = HealthConnectClient.getOrCreate(this)
         lifecycleScope.launch {
-            val granted = client.permissionController.getGrantedPermissions()
-            if (granted.containsAll(requiredPermissions)) {
-                publishUiFeedback("Health Connect permissies zijn al verleend.")
-            } else {
-                publishUiFeedback("Vraag Health Connect permissies aan...")
-                requestHealthConnectPermissions.launch(requiredPermissions)
+            val samsungGateway = prepareSamsungHealthGateway(
+                activity = this@MainActivity,
+                shouldRequestPermissions = !samsungHealthPermissionAttempted
+            )
+            samsungHealthPermissionAttempted = true
+            if (samsungGateway != null) {
+                publishUiFeedback("Samsung Health permissies zijn actief.")
             }
+            requestHealthConnectPermissionsIfNeeded(
+                requestedMetrics = SYNC_METRICS,
+                reason = "stappen en hartslag"
+            )
         }
     }
 
@@ -166,24 +109,67 @@ class MainActivity : ComponentActivity() {
         metrics: Set<HealthMetricType> = SYNC_METRICS
     ) {
         lifecycleScope.launch {
-            val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
             val nowEpochMillis = System.currentTimeMillis()
-            val importer = HealthHistoryImporter(
-                gateway = gateway,
-                source = HealthDataSource.HEALTH_CONNECT,
-                eventBus = AppBus.events
+            pendingHistoryMetrics = metrics
+            startImportAfterPermissionGrant = true
+
+            val samsungGateway = prepareSamsungHealthGateway(
+                activity = this@MainActivity,
+                shouldRequestPermissions = !samsungHealthPermissionAttempted
             )
+            samsungHealthPermissionAttempted = true
 
             runCatching {
-                val records = importer.import(
-                    HealthHistoryImportRequest(
-                        metrics = metrics,
-                        startEpochMillis = nowEpochMillis - ONE_YEAR_MILLIS,
-                        endEpochMillis = nowEpochMillis
+                val samsungMetrics = samsungMetricsFor(metrics)
+                val samsungCount = if (samsungGateway != null && samsungMetrics.isNotEmpty()) {
+                    importHealthHistory(
+                        gateway = samsungGateway,
+                        source = HealthDataSource.SAMSUNG_HEALTH,
+                        metrics = samsungMetrics,
+                        nowEpochMillis = nowEpochMillis,
+                        eventBus = AppBus.events,
+                        oneYearMillis = ONE_YEAR_MILLIS
+                    )
+                } else {
+                    0
+                }
+
+                val healthConnectMetrics = healthConnectFallbackMetricsFor(
+                    metrics = metrics,
+                    samsungReady = samsungGateway != null
+                )
+                val healthConnectGateway = healthConnectGatewayOrRequest(
+                    requestedMetrics = metrics,
+                    requestPermissions = healthConnectMetrics.isNotEmpty(),
+                    reason = "fallback import"
+                )
+                val healthConnectCount = if (healthConnectGateway != null && healthConnectMetrics.isNotEmpty()) {
+                    ensureAndroidLiveSyncStarted()
+                    importHealthHistory(
+                        gateway = healthConnectGateway,
+                        source = HealthDataSource.HEALTH_CONNECT,
+                        metrics = healthConnectMetrics,
+                        nowEpochMillis = nowEpochMillis,
+                        eventBus = AppBus.events,
+                        oneYearMillis = ONE_YEAR_MILLIS
+                    )
+                } else {
+                    0
+                }
+
+                publishTodayDashboardMetrics(
+                    primaryGateway = samsungGateway,
+                    fallbackGateway = healthConnectGateway,
+                    eventBus = AppBus.events
+                )
+                publishUiFeedback(
+                    buildImportCompletionMessage(
+                        samsungCount = samsungCount,
+                        healthConnectCount = healthConnectCount,
+                        pendingHealthConnectMetrics = healthConnectMetrics,
+                        healthConnectGateway = healthConnectGateway
                     )
                 )
-                publishTodayStepsFromHealthConnect(gateway)
-                publishUiFeedback("Historie import klaar: ${records.size} records.")
             }
                 .onFailure { error ->
                     Log.e(TAG, "History import failed", error)
@@ -197,16 +183,19 @@ class MainActivity : ComponentActivity() {
             AppBus.events.events.collect { event ->
                 when (event) {
                     is HealthEvent.SyncRequested -> {
-                        publishUiFeedback("Importverzoek ontvangen, controleer permissies...")
-                        ensureHealthConnectPermissionsAndSync(requestedMetrics = event.metrics)
+                        publishUiFeedback("Importverzoek ontvangen. Samsung Health eerst, Health Connect als fallback.")
+                        startAndroidHealthSync(metrics = event.metrics)
                     }
                     is HealthEvent.PermissionsRequested -> {
                         publishUiFeedback("Permissieverzoek ontvangen...")
-                        requestHealthConnectPermissionsOnly()
+                        requestAndroidHealthPermissionsOnly()
                     }
                     is HealthEvent.HealthConnectSettingsRequested -> {
                         publishUiFeedback("Open Health Connect instellingen...")
-                        openHealthConnectSettings()
+                        openHealthConnectSettings(
+                            providerPackage = HEALTH_CONNECT_PROVIDER_PACKAGE,
+                            publishUiFeedback = ::publishUiFeedback
+                        )
                     }
                 }
             }
@@ -224,8 +213,14 @@ class MainActivity : ComponentActivity() {
                     metrics = SYNC_METRICS,
                     lookbackMillis = LIVE_SYNC_LOOKBACK_MILLIS
                 )
-                val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
-                publishTodayStepsFromHealthConnect(gateway)
+                publishTodayDashboardMetrics(
+                    primaryGateway = prepareSamsungHealthGateway(
+                        activity = this@MainActivity,
+                        shouldRequestPermissions = false
+                    ),
+                    fallbackGateway = processorGateway(),
+                    eventBus = AppBus.events
+                )
             }
                 .onFailure { error ->
                     Log.e(TAG, "Live sync processing failed", error)
@@ -234,54 +229,86 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun refreshTodayStepsForDashboard() {
+    private fun refreshTodayDashboardMetrics() {
         lifecycleScope.launch {
-            if (!HealthConnectGateway.isAvailable(this@MainActivity)) return@launch
-
-            val client = HealthConnectClient.getOrCreate(this@MainActivity)
-            val granted = runCatching {
-                client.permissionController.getGrantedPermissions()
-            }.getOrNull() ?: return@launch
-
-            if (!granted.containsAll(requiredPermissions)) return@launch
-
-            val gateway = HealthConnectGateway(context = this@MainActivity, eventBus = AppBus.events)
-            publishTodayStepsFromHealthConnect(gateway)
+            val samsungGateway = prepareSamsungHealthGateway(
+                activity = this@MainActivity,
+                shouldRequestPermissions = !samsungHealthPermissionAttempted
+            )
+            samsungHealthPermissionAttempted = true
+            val healthConnectGateway = healthConnectGatewayOrRequest(
+                requestedMetrics = SYNC_METRICS,
+                requestPermissions = false,
+                reason = "dashboard refresh"
+            )
+            if (healthConnectGateway != null) {
+                ensureAndroidLiveSyncStarted()
+            }
+            if (samsungGateway == null && healthConnectGateway == null) return@launch
+            publishTodayDashboardMetrics(
+                primaryGateway = samsungGateway,
+                fallbackGateway = healthConnectGateway,
+                eventBus = AppBus.events
+            )
         }
     }
 
-    private suspend fun publishTodayStepsFromHealthConnect(
-        gateway: HealthConnectGateway
-    ) {
-        val zoneId = ZoneId.systemDefault()
-        val now = Instant.now()
-        val startOfDay = now.atZone(zoneId).toLocalDate().atStartOfDay(zoneId).toInstant()
-        val snapshot = buildTodayStepsSnapshot(
-            records = gateway.readRecords(
-                HealthReadRequest(
-                    metrics = setOf(HealthMetricType.STEPS),
-                    startEpochMillis = startOfDay.toEpochMilli(),
-                    endEpochMillis = now.toEpochMilli(),
-                    limit = 10_000
-                )
-            ),
-            dayStartEpochMillis = startOfDay.toEpochMilli(),
-            dayEndEpochMillis = now.toEpochMilli(),
-            bucketSizeHours = 1
-        )
-        AppBus.events.publish(
-            FrontendEvent.TodayStepsUpdated(
-                totalSteps = snapshot.totalSteps,
-                buckets = snapshot.buckets.map { bucket ->
-                    FrontendEvent.StepBucket(
-                        label = bucket.label,
-                        steps = bucket.steps
+    private suspend fun healthConnectGatewayOrRequest(
+        requestedMetrics: Set<HealthMetricType>,
+        requestPermissions: Boolean,
+        reason: String
+    ): HealthConnectGateway? {
+        when (HealthConnectClient.getSdkStatus(this, HEALTH_CONNECT_PROVIDER_PACKAGE)) {
+            HealthConnectClient.SDK_UNAVAILABLE -> return null
+            HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
+                if (requestPermissions) {
+                    publishUiFeedback("Health Connect update/installatie vereist.")
+                    openHealthConnectOnPlayStore(
+                        providerPackage = HEALTH_CONNECT_PROVIDER_PACKAGE,
+                        publishUiFeedback = ::publishUiFeedback
                     )
-                },
-                emittedAtEpochMillis = System.currentTimeMillis()
-            )
-        )
+                }
+                return null
+            }
+            HealthConnectClient.SDK_AVAILABLE -> Unit
+            else -> return null
+        }
+        if (!HealthConnectGateway.isAvailable(this)) return null
+
+        val client = HealthConnectClient.getOrCreate(this)
+        val granted = runCatching {
+            client.permissionController.getGrantedPermissions()
+        }.getOrNull() ?: return null
+
+        if (granted.containsAll(requiredPermissions)) {
+            return processorGateway()
+        }
+
+        if (requestPermissions) {
+            pendingHistoryMetrics = requestedMetrics
+            publishUiFeedback("Vraag Health Connect permissies aan voor $reason...")
+            requestHealthConnectPermissions.launch(requiredPermissions)
+        }
+        return null
     }
+
+    private suspend fun requestHealthConnectPermissionsIfNeeded(
+        requestedMetrics: Set<HealthMetricType>,
+        reason: String
+    ) {
+        healthConnectGatewayOrRequest(
+            requestedMetrics = requestedMetrics,
+            requestPermissions = true,
+            reason = reason
+        )?.let {
+            publishUiFeedback("Health Connect permissies zijn al actief.")
+        }
+    }
+
+    private fun processorGateway(): HealthConnectGateway = HealthConnectGateway(
+        context = this,
+        eventBus = AppBus.events
+    )
 
     private fun publishUiFeedback(message: String) {
         lifecycleScope.launch {
@@ -291,49 +318,6 @@ class MainActivity : ComponentActivity() {
                     emittedAtEpochMillis = System.currentTimeMillis()
                 )
             )
-        }
-    }
-
-    private fun openHealthConnectSettings() {
-        val healthConnectSettingsIntent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS").apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        val healthConnectAppInfoIntent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.parse("package:$HEALTH_CONNECT_PROVIDER_PACKAGE")
-        ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-
-        runCatching {
-            startActivity(healthConnectSettingsIntent)
-            publishUiFeedback("Health Connect instellingen geopend.")
-        }.recoverCatching {
-            startActivity(healthConnectAppInfoIntent)
-            publishUiFeedback("Health Connect app-instellingen geopend.")
-        }.recoverCatching {
-            openHealthConnectOnPlayStore()
-        }.onFailure {
-            publishUiFeedback("Health Connect instellingen konden niet worden geopend.")
-            Log.e(TAG, "Opening Health Connect settings failed", it)
-        }
-    }
-
-    private fun openHealthConnectOnPlayStore() {
-        val marketIntent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse("market://details?id=$HEALTH_CONNECT_PROVIDER_PACKAGE")
-        ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-        val webIntent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse("https://play.google.com/store/apps/details?id=$HEALTH_CONNECT_PROVIDER_PACKAGE")
-        ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-
-        runCatching {
-            startActivity(marketIntent)
-        }.recoverCatching {
-            startActivity(webIntent)
-        }.onFailure {
-            publishUiFeedback("Kon Health Connect Play Store pagina niet openen.")
-            Log.e(TAG, "Opening Play Store failed", it)
         }
     }
 
@@ -353,7 +337,12 @@ class MainActivity : ComponentActivity() {
             HealthMetricType.HEART_RATE_BPM,
             HealthMetricType.SLEEP_DURATION_MINUTES,
             HealthMetricType.ACTIVE_ENERGY_KCAL,
-            HealthMetricType.BODY_WEIGHT_KG
+            HealthMetricType.BODY_WEIGHT_KG,
+            HealthMetricType.BODY_FAT_PERCENTAGE,
+            HealthMetricType.MUSCLE_MASS_KG,
+            HealthMetricType.WATER_PERCENTAGE,
+            HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
+            HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG
         )
     }
 }

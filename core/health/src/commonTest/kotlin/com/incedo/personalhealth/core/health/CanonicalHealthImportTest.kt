@@ -2,6 +2,7 @@ package com.incedo.personalhealth.core.health
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CanonicalHealthImportTest {
 
@@ -41,5 +42,27 @@ class CanonicalHealthImportTest {
         assertEquals("steps-09", document.records.single().id)
         assertEquals(HealthMetricType.STEPS, document.records.single().metric)
         assertEquals("csv-import", document.records.single().metadata["origin"])
+    }
+
+    @Test
+    fun parseWithingsWeightCsvImport_mapsWeightRecords() {
+        val document = parseWithingsWeightCsvImport(
+            """
+            Date,Time,Weight (kg),Fat mass (%),Systolic blood pressure (mmHg),Diastolic blood pressure (mmHg)
+            2024-03-10,07:15:00,79.6,18.2,121,79
+            2024-03-12,07:10:00,79.2,18.0,118,76
+            """.trimIndent()
+        )
+
+        assertEquals("withings-health-csv-v1", document.version)
+        assertEquals(8, document.records.size)
+        assertTrue(document.records.any { it.metric == HealthMetricType.BODY_WEIGHT_KG })
+        assertTrue(document.records.all { it.source == HealthDataSource.WITHINGS })
+        assertEquals("withings-csv-import", document.records.first().metadata["origin"])
+        assertTrue(document.records.any { it.metric == HealthMetricType.BODY_FAT_PERCENTAGE })
+        assertTrue(document.records.any { it.metric == HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG })
+        assertTrue(document.records.any { it.metric == HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG })
+        assertTrue(document.window.startEpochMillis <= document.records.last().endEpochMillis)
+        assertTrue(document.window.endEpochMillis >= document.records.last().endEpochMillis)
     }
 }

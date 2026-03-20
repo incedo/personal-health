@@ -3,6 +3,13 @@ package com.incedo.personalhealth.core.health
 import com.incedo.personalhealth.core.events.AppEvent
 
 sealed interface HealthEvent : AppEvent {
+    data class DashboardRecordsUpdated(
+        val records: List<HealthRecord>,
+        val dayStartEpochMillis: Long,
+        val dayEndEpochMillis: Long,
+        override val emittedAtEpochMillis: Long
+    ) : HealthEvent
+
     data class RecordsRead(
         val source: HealthDataSource,
         val request: HealthReadRequest,

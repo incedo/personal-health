@@ -1,5 +1,7 @@
 package com.incedo.personalhealth.feature.home
 
+import kotlinx.serialization.Serializable
+
 data class StepTimelinePoint(
     val label: String,
     val steps: Int
@@ -12,6 +14,7 @@ data class StepDetailStats(
     val activeHours: Int
 )
 
+@Serializable
 enum class QuickActivityType(val label: String) {
     RUNNING("Hardlopen"),
     WALKING("Wandelen"),
@@ -26,7 +29,8 @@ data class QuickActivityEntry(
     val id: String,
     val type: QuickActivityType,
     val title: String,
-    val createdAtEpochMillis: Long
+    val createdAtEpochMillis: Long,
+    val durationMillis: Long? = null
 )
 
 enum class HomeThemeMode(val label: String) {
@@ -94,21 +98,6 @@ fun stepDetailStats(points: List<StepTimelinePoint>): StepDetailStats {
     )
 }
 
-fun logQuickActivity(
-    entries: List<QuickActivityEntry>,
-    type: QuickActivityType,
-    nowEpochMillis: Long
-): List<QuickActivityEntry> {
-    val nextOrdinal = (entries.size + 1).toString().padStart(2, '0')
-    val nextEntry = QuickActivityEntry(
-        id = "${type.name.lowercase()}-$nextOrdinal",
-        type = type,
-        title = quickActivityEntryTitle(type),
-        createdAtEpochMillis = nowEpochMillis
-    )
-    return listOf(nextEntry) + entries
-}
-
 fun quickActivitySummary(entries: List<QuickActivityEntry>): String = when {
     entries.isEmpty() -> "Nog geen activiteiten gelogd"
     entries.size == 1 -> "1 activiteit gelogd"
@@ -118,7 +107,8 @@ fun quickActivitySummary(entries: List<QuickActivityEntry>): String = when {
 fun buildVitalityInsights(
     fitScore: Int,
     heartRateBpm: Int,
-    steps: Int
+    steps: Int,
+    activityMinutes: Int
 ): List<VitalityInsight> {
     val recoveryInsight = when {
         fitScore >= 80 && heartRateBpm <= 64 -> VitalityInsight(
@@ -141,21 +131,21 @@ fun buildVitalityInsights(
     }
 
     val movementInsight = when {
-        steps >= 8_000 -> VitalityInsight(
-            title = "Beweging op koers",
-            description = "Je zit al dicht bij je doel. Houd je ritme vast en verspreid je stappen over de rest van de dag.",
+        activityMinutes >= 45 -> VitalityInsight(
+            title = "Activiteit op koers",
+            description = "Je actieve minuten lopen goed. Gebruik je stappen nu vooral om je ritme vast te houden.",
             tone = HomeInsightTone.ACCENT
         )
 
-        steps >= 4_000 -> VitalityInsight(
-            title = "Beweging loopt",
-            description = "Je basis is gelegd. Een korte wandeling of korte sessie later vandaag maakt het verschil.",
+        activityMinutes >= 20 || steps >= 4_000 -> VitalityInsight(
+            title = "Activiteit bouwt op",
+            description = "Je bent al begonnen. Nog een kort actief blok later vandaag tilt je ring zichtbaar verder op.",
             tone = HomeInsightTone.WARM
         )
 
         else -> VitalityInsight(
-            title = "Meer beweging nodig",
-            description = "Plan een actief blok in zodat je energie en score later op de dag niet wegzakken.",
+            title = "Meer actieve tijd nodig",
+            description = "Start een wandeling, run of gymsessie zodat je actieve minutenring vandaag niet achterblijft.",
             tone = HomeInsightTone.WARM
         )
     }
@@ -175,9 +165,4 @@ fun buildVitalityInsights(
     }
 
     return listOf(recoveryInsight, movementInsight, nutritionInsight)
-}
-
-private fun quickActivityEntryTitle(type: QuickActivityType): String = when (type) {
-    QuickActivityType.NUTRITION -> "Nutrition log"
-    else -> "${type.label} sessie"
 }
