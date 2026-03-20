@@ -29,17 +29,24 @@ import com.incedo.personalhealth.core.health.currentEpochMillis
 import com.incedo.personalhealth.feature.home.HomeDetailDestination
 import com.incedo.personalhealth.feature.home.HomeScreen
 import com.incedo.personalhealth.feature.home.FitnessBodyProfile
+import com.incedo.personalhealth.feature.home.PersistedNutritionLogStore
 import com.incedo.personalhealth.feature.home.PersistedFitnessActivityStore
+import com.incedo.personalhealth.feature.home.PlatformNutritionLogPersistenceDriver
 import com.incedo.personalhealth.feature.home.PlatformFitnessActivityPersistenceDriver
+import com.incedo.personalhealth.feature.home.NutritionLogEntry
 import com.incedo.personalhealth.feature.home.QuickActivityEntry
 import com.incedo.personalhealth.feature.home.QuickActivityType
 import com.incedo.personalhealth.feature.home.StepTimelinePoint
 import com.incedo.personalhealth.feature.home.HomeThemeMode
+import com.incedo.personalhealth.feature.home.createNutritionLogEntry
+import com.incedo.personalhealth.feature.home.currentNutritionEpochMillis
 import com.incedo.personalhealth.feature.home.fallbackStepTimeline
 import com.incedo.personalhealth.feature.home.fitnessSessionToQuickActivityEntry
 import com.incedo.personalhealth.feature.home.logQuickActivity
 import com.incedo.personalhealth.feature.home.summarizeStepTimeline
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
+import com.incedo.personalhealth.feature.onboarding.OnboardingGoal
+import com.incedo.personalhealth.feature.onboarding.OnboardingUiState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,7 +54,15 @@ fun PersonalHealthApp() {
     val appScope = rememberCoroutineScope()
     val importStrategy = remember { currentHealthImportStrategy() }
     val fitnessActivityStore = remember { PersistedFitnessActivityStore(PlatformFitnessActivityPersistenceDriver) }
+    val nutritionLogStore = remember { PersistedNutritionLogStore(PlatformNutritionLogPersistenceDriver) }
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
+    val initialOnboardingState = remember {
+        OnboardingUiState(
+            stepIndex = OnboardingPreferenceStore.stepIndex(),
+            selectedGoal = OnboardingPreferenceStore.selectedGoalId()?.let(OnboardingGoal::valueOf),
+            completed = OnboardingPreferenceStore.isCompleted()
+        )
+    }
     var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
     var lastReadSummary by remember { mutableStateOf("Nog geen health records gelezen") }
@@ -55,6 +70,7 @@ fun PersonalHealthApp() {
     var todaySteps by remember { mutableStateOf<Int?>(null) }
     var todayStepsHourlyTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
     var quickActivityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var nutritionEntries by remember { mutableStateOf(nutritionLogStore.readEntries()) }
     var fitnessSessions by remember { mutableStateOf(fitnessActivityStore.readSessions()) }
     var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
     var fitnessBodyProfile by rememberSaveable {
@@ -255,9 +271,28 @@ fun PersonalHealthApp() {
                 },
                 activityOptions = QuickActivityType.entries,
                 activityEntries = activityEntries,
+                nutritionEntries = nutritionEntries,
                 onLogActivity = { activityType ->
-                    quickActivityEntries = logQuickActivity(quickActivityEntries, activityType)
+                    quickActivityEntries = logQuickActivity(
+                        entries = quickActivityEntries,
+                        type = activityType,
+                        nowEpochMillis = currentEpochMillis()
+                    )
                     latestUiMessage = "${activityType.label} toegevoegd aan je activiteiten."
+                },
+                onAddNutrition = {
+                    val entry = createNutritionLogEntry(
+                        existingEntries = nutritionEntries,
+                        nowEpochMillis = currentNutritionEpochMillis()
+                    )
+                    nutritionLogStore.addEntry(entry)
+                    nutritionEntries = nutritionLogStore.readEntries()
+                    latestUiMessage = "Nutrition lokaal opgeslagen voor ${entry.details.posterName}."
+                },
+                onUpdateNutrition = { entry ->
+                    nutritionLogStore.addEntry(entry)
+                    nutritionEntries = nutritionLogStore.readEntries()
+                    latestUiMessage = "Nutrition entry bijgewerkt."
                 },
                 syncContent = {
                     HealthSyncStatusCard(
@@ -323,6 +358,12 @@ fun PersonalHealthApp() {
             )
         } else {
             OnboardingRoute(
+                initialState = initialOnboardingState,
+                onStateChanged = { state ->
+                    OnboardingPreferenceStore.setStepIndex(state.stepIndex)
+                    OnboardingPreferenceStore.setSelectedGoalId(state.selectedGoal?.name)
+                    OnboardingPreferenceStore.setCompleted(state.completed)
+                },
                 onFinished = {
                     onboardingComplete = true
                     OnboardingPreferenceStore.setCompleted(true)

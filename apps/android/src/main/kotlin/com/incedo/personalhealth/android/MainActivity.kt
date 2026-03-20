@@ -23,6 +23,7 @@ import com.incedo.personalhealth.core.health.HealthSignalSubscription
 import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectGateway
 import com.incedo.personalhealth.integration.healthconnect.HealthConnectPollingSignalSource
+import com.incedo.personalhealth.feature.home.NutritionImagePicker
 import com.incedo.personalhealth.shared.AppBus
 import com.incedo.personalhealth.shared.PersonalHealthApp
 import kotlinx.coroutines.launch
@@ -53,6 +54,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NutritionImagePicker.attachHost(this)
         setContent {
             PersonalHealthApp()
         }

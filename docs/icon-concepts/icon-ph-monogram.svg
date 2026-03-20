@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg3" x1="132" y1="120" x2="894" y2="910" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10293D"/>
+      <stop offset="1" stop-color="#0B2234"/>
+    </linearGradient>
+    <linearGradient id="mint3" x1="268" y1="232" x2="706" y2="776" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2FE0CC"/>
+      <stop offset="1" stop-color="#0FA897"/>
+    </linearGradient>
+    <linearGradient id="warm3" x1="390" y1="340" x2="758" y2="734" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD35A"/>
+      <stop offset="1" stop-color="#E0A800"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#bg3)"/>
+  <rect x="232" y="238" width="182" height="548" rx="91" fill="url(#mint3)"/>
+  <rect x="232" y="238" width="392" height="178" rx="89" fill="url(#mint3)"/>
+  <rect x="530" y="238" width="182" height="548" rx="91" fill="url(#warm3)"/>
+  <rect x="414" y="424" width="296" height="162" rx="81" fill="url(#warm3)"/>
+  <path d="M300 636H406L454 564L520 712L578 604H710" stroke="white" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

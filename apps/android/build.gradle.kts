@@ -49,6 +49,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":feature:home"))
     implementation(project(":shared:app"))
     implementation(project(":core:events"))
     implementation(project(":core:health"))

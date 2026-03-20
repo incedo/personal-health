@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgB" x1="126" y1="132" x2="876" y2="892" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5FBFF"/>
+      <stop offset="1" stop-color="#D7EEF1"/>
+    </linearGradient>
+    <linearGradient id="bodyB" x1="394" y1="280" x2="710" y2="736" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18C7B4"/>
+      <stop offset="1" stop-color="#0FA897"/>
+    </linearGradient>
+    <linearGradient id="accentB" x1="462" y1="262" x2="762" y2="662" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD35A"/>
+      <stop offset="1" stop-color="#E0A800"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#bgB)"/>
+  <circle cx="512" cy="512" r="304" fill="white"/>
+  <circle cx="560" cy="298" r="76" fill="url(#bodyB)"/>
+  <path d="M462 426L570 360L676 432L622 504L548 462L502 544L640 632L732 796H620L548 684L450 618L396 796H288L368 570L462 426Z" fill="url(#bodyB)"/>
+  <path d="M676 432L786 370L842 450L726 510L676 432Z" fill="url(#accentB)"/>
+  <path d="M188 612H302L350 556L404 664L460 518L520 612H602" stroke="#E26376" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

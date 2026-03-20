@@ -1,0 +1,46 @@
+<svg width="1290" height="2796" viewBox="0 0 1290 2796" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="phoneBg" x1="180" y1="140" x2="1130" y2="2660" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B2234"/>
+      <stop offset="1" stop-color="#10293D"/>
+    </linearGradient>
+    <linearGradient id="wallpaper" x1="170" y1="250" x2="1120" y2="2380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0FA897"/>
+      <stop offset="0.5" stop-color="#0F7E8A"/>
+      <stop offset="1" stop-color="#10293D"/>
+    </linearGradient>
+    <filter id="deviceShadow" x="18" y="34" width="1254" height="2728" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="30" stdDeviation="38" flood-color="#031018" flood-opacity="0.28"/>
+    </filter>
+    <clipPath id="screenClip">
+      <rect x="131" y="181" width="1028" height="2238" rx="118"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#deviceShadow)">
+    <rect x="66" y="82" width="1158" height="2632" rx="170" fill="#0A1420"/>
+    <rect x="100" y="116" width="1090" height="2564" rx="146" fill="#111E2B"/>
+    <rect x="131" y="181" width="1028" height="2238" rx="118" fill="url(#wallpaper)"/>
+  </g>
+
+  <g clip-path="url(#screenClip)">
+    <path d="M200 394H420" stroke="#D9F5F1" stroke-width="16" stroke-linecap="round" opacity="0.45"/>
+    <path d="M852 2146H1090" stroke="#D9F5F1" stroke-width="16" stroke-linecap="round" opacity="0.45"/>
+    <path d="M176 1690C368 1506 614 1432 830 1490C980 1531 1081 1642 1159 1773V2419H131V1950C160 1861 180 1775 176 1690Z" fill="#0B2234" fill-opacity="0.18"/>
+
+    <g transform="translate(321 730) scale(0.63)">
+      <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#phoneBg)" opacity="0"/>
+      <image href="file:///Users/kees/data/projects/personal-health/docs/icon-concepts/icon-active-heart-combined.svg" x="0" y="0" width="1024" height="1024"/>
+    </g>
+  </g>
+
+  <rect x="463" y="129" width="364" height="42" rx="21" fill="#0A1420"/>
+  <circle cx="259" cy="309" r="28" fill="#D9F5F1"/>
+  <rect x="175" y="275" width="108" height="18" rx="9" fill="#D9F5F1"/>
+  <rect x="175" y="310" width="74" height="18" rx="9" fill="#D9F5F1" opacity="0.72"/>
+
+  <text x="645" y="555" text-anchor="middle" font-family="Avenir, Helvetica, Arial, sans-serif" font-size="84" font-weight="700" fill="#FFFFFF">Personal Health</text>
+  <text x="645" y="635" text-anchor="middle" font-family="Avenir, Helvetica, Arial, sans-serif" font-size="40" font-weight="500" fill="#D9F5F1">combined active + health icon</text>
+
+  <rect x="394" y="2490" width="502" height="10" rx="5" fill="#D9E4EA" opacity="0.7"/>
+</svg>
