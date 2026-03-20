@@ -24,9 +24,35 @@ sealed interface FrontendEvent : AppEvent {
         override val emittedAtEpochMillis: Long
     ) : FrontendEvent
 
+    data class TodayHeartRateUpdated(
+        val latestHeartRateBpm: Int?,
+        val averageHeartRateBpm: Int?,
+        val buckets: List<HeartRateBucket>,
+        override val emittedAtEpochMillis: Long
+    ) : FrontendEvent
+
+    data class TodayHealthSummariesUpdated(
+        val items: List<HealthSummaryItem>,
+        override val emittedAtEpochMillis: Long
+    ) : FrontendEvent
+
     data class StepBucket(
         val label: String,
         val steps: Int
+    )
+
+    data class HeartRateBucket(
+        val label: String,
+        val averageHeartRateBpm: Int
+    )
+
+    data class HealthSummaryItem(
+        val metricId: String,
+        val title: String,
+        val value: String,
+        val detail: String,
+        val progress: Float,
+        val sourceSummary: String
     )
 }
 

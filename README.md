@@ -22,6 +22,7 @@ Kotlin multi-module Compose project with a modular architecture for:
 - `core/events` App-level event bus + frontend event contracts
 - `core/health` Canonical health data model + gateway contract
 - `integration/health-connect` Android-only Health Connect integration
+- `integration/samsung-health` Android-only Samsung Health Data SDK gateway preparation
 - `integration/healthkit` iOS-only HealthKit integration
 
 Local activity persistence direction:
@@ -67,6 +68,7 @@ Gebruik de lokale quality gate runner:
 - Vraagt daarna of visual simulator tests moeten meedraaien (`ja/nee`).
 - Geen antwoord binnen 10 seconden = visual tests overslaan.
 - Feature tests draaien vanuit losse sibling testmodules (`feature/*-test`), niet vanuit productie feature folders.
+- Gebruik `./gradlew lineCountCheck` om af te dwingen dat nieuwe of aangepaste Kotlin/Gradle bronbestanden niet boven 300 regels uitkomen.
 
 Visual tools in deze setup:
 - Paparazzi (`:apps:android:verifyPaparazziDebug`)
@@ -84,6 +86,12 @@ Generate iOS framework/pod artifacts from shared module:
 Then follow setup notes in `apps/ios/README.md`.
 
 Android phone/tablet behavior is handled in shared Compose UI with width-based adaptive layouts.
+
+## Samsung Health Data SDK
+
+- Local Android voorbereiding staat in `integration/samsung-health`.
+- Voor echte Samsung Health Data SDK reads moet je de officiele Samsung SDK-binary lokaal toevoegen en developer mode in Samsung Health aanzetten.
+- De architectuur is al voorbereid als aanvullende Android datasource naast Health Connect.
 
 ## Rules and Documentation
 

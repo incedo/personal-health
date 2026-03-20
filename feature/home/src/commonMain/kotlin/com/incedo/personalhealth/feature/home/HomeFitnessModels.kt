@@ -2,6 +2,9 @@ package com.incedo.personalhealth.feature.home
 
 enum class HomeDetailDestination {
     STEPS,
+    HEART_RATE,
+    WEIGHT,
+    HEALTH_DATA,
     FITNESS,
     FITNESS_EDITOR_DEBUG
 }
@@ -217,6 +220,15 @@ fun fitnessSessionVolumeKg(session: FitnessActivitySession): Int =
 
 fun fitnessSessionExerciseCount(session: FitnessActivitySession): Int = session.exercises.size
 
+fun totalFitnessActivityMinutes(
+    sessions: List<FitnessActivitySession>,
+    dayWindow: LocalDayWindow
+): Int = sessions.sumOf { session ->
+    val overlapStart = maxOf(session.startedAtEpochMillis, dayWindow.startEpochMillis)
+    val overlapEnd = minOf(session.completedAtEpochMillis, dayWindow.endEpochMillisExclusive)
+    ((overlapEnd - overlapStart).coerceAtLeast(0L) / 60_000L).toInt()
+}
+
 fun formatMuscleGroupSummary(muscleGroups: List<MuscleGroup>): String = when {
     muscleGroups.isEmpty() -> "Geen spierfocus gekozen"
     muscleGroups.size == 1 -> muscleGroups.single().label
@@ -233,5 +245,6 @@ fun fitnessSessionToQuickActivityEntry(session: FitnessActivitySession): QuickAc
         id = session.id,
         type = QuickActivityType.FITNESS,
         title = "${session.title} • ${session.exercises.size} oefeningen",
-        createdAtEpochMillis = session.completedAtEpochMillis
+        createdAtEpochMillis = session.completedAtEpochMillis,
+        durationMillis = (session.completedAtEpochMillis - session.startedAtEpochMillis).coerceAtLeast(0L)
     )

@@ -9,4 +9,14 @@ actual fun PlatformHealthImportPanel(
     onImportDocument: suspend (CanonicalHealthImportDocument) -> Unit,
     onImportMessage: suspend (String) -> Unit,
     modifier: Modifier
-) = Unit
+) {
+    HealthPayloadImportPanel(
+        title = "Desktop import",
+        description = "Importeer canonical JSON of Withings CSV om lange gewichts- en bloeddrukhistorie lokaal te testen.",
+        initialPayload = "",
+        onPersistPayload = {},
+        onImportDocument = onImportDocument,
+        onImportMessage = onImportMessage,
+        modifier = modifier
+    )
+}

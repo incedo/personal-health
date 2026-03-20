@@ -48,7 +48,7 @@ fun buildTodayStepsSnapshot(
     )
 }
 
-private fun Int.toStepHourLabel(): String = buildString {
-    append(toString().padStart(2, '0'))
+internal fun Int.toStepHourLabel(): String = buildString {
+    append(this@toStepHourLabel.toString().padStart(2, '0'))
     append(":00")
 }

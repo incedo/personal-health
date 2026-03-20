@@ -69,4 +69,48 @@ class InMemoryAppEventBusTest {
 
         assertEquals(event, received.await())
     }
+
+    @Test
+    fun publish_supportsTodayHeartRateUpdatedEvent() = runTest {
+        val bus = InMemoryAppEventBus()
+        val event = FrontendEvent.TodayHeartRateUpdated(
+            latestHeartRateBpm = 63,
+            averageHeartRateBpm = 66,
+            buckets = listOf(
+                FrontendEvent.HeartRateBucket(label = "08:00", averageHeartRateBpm = 64),
+                FrontendEvent.HeartRateBucket(label = "10:00", averageHeartRateBpm = 68)
+            ),
+            emittedAtEpochMillis = 11L
+        )
+
+        val received = async { bus.events.first() }
+        runCurrent()
+        bus.publish(event)
+
+        assertEquals(event, received.await())
+    }
+
+    @Test
+    fun publish_supportsTodayHealthSummariesUpdatedEvent() = runTest {
+        val bus = InMemoryAppEventBus()
+        val event = FrontendEvent.TodayHealthSummariesUpdated(
+            items = listOf(
+                FrontendEvent.HealthSummaryItem(
+                    metricId = "steps",
+                    title = "Stappen",
+                    value = "1200",
+                    detail = "Vandaag totaal",
+                    progress = 0.12f,
+                    sourceSummary = "Health Connect"
+                )
+            ),
+            emittedAtEpochMillis = 12L
+        )
+
+        val received = async { bus.events.first() }
+        runCurrent()
+        bus.publish(event)
+
+        assertEquals(event, received.await())
+    }
 }

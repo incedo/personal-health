@@ -3,7 +3,6 @@ package com.incedo.personalhealth.shared
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -24,26 +23,36 @@ import com.incedo.personalhealth.core.events.SyncState
 import com.incedo.personalhealth.core.health.CanonicalHealthImportDocument
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
-import com.incedo.personalhealth.core.health.buildTodayStepsSnapshot
 import com.incedo.personalhealth.core.health.currentEpochMillis
+import com.incedo.personalhealth.feature.home.HeartRateTimelinePoint
 import com.incedo.personalhealth.feature.home.HomeDetailDestination
+import com.incedo.personalhealth.feature.home.HomeHealthMetricCard
 import com.incedo.personalhealth.feature.home.HomeScreen
+import com.incedo.personalhealth.feature.home.HomeWeightChartCatalog
+import com.incedo.personalhealth.feature.home.PersistedActivityTrackingStore
+import com.incedo.personalhealth.feature.home.PlatformActivityTrackingPersistenceDriver
 import com.incedo.personalhealth.feature.home.FitnessBodyProfile
 import com.incedo.personalhealth.feature.home.PersistedNutritionLogStore
 import com.incedo.personalhealth.feature.home.PersistedFitnessActivityStore
 import com.incedo.personalhealth.feature.home.PlatformNutritionLogPersistenceDriver
 import com.incedo.personalhealth.feature.home.PlatformFitnessActivityPersistenceDriver
 import com.incedo.personalhealth.feature.home.NutritionLogEntry
-import com.incedo.personalhealth.feature.home.QuickActivityEntry
 import com.incedo.personalhealth.feature.home.QuickActivityType
 import com.incedo.personalhealth.feature.home.StepTimelinePoint
 import com.incedo.personalhealth.feature.home.HomeThemeMode
 import com.incedo.personalhealth.feature.home.createNutritionLogEntry
 import com.incedo.personalhealth.feature.home.currentNutritionEpochMillis
+import com.incedo.personalhealth.feature.home.elapsedDurationMillis
+import com.incedo.personalhealth.feature.home.fallbackHeartRateTimeline
 import com.incedo.personalhealth.feature.home.fallbackStepTimeline
+import com.incedo.personalhealth.feature.home.formatActivitySummaryDuration
 import com.incedo.personalhealth.feature.home.fitnessSessionToQuickActivityEntry
-import com.incedo.personalhealth.feature.home.logQuickActivity
+import com.incedo.personalhealth.feature.home.localDayWindow
+import com.incedo.personalhealth.feature.home.rememberActivityClock
 import com.incedo.personalhealth.feature.home.summarizeStepTimeline
+import com.incedo.personalhealth.feature.home.toQuickActivityEntry
+import com.incedo.personalhealth.feature.home.totalFitnessActivityMinutes
+import com.incedo.personalhealth.feature.home.totalTrackedActivityMinutes
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
 import com.incedo.personalhealth.feature.onboarding.OnboardingGoal
 import com.incedo.personalhealth.feature.onboarding.OnboardingUiState
@@ -54,7 +63,15 @@ fun PersonalHealthApp() {
     val appScope = rememberCoroutineScope()
     val importStrategy = remember { currentHealthImportStrategy() }
     val fitnessActivityStore = remember { PersistedFitnessActivityStore(PlatformFitnessActivityPersistenceDriver) }
+    val activityTrackingStore = remember { PersistedActivityTrackingStore(PlatformActivityTrackingPersistenceDriver) }
     val nutritionLogStore = remember { PersistedNutritionLogStore(PlatformNutritionLogPersistenceDriver) }
+    val initialDashboardHealthState = remember { readPersistedDashboardHealthUiState() }
+    remember {
+        runHomeStorageMaintenance(
+            fitnessActivityStore = fitnessActivityStore,
+            activityTrackingStore = activityTrackingStore
+        )
+    }
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
     val initialOnboardingState = remember {
         OnboardingUiState(
@@ -69,9 +86,14 @@ fun PersonalHealthApp() {
     var latestUiMessage by remember { mutableStateOf("Nog geen acties uitgevoerd") }
     var todaySteps by remember { mutableStateOf<Int?>(null) }
     var todayStepsHourlyTimeline by remember { mutableStateOf(emptyList<StepTimelinePoint>()) }
-    var quickActivityEntries by remember { mutableStateOf(emptyList<QuickActivityEntry>()) }
+    var todayHeartRateBpm by remember { mutableStateOf<Int?>(null) }
+    var todayHeartRateTimeline by remember { mutableStateOf(emptyList<HeartRateTimelinePoint>()) }
+    var bodyWeightCatalog by remember { mutableStateOf(initialDashboardHealthState.bodyWeightCatalog) }
+    var healthMetricCards by remember { mutableStateOf(initialDashboardHealthState.healthMetricCards) }
+    var lastDashboardEventCache by remember { mutableStateOf<DashboardHealthEventCache?>(null) }
     var nutritionEntries by remember { mutableStateOf(nutritionLogStore.readEntries()) }
     var fitnessSessions by remember { mutableStateOf(fitnessActivityStore.readSessions()) }
+    var trackedActivitySnapshot by remember { mutableStateOf(activityTrackingStore.readSnapshot()) }
     var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
     var fitnessBodyProfile by rememberSaveable {
         mutableStateOf(
@@ -86,16 +108,20 @@ fun PersonalHealthApp() {
     var intentSkippedCount by remember { mutableStateOf(0) }
     var intentAppliedCount by remember { mutableStateOf(0) }
     var intentFailedCount by remember { mutableStateOf(0) }
-    var metricEventCounts by remember {
-        mutableStateOf(
-            mapOf(
-                HealthMetricType.STEPS to 0,
-                HealthMetricType.HEART_RATE_BPM to 0,
-                HealthMetricType.SLEEP_DURATION_MINUTES to 0,
-                HealthMetricType.ACTIVE_ENERGY_KCAL to 0,
-                HealthMetricType.BODY_WEIGHT_KG to 0
-            )
-        )
+    var metricEventCounts by remember { mutableStateOf(mapOf(
+        HealthMetricType.STEPS to 0,
+        HealthMetricType.HEART_RATE_BPM to 0,
+        HealthMetricType.SLEEP_DURATION_MINUTES to 0,
+        HealthMetricType.ACTIVE_ENERGY_KCAL to 0,
+        HealthMetricType.BODY_WEIGHT_KG to 0
+    )) }
+
+    PlatformDemoSeedEffect(fitnessActivityStore, activityTrackingStore, nutritionLogStore) { seeded, refreshedNutritionEntries, refreshedFitnessSessions, refreshedActivitySnapshot ->
+        onboardingComplete = OnboardingPreferenceStore.isCompleted()
+        nutritionEntries = refreshedNutritionEntries
+        fitnessSessions = refreshedFitnessSessions
+        trackedActivitySnapshot = refreshedActivitySnapshot
+        if (seeded) latestUiMessage = "Platform demo data geladen."
     }
 
     LaunchedEffect(Unit) {
@@ -108,19 +134,26 @@ fun PersonalHealthApp() {
                     }
                 }
 
-                is FrontendEvent.UiFeedbackRequested -> {
-                    latestUiMessage = event.message
-                }
+                is FrontendEvent.UiFeedbackRequested -> latestUiMessage = event.message
 
                 is FrontendEvent.TodayStepsUpdated -> {
                     todaySteps = event.totalSteps
-                    todayStepsHourlyTimeline = event.buckets.map { bucket ->
-                        StepTimelinePoint(
-                            label = bucket.label,
-                            steps = bucket.steps
-                        )
-                    }
+                    todayStepsHourlyTimeline = event.toStepTimelinePoints()
                 }
+
+                is FrontendEvent.TodayHeartRateUpdated -> {
+                    todayHeartRateBpm = event.latestHeartRateBpm ?: event.averageHeartRateBpm
+                    todayHeartRateTimeline = event.toHeartRateTimelinePoints()
+                }
+
+                is HealthEvent.DashboardRecordsUpdated -> {
+                    lastDashboardEventCache = event.toCache()
+                    val dashboardHealthUiState = persistDashboardHealthUiState(event)
+                    healthMetricCards = dashboardHealthUiState.healthMetricCards
+                    bodyWeightCatalog = dashboardHealthUiState.bodyWeightCatalog
+                }
+
+                is FrontendEvent.TodayHealthSummariesUpdated -> Unit
 
                 is HealthEvent.RecordsRead -> {
                     val sourceLabel = event.source.name.lowercase()
@@ -132,13 +165,9 @@ fun PersonalHealthApp() {
                     latestUiMessage = "Importverzoek verstuurd (${event.metrics.size} metrics)"
                 }
 
-                is HealthEvent.LiveSyncIntentReceived -> {
-                    intentReceivedCount += 1
-                }
+                is HealthEvent.LiveSyncIntentReceived -> intentReceivedCount += 1
 
-                is HealthEvent.LiveSyncIntentSkippedDuplicate -> {
-                    intentSkippedCount += 1
-                }
+                is HealthEvent.LiveSyncIntentSkippedDuplicate -> intentSkippedCount += 1
 
                 is HealthEvent.LiveSyncIntentApplied -> {
                     intentAppliedCount += 1
@@ -152,13 +181,8 @@ fun PersonalHealthApp() {
                     lastReadSummary = "intent failed: ${event.reason}"
                 }
 
-                is HealthEvent.LiveSyncStepsIntentApplied -> {
-                    metricEventCounts = metricEventCounts.bump(HealthMetricType.STEPS)
-                }
-
-                is HealthEvent.LiveSyncHeartRateIntentApplied -> {
-                    metricEventCounts = metricEventCounts.bump(HealthMetricType.HEART_RATE_BPM)
-                }
+                is HealthEvent.LiveSyncStepsIntentApplied -> metricEventCounts = metricEventCounts.bump(HealthMetricType.STEPS)
+                is HealthEvent.LiveSyncHeartRateIntentApplied -> metricEventCounts = metricEventCounts.bump(HealthMetricType.HEART_RATE_BPM)
 
                 is HealthEvent.LiveSyncSleepIntentApplied -> {
                     metricEventCounts = metricEventCounts.bump(HealthMetricType.SLEEP_DURATION_MINUTES)
@@ -168,9 +192,7 @@ fun PersonalHealthApp() {
                     metricEventCounts = metricEventCounts.bump(HealthMetricType.ACTIVE_ENERGY_KCAL)
                 }
 
-                is HealthEvent.LiveSyncBodyWeightIntentApplied -> {
-                    metricEventCounts = metricEventCounts.bump(HealthMetricType.BODY_WEIGHT_KG)
-                }
+                is HealthEvent.LiveSyncBodyWeightIntentApplied -> metricEventCounts = metricEventCounts.bump(HealthMetricType.BODY_WEIGHT_KG)
             }
         }
     }
@@ -183,14 +205,35 @@ fun PersonalHealthApp() {
     } else {
         summarizeStepTimeline(detailStepsTimeline, pointsPerBucket = 3)
     }
+    val activityClockEpochMillis = rememberActivityClock(trackedActivitySnapshot.activeSession != null)
+    val activityDayWindow = localDayWindow(activityClockEpochMillis)
+    val activityMinutesToday = totalTrackedActivityMinutes(
+        completedSessions = trackedActivitySnapshot.completedSessions,
+        activeSession = trackedActivitySnapshot.activeSession,
+        nowEpochMillis = activityClockEpochMillis,
+        dayWindow = activityDayWindow
+    ) + totalFitnessActivityMinutes(
+        sessions = fitnessSessions,
+        dayWindow = activityDayWindow
+    )
     val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90)
-    val fitScore = (35 + (dashboardSteps / 180) - ((derivedHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
+    val dashboardHeartRate = todayHeartRateBpm ?: derivedHeartRate
+    val detailHeartRateTimeline = todayHeartRateTimeline.ifEmpty {
+        fallbackHeartRateTimeline(
+            averageBpm = dashboardHeartRate,
+            sampleCount = metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0
+        )
+    }
+    val fitScore = (35 + (dashboardSteps / 180) - ((dashboardHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
     val darkTheme = when (themeMode) {
         HomeThemeMode.SYSTEM -> isSystemInDarkTheme()
         HomeThemeMode.DARK -> true
         HomeThemeMode.LIGHT -> false
     }
-    val activityEntries = fitnessSessions.map(::fitnessSessionToQuickActivityEntry) + quickActivityEntries
+    val activityEntries = (
+        fitnessSessions.map(::fitnessSessionToQuickActivityEntry) +
+            trackedActivitySnapshot.completedSessions.map { it.toQuickActivityEntry() }
+        ).sortedByDescending { it.createdAtEpochMillis }
 
     PersonalHealthTheme(darkTheme = darkTheme) {
         if (onboardingComplete) {
@@ -199,9 +242,13 @@ fun PersonalHealthApp() {
                 steps = dashboardSteps,
                 stepsTimeline = dashboardTimeline,
                 detailStepsTimeline = detailStepsTimeline,
+                detailHeartRateTimeline = detailHeartRateTimeline,
+                detailWeightCatalog = bodyWeightCatalog,
+                healthMetricCards = healthMetricCards,
+                activityMinutesToday = activityMinutesToday,
                 fitnessSessions = fitnessSessions,
                 fitnessBodyProfile = fitnessBodyProfile,
-                heartRateBpm = derivedHeartRate,
+                heartRateBpm = dashboardHeartRate,
                 profileName = "Kees",
                 themeMode = themeMode,
                 activeDetailDestination = activeDetailDestination,
@@ -212,57 +259,36 @@ fun PersonalHealthApp() {
                 },
                 onOpenStepsDetail = {
                     activeDetailDestination = HomeDetailDestination.STEPS
-                    appScope.launch {
-                        AppBus.events.publish(
-                            FrontendEvent.NavigationChanged(
-                                fromRoute = "home",
-                                toRoute = "steps-detail",
-                                emittedAtEpochMillis = currentEpochMillis()
-                            )
-                        )
-                    }
+                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.STEPS.routeName())
+                },
+                onOpenHeartRateDetail = {
+                    activeDetailDestination = HomeDetailDestination.HEART_RATE
+                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.HEART_RATE.routeName())
+                },
+                onOpenWeightDetail = {
+                    activeDetailDestination = HomeDetailDestination.WEIGHT
+                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.WEIGHT.routeName())
+                },
+                onOpenHealthDataDetail = {
+                    activeDetailDestination = HomeDetailDestination.HEALTH_DATA
+                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.HEALTH_DATA.routeName())
                 },
                 onOpenFitnessDetail = {
                     activeDetailDestination = HomeDetailDestination.FITNESS
-                    appScope.launch {
-                        AppBus.events.publish(
-                            FrontendEvent.NavigationChanged(
-                                fromRoute = "home",
-                                toRoute = "fitness-detail",
-                                emittedAtEpochMillis = currentEpochMillis()
-                            )
-                        )
-                    }
+                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.FITNESS.routeName())
                 },
                 onOpenFitnessEditorDebug = {
                     activeDetailDestination = HomeDetailDestination.FITNESS_EDITOR_DEBUG
-                    appScope.launch {
-                        AppBus.events.publish(
-                            FrontendEvent.NavigationChanged(
-                                fromRoute = "fitness-detail",
-                                toRoute = "fitness-editor-debug",
-                                emittedAtEpochMillis = currentEpochMillis()
-                            )
-                        )
-                    }
+                    publishNavigationChange(
+                        appScope,
+                        fromRoute = HomeDetailDestination.FITNESS.routeName(),
+                        toRoute = HomeDetailDestination.FITNESS_EDITOR_DEBUG.routeName()
+                    )
                 },
                 onCloseDetail = {
-                    val fromRoute = when (activeDetailDestination) {
-                        HomeDetailDestination.STEPS -> "steps-detail"
-                        HomeDetailDestination.FITNESS -> "fitness-detail"
-                        HomeDetailDestination.FITNESS_EDITOR_DEBUG -> "fitness-editor-debug"
-                        null -> "home"
-                    }
+                    val fromRoute = activeDetailDestination?.routeName() ?: "home"
                     activeDetailDestination = null
-                    appScope.launch {
-                        AppBus.events.publish(
-                            FrontendEvent.NavigationChanged(
-                                fromRoute = fromRoute,
-                                toRoute = "home",
-                                emittedAtEpochMillis = currentEpochMillis()
-                            )
-                        )
-                    }
+                    publishNavigationChange(appScope, fromRoute = fromRoute, toRoute = "home")
                 },
                 onSaveFitnessSession = { session ->
                     fitnessActivityStore.upsertSession(session)
@@ -270,15 +296,38 @@ fun PersonalHealthApp() {
                     latestUiMessage = "${session.title} lokaal opgeslagen met ${session.exercises.size} oefeningen."
                 },
                 activityOptions = QuickActivityType.entries,
+                activeActivity = trackedActivitySnapshot.activeSession,
                 activityEntries = activityEntries,
                 nutritionEntries = nutritionEntries,
-                onLogActivity = { activityType ->
-                    quickActivityEntries = logQuickActivity(
-                        entries = quickActivityEntries,
-                        type = activityType,
-                        nowEpochMillis = currentEpochMillis()
-                    )
-                    latestUiMessage = "${activityType.label} toegevoegd aan je activiteiten."
+                activityClockEpochMillis = activityClockEpochMillis,
+                onStartActivity = { activityType ->
+                    if (trackedActivitySnapshot.activeSession != null) {
+                        latestUiMessage = "${trackedActivitySnapshot.activeSession!!.type.label} loopt al. Stop eerst de actieve sessie."
+                    } else {
+                        trackedActivitySnapshot = activityTrackingStore.startActivity(
+                            type = activityType,
+                            nowEpochMillis = activityClockEpochMillis
+                        )
+                        latestUiMessage = "${activityType.label} gestart."
+                    }
+                },
+                onStopActivity = {
+                    val stoppedSession = trackedActivitySnapshot.activeSession
+                    trackedActivitySnapshot = activityTrackingStore.stopActiveActivity(activityClockEpochMillis)
+                    latestUiMessage = if (stoppedSession == null) {
+                        "Er loopt geen activiteit om te stoppen."
+                    } else {
+                        "${stoppedSession.type.label} gestopt na ${
+                            formatActivitySummaryDuration(
+                                stoppedSession.elapsedDurationMillis(activityClockEpochMillis)
+                            )
+                        }."
+                    }
+                },
+                onRefreshHealthData = {
+                    appScope.launch {
+                        AppBus.events.publish(HealthEvent.SyncRequested(DEFAULT_IMPORT_METRICS, currentEpochMillis()))
+                    }
                 },
                 onAddNutrition = {
                     val entry = createNutritionLogEntry(
@@ -323,6 +372,14 @@ fun PersonalHealthApp() {
                                         )
                                     }
                                 )
+                            }
+                        },
+                        onRecalculateDebug = lastDashboardEventCache?.let {
+                            {
+                                appScope.launch {
+                                    it.recalculate(AppBus.events)
+                                    latestUiMessage = "Dashboard health snapshots opnieuw berekend."
+                                }
                             }
                         },
                         latestUiMessage = latestUiMessage,
@@ -376,131 +433,13 @@ fun PersonalHealthApp() {
 private suspend fun applyImportedHealthDocument(
     document: CanonicalHealthImportDocument
 ) {
-    val snapshot = buildTodayStepsSnapshot(
+    publishDashboardHealthEvents(
         records = document.records,
         dayStartEpochMillis = document.window.startEpochMillis,
         dayEndEpochMillis = document.window.endEpochMillis,
-        bucketSizeHours = 1
+        emittedAtEpochMillis = document.exportedAtEpochMillis ?: currentEpochMillis(),
+        eventBus = AppBus.events
     )
-    AppBus.events.publish(
-        FrontendEvent.TodayStepsUpdated(
-            totalSteps = snapshot.totalSteps,
-            buckets = snapshot.buckets.map { bucket ->
-                FrontendEvent.StepBucket(
-                    label = bucket.label,
-                    steps = bucket.steps
-                )
-            },
-            emittedAtEpochMillis = document.exportedAtEpochMillis ?: currentEpochMillis()
-        )
-    )
-}
-
-@Composable
-private fun HealthSyncStatusCard(
-    syncState: SyncState,
-    channel: String,
-    lastReadSummary: String
-) {
-    val bgColor = when (syncState) {
-        SyncState.SYNCING -> MaterialTheme.colorScheme.primaryContainer
-        SyncState.UP_TO_DATE -> MaterialTheme.colorScheme.secondaryContainer
-        SyncState.ERROR -> MaterialTheme.colorScheme.errorContainer
-        SyncState.IDLE -> MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = 3.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-        ) {
-            Surface(
-                color = bgColor,
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = "Sync: ${syncState.name.lowercase()} ($channel)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                )
-            }
-            Text(
-                text = lastReadSummary,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun HealthSyncStatsCard(
-    strategy: HealthImportStrategy,
-    intentReceivedCount: Int,
-    intentSkippedCount: Int,
-    intentAppliedCount: Int,
-    intentFailedCount: Int,
-    metricEventCounts: Map<HealthMetricType, Int>,
-    onAction: (HealthImportActionId) -> Unit,
-    latestUiMessage: String,
-    importRequestCount: Int,
-    importInProgress: Boolean
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = 2.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-        ) {
-            Text(strategy.title, style = MaterialTheme.typography.titleSmall)
-            Text(
-                "${strategy.platformName}: ${strategy.summary}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                "import clicks=$importRequestCount status=${if (importInProgress) "bezig" else "idle"}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                "received=$intentReceivedCount applied=$intentAppliedCount skipped=$intentSkippedCount failed=$intentFailedCount",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                "steps=${metricEventCounts[HealthMetricType.STEPS] ?: 0} " +
-                    "hr=${metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0} " +
-                    "sleep=${metricEventCounts[HealthMetricType.SLEEP_DURATION_MINUTES] ?: 0} " +
-                    "energy=${metricEventCounts[HealthMetricType.ACTIVE_ENERGY_KCAL] ?: 0} " +
-                    "weight=${metricEventCounts[HealthMetricType.BODY_WEIGHT_KG] ?: 0}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text("Laatste melding: $latestUiMessage", style = MaterialTheme.typography.bodySmall)
-            strategy.actions.forEach { action ->
-                val importAction = action.id == HealthImportActionId.IMPORT_HISTORY
-                Button(
-                    onClick = { onAction(action.id) },
-                    enabled = !importInProgress || !importAction,
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text(
-                        if (importAction && importInProgress) {
-                            "Import bezig..."
-                        } else {
-                            action.label
-                        }
-                    )
-                }
-            }
-        }
-    }
 }
 
 private fun Map<HealthMetricType, Int>.bump(metric: HealthMetricType): Map<HealthMetricType, Int> {

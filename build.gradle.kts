@@ -16,6 +16,8 @@ buildscript {
     }
 }
 
+val maxSourceFileLines = 300
+
 dependencies {
     kover(project(":apps:android"))
     kover(project(":apps:desktop"))
@@ -36,6 +38,7 @@ tasks.register("qualityGateBase") {
     group = "verification"
     description = "Runs non-visual quality gate checks (CI-safe)."
     dependsOn(
+        "lineCountCheck",
         ":apps:desktop:test",
         ":apps:web:compileKotlinWasmJs",
         ":shared:app:compileKotlinDesktop",
@@ -55,6 +58,61 @@ tasks.register("qualityGate") {
     group = "verification"
     description = "Alias for base quality checks. Use scripts/quality-gate-local.sh for optional visual checks."
     dependsOn("qualityGateBase")
+}
+
+tasks.register("lineCountCheck") {
+    group = "verification"
+    description = "Fails when Kotlin and Gradle source files exceed 300 lines unless explicitly baselined."
+
+    doLast {
+        val baselineFile = rootProject.file("config/max-file-lines-baseline.txt")
+        require(baselineFile.exists()) {
+            "Missing baseline file at ${baselineFile.absolutePath}"
+        }
+
+        val baseline = baselineFile.readLines()
+            .map(String::trim)
+            .filter { it.isNotEmpty() && !it.startsWith("#") }
+            .associate { line ->
+                val parts = line.split("=")
+                require(parts.size == 2) { "Invalid baseline entry: $line" }
+                parts[0] to parts[1].toInt()
+            }
+
+        val oversizedFiles = fileTree(rootDir) {
+            include("**/*.kt", "**/*.kts")
+            exclude(".gradle/**", "**/build/**")
+        }.files.map { file ->
+            val relativePath = file.relativeTo(rootDir).invariantSeparatorsPath
+            relativePath to file.useLines { it.count() }
+        }.filter { (_, lineCount) ->
+            lineCount > maxSourceFileLines
+        }.sortedBy { it.first }
+
+        val failures = oversizedFiles.mapNotNull { (path, currentLineCount) ->
+            val baselineCount = baseline[path]
+            when {
+                baselineCount == null ->
+                    "New oversized file: $path has $currentLineCount lines (max $maxSourceFileLines)"
+                currentLineCount > baselineCount ->
+                    "Legacy oversized file grew: $path has $currentLineCount lines (baseline $baselineCount)"
+                else -> null
+            }
+        }
+
+        if (failures.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("lineCountCheck failed:")
+                    failures.forEach { appendLine("- $it") }
+                }
+            )
+        }
+    }
+}
+
+tasks.matching { it.name == "check" }.configureEach {
+    dependsOn("lineCountCheck")
 }
 
 tasks.register("coverageLayerGate") {
