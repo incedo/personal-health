@@ -12,8 +12,17 @@ import platform.HealthKit.HKObserverQuery
 import platform.HealthKit.HKQuery
 import platform.HealthKit.HKCategoryTypeIdentifierSleepAnalysis
 import platform.HealthKit.HKQuantityTypeIdentifierActiveEnergyBurned
+import platform.HealthKit.HKQuantityTypeIdentifierBloodGlucose
+import platform.HealthKit.HKQuantityTypeIdentifierBloodPressureDiastolic
+import platform.HealthKit.HKQuantityTypeIdentifierBloodPressureSystolic
+import platform.HealthKit.HKQuantityTypeIdentifierBodyFatPercentage
 import platform.HealthKit.HKQuantityTypeIdentifierBodyMass
+import platform.HealthKit.HKQuantityTypeIdentifierBodyTemperature
+import platform.HealthKit.HKQuantityTypeIdentifierDietaryEnergyConsumed
+import platform.HealthKit.HKQuantityTypeIdentifierDietaryWater
 import platform.HealthKit.HKQuantityTypeIdentifierHeartRate
+import platform.HealthKit.HKQuantityTypeIdentifierHeight
+import platform.HealthKit.HKQuantityTypeIdentifierOxygenSaturation
 import platform.HealthKit.HKQuantityTypeIdentifierStepCount
 import platform.HealthKit.HKSampleType
 import platform.Foundation.NSDate
@@ -58,6 +67,15 @@ class HealthKitObserverSignalSource : HealthChangeSignalSource {
         HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierHeartRate)?.let { types += it }
         HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierActiveEnergyBurned)?.let { types += it }
         HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierBodyMass)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierHeight)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierBodyFatPercentage)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierBloodPressureSystolic)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierBloodPressureDiastolic)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierBloodGlucose)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierOxygenSaturation)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierBodyTemperature)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierDietaryWater)?.let { types += it }
+        HKObjectType.quantityTypeForIdentifier(HKQuantityTypeIdentifierDietaryEnergyConsumed)?.let { types += it }
         HKObjectType.categoryTypeForIdentifier(HKCategoryTypeIdentifierSleepAnalysis)?.let { types += it }
         return types
     }

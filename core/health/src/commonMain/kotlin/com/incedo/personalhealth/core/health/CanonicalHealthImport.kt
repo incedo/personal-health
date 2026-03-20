@@ -50,7 +50,7 @@ fun parseCanonicalHealthImportDocument(json: String): CanonicalHealthImportDocum
 
 private fun JsonObject.toHealthRecord(index: Int): HealthRecord = HealthRecord(
     id = requiredString("id", index),
-    metric = enumValueOf(requiredString("metric", index)),
+    metric = HealthMetricType.fromSerializedName(requiredString("metric", index)),
     value = requiredDouble("value", index),
     unit = requiredString("unit", index),
     startEpochMillis = requiredLong("startEpochMillis", index),

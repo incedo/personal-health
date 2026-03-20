@@ -65,4 +65,22 @@ class CanonicalHealthImportTest {
         assertTrue(document.window.startEpochMillis <= document.records.last().endEpochMillis)
         assertTrue(document.window.endEpochMillis >= document.records.last().endEpochMillis)
     }
+
+    @Test
+    fun parseWithingsWeightCsvImport_mapsDutchHeadersAndInlineDateTime() {
+        val document = parseWithingsWeightCsvImport(
+            """
+            Datum,"Gewicht (kg)","Vetcellen (kg)","Botmassa (kg)","Spiermassa (kg)","Hydratatie (kg)",Opmerkingen
+            "2026-03-20 07:36:03",76.24,14.15,3.2,55.1,40.0,
+            """.trimIndent()
+        )
+
+        assertEquals("withings-health-csv-v1", document.version)
+        assertEquals(4, document.records.size)
+        assertTrue(document.records.any { it.metric == HealthMetricType.BODY_WEIGHT_KG && it.value == 76.24 })
+        assertTrue(document.records.any { it.metric == HealthMetricType.BONE_MASS_KG && it.value == 3.2 })
+        assertTrue(document.records.any { it.metric == HealthMetricType.MUSCLE_MASS_KG && it.value == 55.1 })
+        assertTrue(document.records.any { it.metric == HealthMetricType.WATER_MASS_KG && it.value == 40.0 })
+        assertTrue(document.records.all { it.source == HealthDataSource.WITHINGS })
+    }
 }

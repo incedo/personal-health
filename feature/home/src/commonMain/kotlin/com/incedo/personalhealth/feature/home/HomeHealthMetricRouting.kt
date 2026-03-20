@@ -9,6 +9,8 @@ internal fun resolveSleepMetric(metrics: List<HomeHealthMetricCard>): HomeHealth
     metrics.firstOrNull { it.id == SLEEP_HEALTH_METRIC_ID }
         ?: HomeHealthMetricCard(
             id = SLEEP_HEALTH_METRIC_ID,
+            metricKey = "SLEEP_DURATION_MINUTES",
+            domainId = "SLEEP",
             title = "Slaap",
             value = "Geen data",
             detail = "Laatste slaapsessie ontbreekt",
@@ -21,6 +23,8 @@ internal fun resolveWeightMetric(metrics: List<HomeHealthMetricCard>): HomeHealt
     metrics.firstOrNull { it.id == BODY_WEIGHT_HEALTH_METRIC_ID }
         ?: HomeHealthMetricCard(
             id = BODY_WEIGHT_HEALTH_METRIC_ID,
+            metricKey = "BODY_WEIGHT_KG",
+            domainId = "BODY_MEASUREMENTS",
             title = "Gewicht",
             value = "Geen data",
             detail = "Laatste meting ontbreekt",

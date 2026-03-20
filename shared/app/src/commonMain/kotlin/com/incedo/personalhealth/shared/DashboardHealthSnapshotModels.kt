@@ -19,6 +19,8 @@ internal data class PersistedDashboardHealthSnapshot(
 @Serializable
 internal data class PersistedHealthMetricCard(
     val id: String,
+    val metricKey: String = "",
+    val domainId: String = "UNKNOWN",
     val title: String,
     val value: String,
     val detail: String,
@@ -37,7 +39,8 @@ internal data class PersistedWeightTimeline(
 @Serializable
 internal data class PersistedWeightTimelinePoint(
     val label: String,
-    val weightKg: Double? = null
+    val weightKg: Double? = null,
+    val periodLabel: String = label
 )
 
 @Serializable
@@ -47,12 +50,14 @@ internal data class PersistedHealthMetricMetadata(
     val latestRecordEpochMillis: Long? = null
 )
 
-internal const val DASHBOARD_HEALTH_SNAPSHOT_SCHEMA_VERSION = 1
+internal const val DASHBOARD_HEALTH_SNAPSHOT_SCHEMA_VERSION = 2
 
 internal fun PersistedDashboardHealthSnapshot.toUiState(): DashboardHealthUiState = DashboardHealthUiState(
     healthMetricCards = cards.map { card ->
         com.incedo.personalhealth.feature.home.HomeHealthMetricCard(
             id = card.id,
+            metricKey = card.metricKey.ifBlank { card.id.uppercase() },
+            domainId = card.domainId,
             title = card.title,
             value = card.value,
             detail = card.detail,
@@ -70,7 +75,8 @@ internal fun PersistedDashboardHealthSnapshot.toUiState(): DashboardHealthUiStat
                 points = timeline.points.map { point ->
                     WeightTimelinePoint(
                         label = point.label,
-                        weightKg = point.weightKg
+                        weightKg = point.weightKg,
+                        periodLabel = point.periodLabel
                     )
                 }
             )
@@ -83,6 +89,8 @@ internal fun DashboardHealthSnapshot.toPersistedSnapshot(): PersistedDashboardHe
     cards = uiState.healthMetricCards.map { card ->
         PersistedHealthMetricCard(
             id = card.id,
+            metricKey = card.metricKey,
+            domainId = card.domainId,
             title = card.title,
             value = card.value,
             detail = card.detail,
@@ -98,7 +106,8 @@ internal fun DashboardHealthSnapshot.toPersistedSnapshot(): PersistedDashboardHe
             points = timeline.points.map { point ->
                 PersistedWeightTimelinePoint(
                     label = point.label,
-                    weightKg = point.weightKg
+                    weightKg = point.weightKg,
+                    periodLabel = point.periodLabel
                 )
             }
         )

@@ -96,7 +96,9 @@ class InMemoryAppEventBusTest {
         val event = FrontendEvent.TodayHealthSummariesUpdated(
             items = listOf(
                 FrontendEvent.HealthSummaryItem(
+                    metricKey = "STEPS",
                     metricId = "steps",
+                    domainId = "ACTIVITY",
                     title = "Stappen",
                     value = "1200",
                     detail = "Vandaag totaal",

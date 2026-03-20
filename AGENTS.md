@@ -68,6 +68,11 @@ Project rules for contributors and coding agents working in this repository.
   - domain events (for example health records/sync)
   - sync lifecycle events (idle/syncing/up_to_date/error)
 
+14. `commonMain` must stay platform-neutral.
+- `commonMain` code must not import platform-specific APIs such as `java.time`, `java.io`, `java.nio`, Apple Foundation types, or Android framework classes.
+- Put platform-specific date/time, filesystem, locale, and OS integrations behind `expect`/`actual` abstractions or a multiplatform-safe library.
+- If logic must stay shared, only use APIs that compile on every configured target.
+
 ## App Generation Rules (Required)
 1. Generate one adaptive UI code path, not separate per-device screens.
 - Build layouts from window size classes and constraints, never from hardcoded device names.

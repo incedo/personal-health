@@ -6,12 +6,11 @@ import com.incedo.personalhealth.feature.home.HomeWeightChartCatalog
 import com.incedo.personalhealth.feature.home.HomeWeightRange
 import com.incedo.personalhealth.feature.home.HomeWeightTimeline
 import com.incedo.personalhealth.feature.home.WeightTimelinePoint
-import kotlin.math.ceil
 
 private const val DAY_MILLIS = 24L * 60L * 60L * 1000L
 private const val WEEK_MILLIS = 7L * DAY_MILLIS
 private const val MONTH_MILLIS = 30L * DAY_MILLIS
-private const val SEMESTER_MILLIS = 182L * DAY_MILLIS
+private const val YEAR_MILLIS = 365L * DAY_MILLIS
 
 internal fun buildWeightChartCatalog(
     records: List<HealthRecord>,
@@ -44,10 +43,11 @@ private fun buildWeeklyMeasurementTimeline(
     val points = records
         .filter { it.endEpochMillis >= startEpochMillis }
         .map { record ->
-            WeightTimelinePoint(
-                label = relativeDayLabel(record.endEpochMillis, dayEndEpochMillis),
-                weightKg = record.value
-            )
+        WeightTimelinePoint(
+            label = relativeDayLabel(record.endEpochMillis, dayEndEpochMillis),
+            weightKg = record.value,
+            periodLabel = formatWeightDayLabel(record.endEpochMillis)
+        )
         }
     return HomeWeightTimeline(range = range, title = "Alle metingen van deze week", points = points)
 }
@@ -67,7 +67,8 @@ private fun buildRollingDailyTimeline(
             .maxByOrNull { it.endEpochMillis }
         WeightTimelinePoint(
             label = if (index == dayCount - 1) "Vandaag" else "D-${dayCount - 1 - index}",
-            weightKg = latestRecord?.value
+            weightKg = latestRecord?.value,
+            periodLabel = "${formatWeightDayLabel(bucketStart)} - ${formatWeightDayLabel(bucketEnd - 1L)}"
         )
     }
     return HomeWeightTimeline(range = range, title = "Laatste $dayCount dagen", points = points)
@@ -90,8 +91,9 @@ private fun buildAveragedTimeline(
             .filter { it.endEpochMillis in bucketStart until bucketEnd }
         val average = bucketRecords.takeIf { it.isNotEmpty() }?.map { it.value }?.average()
         WeightTimelinePoint(
-            label = "${index + 1}",
-            weightKg = average
+            label = averageBucketLabel(range, index),
+            weightKg = average,
+            periodLabel = "${formatWeightDayLabel(bucketStart)} - ${formatWeightDayLabel(bucketEnd - 1L)}"
         )
     }
     return HomeWeightTimeline(
@@ -116,8 +118,9 @@ private fun buildMonthlyMeasurementTimeline(
             .filter { it.endEpochMillis in bucketStart until bucketEnd }
             .maxByOrNull { it.endEpochMillis }
         WeightTimelinePoint(
-            label = "M${index + 1}",
-            weightKg = latestRecord?.value
+            label = formatWeightMonthLabel(bucketStart),
+            weightKg = latestRecord?.value,
+            periodLabel = "${formatWeightDayLabel(bucketStart)} - ${formatWeightDayLabel(bucketEnd - 1L)}"
         )
     }
     return HomeWeightTimeline(range = range, title = "Laatste 6 maanden", points = points)
@@ -134,32 +137,34 @@ private fun buildAllTimeTimeline(
 
     val firstEpochMillis = records.first().endEpochMillis
     val totalDays = ((dayEndEpochMillis - firstEpochMillis) / DAY_MILLIS).coerceAtLeast(1L)
-    return if (totalDays >= 365L) {
-        buildSemesterAverageTimeline(records, firstEpochMillis, dayEndEpochMillis, range)
+    return if (totalDays >= YEAR_MILLIS) {
+        buildYearlyAverageTimeline(records, firstEpochMillis, dayEndEpochMillis, range)
     } else {
         buildAveragedTimeline(records, dayEndEpochMillis, 12, MONTH_MILLIS, range, "Maandgemiddelde")
             .copy(title = "Alle data")
     }
 }
 
-private fun buildSemesterAverageTimeline(
+private fun buildYearlyAverageTimeline(
     records: List<HealthRecord>,
     firstEpochMillis: Long,
     dayEndEpochMillis: Long,
     range: HomeWeightRange
 ): HomeWeightTimeline {
-    val totalSemesters = ceil(((dayEndEpochMillis - firstEpochMillis).coerceAtLeast(SEMESTER_MILLIS)) / SEMESTER_MILLIS.toDouble()).toInt()
-    val points = (0 until totalSemesters).map { index ->
-        val bucketStart = firstEpochMillis + index * SEMESTER_MILLIS
-        val bucketEnd = bucketStart + SEMESTER_MILLIS
-        val semesterRecords = records.filter { it.endEpochMillis in bucketStart until bucketEnd }
-        val average = semesterRecords.takeIf { it.isNotEmpty() }?.map { it.value }?.average()
+    val startYear = yearOfEpochMillis(firstEpochMillis)
+    val endYear = yearOfEpochMillis(dayEndEpochMillis)
+    val points = (startYear..endYear).map { year ->
+        val bucketStart = startOfYearEpochMillis(year)
+        val bucketEnd = startOfYearEpochMillis(year + 1)
+        val yearRecords = records.filter { it.endEpochMillis in bucketStart until bucketEnd }
+        val average = yearRecords.takeIf { it.isNotEmpty() }?.map { it.value }?.average()
         WeightTimelinePoint(
-            label = "S${index + 1}",
-            weightKg = average
+            label = year.toString(),
+            weightKg = average,
+            periodLabel = "${formatWeightDayLabel(bucketStart)} - ${formatWeightDayLabel(bucketEnd - 1L)}"
         )
     }
-    return HomeWeightTimeline(range = range, title = "Alle data per semester", points = points)
+    return HomeWeightTimeline(range = range, title = "Alle data per jaar", points = points)
 }
 
 private fun relativeDayLabel(
@@ -168,4 +173,10 @@ private fun relativeDayLabel(
 ): String {
     val daysAgo = ((dayEndEpochMillis - epochMillis) / DAY_MILLIS).toInt().coerceAtLeast(0)
     return if (daysAgo == 0) "Vandaag" else "D-$daysAgo"
+}
+
+private fun averageBucketLabel(range: HomeWeightRange, index: Int): String = when (range) {
+    HomeWeightRange.QUARTER -> "W${index + 1}"
+    HomeWeightRange.YEAR -> "M${index + 1}"
+    else -> "${index + 1}"
 }

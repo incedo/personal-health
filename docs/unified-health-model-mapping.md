@@ -1,6 +1,7 @@
 # Unified Health Model Mapping (Health Connect + HealthKit)
 
-This document maps Android Health Connect and Apple HealthKit data types to one canonical model.
+This document maps provider-specific data types to one canonical model.
+The canonical layer is provider-agnostic so Samsung Health, Apple Health, Oura, Whoop, Withings, and Health Connect can all target the same shared contracts.
 
 ## Primary sources
 - Android Health Connect records package summary:
@@ -51,4 +52,5 @@ This document maps Android Health Connect and Apple HealthKit data types to one 
 
 ## Notes
 - The mapping is semantic and normalized; units and sample granularity are aligned in gateway-level adapters.
+- Canonical records are defined by `data type + normalized unit`, not by provider-specific SDK enums.
 - Some platform-specific types have no 1:1 equivalent and are intentionally excluded from the cross-platform canonical set.

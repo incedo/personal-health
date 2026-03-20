@@ -44,6 +44,16 @@ struct ContentView: View {
         if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) { readTypes.insert(heartRate) }
         if let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { readTypes.insert(activeEnergy) }
         if let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass) { readTypes.insert(bodyMass) }
+        if let height = HKObjectType.quantityType(forIdentifier: .height) { readTypes.insert(height) }
+        if let bodyFat = HKObjectType.quantityType(forIdentifier: .bodyFatPercentage) { readTypes.insert(bodyFat) }
+        if let bmi = HKObjectType.quantityType(forIdentifier: .bodyMassIndex) { readTypes.insert(bmi) }
+        if let systolic = HKObjectType.quantityType(forIdentifier: .bloodPressureSystolic) { readTypes.insert(systolic) }
+        if let diastolic = HKObjectType.quantityType(forIdentifier: .bloodPressureDiastolic) { readTypes.insert(diastolic) }
+        if let glucose = HKObjectType.quantityType(forIdentifier: .bloodGlucose) { readTypes.insert(glucose) }
+        if let oxygen = HKObjectType.quantityType(forIdentifier: .oxygenSaturation) { readTypes.insert(oxygen) }
+        if let bodyTemperature = HKObjectType.quantityType(forIdentifier: .bodyTemperature) { readTypes.insert(bodyTemperature) }
+        if let dietaryWater = HKObjectType.quantityType(forIdentifier: .dietaryWater) { readTypes.insert(dietaryWater) }
+        if let dietaryEnergy = HKObjectType.quantityType(forIdentifier: .dietaryEnergyConsumed) { readTypes.insert(dietaryEnergy) }
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) { readTypes.insert(sleep) }
 
         healthStore.requestAuthorization(toShare: nil, read: readTypes) { granted, error in

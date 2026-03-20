@@ -20,6 +20,11 @@ enum class CanonicalHealthDataType(
     BODY_WEIGHT(HealthDomain.BODY_MEASUREMENTS),
     HEIGHT(HealthDomain.BODY_MEASUREMENTS),
     BODY_FAT_PERCENTAGE(HealthDomain.BODY_MEASUREMENTS),
+    MUSCLE_MASS(HealthDomain.BODY_MEASUREMENTS),
+    BONE_MASS(HealthDomain.BODY_MEASUREMENTS),
+    TOTAL_BODY_WATER(HealthDomain.BODY_MEASUREMENTS),
+    BODY_MASS_INDEX(HealthDomain.BODY_MEASUREMENTS),
+    BASAL_METABOLIC_RATE(HealthDomain.BODY_MEASUREMENTS),
 
     MENSTRUATION_PERIOD(HealthDomain.CYCLE_TRACKING),
     MENSTRUAL_FLOW(HealthDomain.CYCLE_TRACKING),
@@ -96,6 +101,33 @@ object UnifiedHealthTypeMappings {
             canonicalType = CanonicalHealthDataType.BODY_FAT_PERCENTAGE,
             healthConnectRecordClass = "BodyFatRecord",
             healthKitTypeIdentifier = "HKQuantityTypeIdentifierBodyFatPercentage",
+            healthKitTypeKind = HealthKitTypeKind.QUANTITY
+        ),
+        UnifiedHealthTypeMapping(
+            canonicalType = CanonicalHealthDataType.MUSCLE_MASS,
+            healthConnectRecordClass = null,
+            healthKitTypeIdentifier = null
+        ),
+        UnifiedHealthTypeMapping(
+            canonicalType = CanonicalHealthDataType.BONE_MASS,
+            healthConnectRecordClass = null,
+            healthKitTypeIdentifier = null
+        ),
+        UnifiedHealthTypeMapping(
+            canonicalType = CanonicalHealthDataType.TOTAL_BODY_WATER,
+            healthConnectRecordClass = null,
+            healthKitTypeIdentifier = null
+        ),
+        UnifiedHealthTypeMapping(
+            canonicalType = CanonicalHealthDataType.BODY_MASS_INDEX,
+            healthConnectRecordClass = null,
+            healthKitTypeIdentifier = "HKQuantityTypeIdentifierBodyMassIndex",
+            healthKitTypeKind = HealthKitTypeKind.QUANTITY
+        ),
+        UnifiedHealthTypeMapping(
+            canonicalType = CanonicalHealthDataType.BASAL_METABOLIC_RATE,
+            healthConnectRecordClass = "BasalMetabolicRateRecord",
+            healthKitTypeIdentifier = "HKQuantityTypeIdentifierBasalEnergyBurned",
             healthKitTypeKind = HealthKitTypeKind.QUANTITY
         ),
         UnifiedHealthTypeMapping(

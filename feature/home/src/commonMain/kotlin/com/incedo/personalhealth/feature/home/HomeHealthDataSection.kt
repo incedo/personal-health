@@ -47,9 +47,9 @@ internal fun HealthDataDetailScreen(
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         HomeHeroCard(
-            eyebrow = "Health Connect",
+            eyebrow = "Health data",
             title = "Alle health data",
-            subtitle = "Overzicht van de data die de app nu uit Health Connect kan lezen en tonen.",
+            subtitle = "Overzicht van canonical health data uit gekoppelde bronnen zoals Apple Health, Samsung Health, Withings en Health Connect.",
             accent = palette.accent,
             compact = compact,
             sideContent = {
@@ -98,7 +98,7 @@ internal fun HealthDataDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Gebruik profiel/import om permissies te beheren en ververs daarna om stappen, hartslag, slaap, actieve energie en gewicht hier op te lijsten.",
+                    text = "Gebruik profiel/import om bronnen en permissies te beheren en ververs daarna om beschikbare metingen hier op te lijsten.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.textSecondary
                 )
@@ -193,7 +193,7 @@ private fun HealthMetricCard(
                     .background(accent)
             )
             Text(
-                text = "${metric.id} • ${metric.sourceSummary}",
+                text = "${metric.domainId.lowercase()} • ${metric.sourceSummary}",
                 style = MaterialTheme.typography.labelMedium,
                 color = palette.textSecondary
             )
