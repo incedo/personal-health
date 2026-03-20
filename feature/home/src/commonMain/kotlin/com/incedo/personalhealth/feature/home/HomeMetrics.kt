@@ -18,13 +18,15 @@ enum class QuickActivityType(val label: String) {
     CYCLING("Fietsen"),
     SWIMMING("Zwemmen"),
     FITNESS("Fitness"),
+    NUTRITION("Nutrition"),
     OTHER("Anders")
 }
 
 data class QuickActivityEntry(
     val id: String,
     val type: QuickActivityType,
-    val title: String
+    val title: String,
+    val createdAtEpochMillis: Long
 )
 
 enum class HomeThemeMode(val label: String) {
@@ -32,6 +34,18 @@ enum class HomeThemeMode(val label: String) {
     DARK("Dark"),
     LIGHT("Light")
 }
+
+enum class HomeInsightTone {
+    ACCENT,
+    WARM,
+    WARNING
+}
+
+data class VitalityInsight(
+    val title: String,
+    val description: String,
+    val tone: HomeInsightTone
+)
 
 fun estimateFitScore(stepCount: Int, heartRateBpm: Int): Int {
     val stepComponent = (stepCount / 100).coerceIn(0, 70)
@@ -82,13 +96,15 @@ fun stepDetailStats(points: List<StepTimelinePoint>): StepDetailStats {
 
 fun logQuickActivity(
     entries: List<QuickActivityEntry>,
-    type: QuickActivityType
+    type: QuickActivityType,
+    nowEpochMillis: Long
 ): List<QuickActivityEntry> {
     val nextOrdinal = (entries.size + 1).toString().padStart(2, '0')
     val nextEntry = QuickActivityEntry(
         id = "${type.name.lowercase()}-$nextOrdinal",
         type = type,
-        title = "${type.label} sessie"
+        title = quickActivityEntryTitle(type),
+        createdAtEpochMillis = nowEpochMillis
     )
     return listOf(nextEntry) + entries
 }
@@ -97,4 +113,71 @@ fun quickActivitySummary(entries: List<QuickActivityEntry>): String = when {
     entries.isEmpty() -> "Nog geen activiteiten gelogd"
     entries.size == 1 -> "1 activiteit gelogd"
     else -> "${entries.size} activiteiten gelogd"
+}
+
+fun buildVitalityInsights(
+    fitScore: Int,
+    heartRateBpm: Int,
+    steps: Int
+): List<VitalityInsight> {
+    val recoveryInsight = when {
+        fitScore >= 80 && heartRateBpm <= 64 -> VitalityInsight(
+            title = "Herstel sterk",
+            description = "Je basis is stabiel. Een geplande workout past goed in je dag.",
+            tone = HomeInsightTone.ACCENT
+        )
+
+        heartRateBpm >= 75 -> VitalityInsight(
+            title = "Herstel bewaken",
+            description = "Je hartslag ligt hoger dan ideaal. Kies vandaag liever voor licht werk of extra rust.",
+            tone = HomeInsightTone.WARNING
+        )
+
+        else -> VitalityInsight(
+            title = "Herstel in balans",
+            description = "Je dagstart is stabiel. Bouw rustig op richting je hoofdactiviteit.",
+            tone = HomeInsightTone.ACCENT
+        )
+    }
+
+    val movementInsight = when {
+        steps >= 8_000 -> VitalityInsight(
+            title = "Beweging op koers",
+            description = "Je zit al dicht bij je doel. Houd je ritme vast en verspreid je stappen over de rest van de dag.",
+            tone = HomeInsightTone.ACCENT
+        )
+
+        steps >= 4_000 -> VitalityInsight(
+            title = "Beweging loopt",
+            description = "Je basis is gelegd. Een korte wandeling of korte sessie later vandaag maakt het verschil.",
+            tone = HomeInsightTone.WARM
+        )
+
+        else -> VitalityInsight(
+            title = "Meer beweging nodig",
+            description = "Plan een actief blok in zodat je energie en score later op de dag niet wegzakken.",
+            tone = HomeInsightTone.WARM
+        )
+    }
+
+    val nutritionInsight = if (fitScore >= 75) {
+        VitalityInsight(
+            title = "Voeding klaarzetten",
+            description = "Log nutrition en mik op eiwit plus langzame koolhydraten om herstel en training te ondersteunen.",
+            tone = HomeInsightTone.WARM
+        )
+    } else {
+        VitalityInsight(
+            title = "Brandstof aanvullen",
+            description = "Log nutrition en voeg een eiwitrijke snack of lunch toe om je dag sneller te stabiliseren.",
+            tone = HomeInsightTone.WARNING
+        )
+    }
+
+    return listOf(recoveryInsight, movementInsight, nutritionInsight)
+}
+
+private fun quickActivityEntryTitle(type: QuickActivityType): String = when (type) {
+    QuickActivityType.NUTRITION -> "Nutrition log"
+    else -> "${type.label} sessie"
 }

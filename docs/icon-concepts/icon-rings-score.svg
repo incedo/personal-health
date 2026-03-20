@@ -1,0 +1,32 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="120" y1="128" x2="900" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5FBFF"/>
+      <stop offset="1" stop-color="#DDEDF5"/>
+    </linearGradient>
+    <linearGradient id="ringA" x1="236" y1="214" x2="780" y2="830" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18C7B4"/>
+      <stop offset="1" stop-color="#0FA897"/>
+    </linearGradient>
+    <linearGradient id="ringB" x1="268" y1="238" x2="750" y2="802" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD35A"/>
+      <stop offset="1" stop-color="#E0A800"/>
+    </linearGradient>
+    <linearGradient id="ringC" x1="300" y1="266" x2="724" y2="774" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8C99"/>
+      <stop offset="1" stop-color="#E26376"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#bg2)"/>
+  <circle cx="512" cy="512" r="272" fill="white"/>
+  <circle cx="512" cy="512" r="272" stroke="#D9F5F1" stroke-width="56"/>
+  <path d="M512 240C643 240 758 331 798 455" stroke="url(#ringA)" stroke-width="56" stroke-linecap="round"/>
+  <path d="M798 455C816 511 816 570 798 628C779 691 740 745 688 786" stroke="url(#ringA)" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="198" stroke="#F8EDC8" stroke-width="56"/>
+  <path d="M512 314C605 314 687 374 720 458" stroke="url(#ringB)" stroke-width="56" stroke-linecap="round"/>
+  <path d="M720 458C740 511 739 572 717 624" stroke="url(#ringB)" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="126" stroke="#FADCE1" stroke-width="56"/>
+  <path d="M512 386C568 386 617 420 641 468" stroke="url(#ringC)" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="106" fill="#10293D"/>
+  <text x="512" y="540" text-anchor="middle" font-family="Avenir, Helvetica, Arial, sans-serif" font-size="136" font-weight="700" fill="white">78</text>
+</svg>

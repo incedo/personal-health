@@ -232,5 +232,6 @@ fun fitnessSessionToQuickActivityEntry(session: FitnessActivitySession): QuickAc
     QuickActivityEntry(
         id = session.id,
         type = QuickActivityType.FITNESS,
-        title = "${session.title} • ${session.exercises.size} oefeningen"
+        title = "${session.title} • ${session.exercises.size} oefeningen",
+        createdAtEpochMillis = session.completedAtEpochMillis
     )

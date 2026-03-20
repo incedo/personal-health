@@ -77,10 +77,16 @@ private data class StepVisual(
 
 @Composable
 fun OnboardingRoute(
+    initialState: OnboardingUiState = OnboardingUiState(),
+    onStateChanged: (OnboardingUiState) -> Unit = {},
     onFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var state by rememberSaveable(stateSaver = OnboardingUiStateSaver) { mutableStateOf(OnboardingUiState()) }
+    var state by rememberSaveable(stateSaver = OnboardingUiStateSaver) { mutableStateOf(initialState) }
+
+    LaunchedEffect(state) {
+        onStateChanged(state)
+    }
 
     LaunchedEffect(state.completed) {
         if (state.completed) {

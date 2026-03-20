@@ -1,8 +1,11 @@
 package com.incedo.personalhealth.feature.home
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,7 +35,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,7 +61,6 @@ internal fun DashboardContent(
     onOpenStepsDetail: () -> Unit,
     compact: Boolean
 ) {
-    val palette = homePalette()
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -63,19 +73,21 @@ internal fun DashboardContent(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(spacing)
         ) {
-            HomeHeroCard(
-                eyebrow = "Today",
-                title = "Welkom terug, $profileName",
-                subtitle = "Je dagstart in een duidelijk overzicht met herstel, activiteit en de eerstvolgende actie.",
-                accent = palette.accent,
+            VitalityLandingCard(
+                fitScore = fitScore,
+                steps = steps,
+                heartRateBpm = heartRateBpm,
+                profileName = profileName,
+                activityOptions = activityOptions,
                 compact = compact,
-                sideContent = {
-                    ProfileRing(
-                        fitScore = fitScore,
-                        profileName = profileName,
-                        modifier = Modifier.size(if (compact) 176.dp else 208.dp)
-                    )
-                }
+                onStartWorkout = { activityType ->
+                    if (activityType == QuickActivityType.FITNESS) {
+                        onOpenFitnessDetail()
+                    } else {
+                        onLogActivity(activityType)
+                    }
+                },
+                onLogNutrition = { onLogActivity(QuickActivityType.NUTRITION) }
             )
 
             if (expanded) {
@@ -84,7 +96,7 @@ internal fun DashboardContent(
                     horizontalArrangement = Arrangement.spacedBy(spacing)
                 ) {
                     Column(
-                        modifier = Modifier.weight(1.2f),
+                        modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(spacing)
                     ) {
                         SummaryStrip(
@@ -92,27 +104,6 @@ internal fun DashboardContent(
                             heartRateBpm = heartRateBpm,
                             fitScore = fitScore,
                             onStepsClick = onOpenStepsDetail
-                        )
-                        StepsOverviewCard(
-                            steps = steps,
-                            stepsTimeline = stepsTimeline,
-                            onOpenDetails = onOpenStepsDetail
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(spacing)
-                    ) {
-                        QuickActivityLogCard(
-                            activityOptions = activityOptions,
-                            activityEntries = activityEntries,
-                            onLogActivity = onLogActivity,
-                            onOpenFitnessDetail = onOpenFitnessDetail,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        GuidanceCard(
-                            fitScore = fitScore,
-                            heartRateBpm = heartRateBpm
                         )
                     }
                 }
@@ -123,24 +114,581 @@ internal fun DashboardContent(
                     fitScore = fitScore,
                     onStepsClick = onOpenStepsDetail
                 )
-                StepsOverviewCard(
-                    steps = steps,
-                    stepsTimeline = stepsTimeline,
-                    onOpenDetails = onOpenStepsDetail
-                )
-                QuickActivityLogCard(
-                    activityOptions = activityOptions,
-                    activityEntries = activityEntries,
-                    onLogActivity = onLogActivity,
-                    onOpenFitnessDetail = onOpenFitnessDetail,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                GuidanceCard(
-                    fitScore = fitScore,
-                    heartRateBpm = heartRateBpm
-                )
             }
         }
+    }
+}
+
+@Composable
+private fun VitalityLandingCard(
+    fitScore: Int,
+    steps: Int,
+    heartRateBpm: Int,
+    profileName: String,
+    activityOptions: List<QuickActivityType>,
+    compact: Boolean,
+    onStartWorkout: (QuickActivityType) -> Unit,
+    onLogNutrition: () -> Unit
+) {
+    val palette = homePalette()
+    val insights = buildVitalityInsights(
+        fitScore = fitScore,
+        heartRateBpm = heartRateBpm,
+        steps = steps
+    )
+
+    Card(
+        shape = RoundedCornerShape(32.dp),
+        colors = CardDefaults.cardColors(containerColor = palette.surface)
+    ) {
+        val backgroundBrush = if (compact) {
+            Brush.verticalGradient(
+                colors = listOf(
+                    palette.accent.copy(alpha = 0.16f),
+                    palette.warm.copy(alpha = 0.12f),
+                    palette.surface
+                )
+            )
+        } else {
+            Brush.horizontalGradient(
+                colors = listOf(
+                    palette.accent.copy(alpha = 0.18f),
+                    palette.warm.copy(alpha = 0.12f),
+                    palette.surface
+                )
+            )
+        }
+
+        if (compact) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(backgroundBrush)
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                VitalityHeader(
+                    fitScore = fitScore,
+                    steps = steps,
+                    heartRateBpm = heartRateBpm,
+                    profileName = profileName,
+                    compact = true
+                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    VitalityScoreRings(
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
+                        modifier = Modifier.size(240.dp)
+                    )
+                }
+                VitalityInsightList(insights = insights)
+                VitalityActions(
+                    compact = true,
+                    activityOptions = activityOptions,
+                    onStartWorkout = onStartWorkout,
+                    onLogNutrition = onLogNutrition
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(backgroundBrush)
+                    .padding(28.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        VitalityHeader(
+                            fitScore = fitScore,
+                            steps = steps,
+                            heartRateBpm = heartRateBpm,
+                            profileName = profileName,
+                            compact = false,
+                            modifier = Modifier.weight(1.15f)
+                        )
+                        SummaryStrip(
+                            steps = steps,
+                            heartRateBpm = heartRateBpm,
+                            fitScore = fitScore,
+                            onStepsClick = { },
+                            compact = false,
+                            modifier = Modifier.weight(0.95f)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        VitalityScoreRings(
+                            fitScore = fitScore,
+                            steps = steps,
+                            heartRateBpm = heartRateBpm,
+                            modifier = Modifier.size(280.dp)
+                        )
+                    }
+                    VitalityInsightList(
+                        insights = insights,
+                        compact = false
+                    )
+                    VitalityActions(
+                        compact = false,
+                        activityOptions = activityOptions,
+                        onStartWorkout = onStartWorkout,
+                        onLogNutrition = onLogNutrition
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VitalityHeader(
+    fitScore: Int,
+    steps: Int,
+    heartRateBpm: Int,
+    profileName: String,
+    compact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val palette = homePalette()
+    val subtitle = when {
+        fitScore >= 80 -> "Je start is sterk. Gebruik dit moment voor een geplande workout of hou je ritme vast."
+        fitScore >= 65 -> "Je dag staat stevig. Met slimme voeding en beweging hou je het momentum vast."
+        else -> "Je basis vraagt aandacht. Kies vandaag bewust voor herstel, brandstof en een haalbare trainingsprikkel."
+    }
+    val guidance = focusOfDayText(
+        fitScore = fitScore,
+        heartRateBpm = heartRateBpm
+    )
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "TODAY",
+            style = MaterialTheme.typography.labelLarge,
+            color = palette.textSecondary
+        )
+        Text(
+            text = "Focus van de dag",
+            style = MaterialTheme.typography.displaySmall,
+            color = palette.textPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = "Welkom terug, $profileName. $subtitle",
+            style = MaterialTheme.typography.bodyLarge,
+            color = palette.textSecondary
+        )
+        Text(
+            text = guidance,
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.textPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun VitalityScoreRings(
+    fitScore: Int,
+    steps: Int,
+    heartRateBpm: Int,
+    modifier: Modifier = Modifier
+) {
+    val palette = homePalette()
+    val vitalityProgress = fitScore.coerceIn(0, 100) / 100f
+    val movementProgress = (steps / 10_000f).coerceIn(0f, 1f)
+    val recoveryProgress = ((84 - heartRateBpm).coerceIn(0, 28) / 28f).coerceIn(0f, 1f)
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val ringGap = 24.dp.toPx()
+            val outerStroke = 18.dp.toPx()
+
+            drawRing(
+                progress = vitalityProgress,
+                color = palette.accent,
+                trackColor = palette.accentSoft.copy(alpha = 0.6f),
+                strokeWidth = outerStroke,
+                inset = 0f
+            )
+            drawRing(
+                progress = movementProgress,
+                color = palette.warm,
+                trackColor = palette.warmSoft.copy(alpha = 0.7f),
+                strokeWidth = outerStroke,
+                inset = ringGap
+            )
+            drawRing(
+                progress = recoveryProgress,
+                color = palette.warning,
+                trackColor = palette.warningSoft.copy(alpha = 0.7f),
+                strokeWidth = outerStroke,
+                inset = ringGap * 2
+            )
+        }
+
+        Surface(
+            modifier = Modifier.size(148.dp),
+            shape = CircleShape,
+            color = palette.surface,
+            shadowElevation = 6.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    VitalityHeart(
+                        progress = vitalityProgress,
+                        modifier = Modifier.size(92.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color.Black.copy(alpha = 0.34f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = fitScore.coerceIn(0, 100).toString(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VitalityHeart(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    val palette = homePalette()
+    val clampedProgress = progress.coerceIn(0f, 1f)
+    val heartTrack = palette.warningSoft.copy(alpha = 0.95f)
+    val heartFill = palette.warning
+    val heartStroke = palette.warning.copy(alpha = 0.9f)
+
+    Canvas(modifier = modifier) {
+        val heartPath = Path().apply {
+            val width = size.width
+            val height = size.height
+
+            moveTo(width * 0.5f, height * 0.92f)
+            cubicTo(
+                width * 0.1f,
+                height * 0.68f,
+                width * 0.02f,
+                height * 0.34f,
+                width * 0.28f,
+                height * 0.2f
+            )
+            cubicTo(
+                width * 0.43f,
+                height * 0.11f,
+                width * 0.5f,
+                height * 0.19f,
+                width * 0.5f,
+                height * 0.28f
+            )
+            cubicTo(
+                width * 0.5f,
+                height * 0.19f,
+                width * 0.57f,
+                height * 0.11f,
+                width * 0.72f,
+                height * 0.2f
+            )
+            cubicTo(
+                width * 0.98f,
+                height * 0.34f,
+                width * 0.9f,
+                height * 0.68f,
+                width * 0.5f,
+                height * 0.92f
+            )
+            close()
+        }
+
+        drawPath(
+            path = heartPath,
+            color = heartTrack
+        )
+
+        clipPath(heartPath) {
+            val fillHeight = size.height * clampedProgress
+            drawRect(
+                color = heartFill,
+                topLeft = Offset(x = 0f, y = size.height - fillHeight),
+                size = Size(width = size.width, height = fillHeight)
+            )
+        }
+
+        drawPath(
+            path = heartPath,
+            color = heartStroke,
+            style = Stroke(width = size.minDimension * 0.06f)
+        )
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRing(
+    progress: Float,
+    color: Color,
+    trackColor: Color,
+    strokeWidth: Float,
+    inset: Float
+) {
+    drawArc(
+        color = trackColor,
+        startAngle = -90f,
+        sweepAngle = 360f,
+        useCenter = false,
+        topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
+        size = androidx.compose.ui.geometry.Size(
+            width = size.width - inset * 2,
+            height = size.height - inset * 2
+        ),
+        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+    )
+    drawArc(
+        color = color,
+        startAngle = -90f,
+        sweepAngle = 360f * progress,
+        useCenter = false,
+        topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
+        size = androidx.compose.ui.geometry.Size(
+            width = size.width - inset * 2,
+            height = size.height - inset * 2
+        ),
+        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+    )
+}
+
+@Composable
+private fun VitalityInsightList(
+    insights: List<VitalityInsight>,
+    compact: Boolean = true
+) {
+    val palette = homePalette()
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "Inzichten van vandaag",
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.textPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
+        if (compact) {
+            insights.take(3).forEach { insight ->
+                VitalityInsightCard(
+                    insight = insight,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                insights.take(3).forEach { insight ->
+                    VitalityInsightCard(
+                        insight = insight,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VitalityInsightCard(
+    insight: VitalityInsight,
+    modifier: Modifier = Modifier
+) {
+    val palette = homePalette()
+    val accent = when (insight.tone) {
+        HomeInsightTone.ACCENT -> palette.accent
+        HomeInsightTone.WARM -> palette.warm
+        HomeInsightTone.WARNING -> palette.warning
+    }
+
+    Surface(
+        modifier = modifier,
+        color = palette.surface,
+        shape = RoundedCornerShape(22.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, palette.surfaceMuted)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(14.dp)
+                    .clip(CircleShape)
+                    .background(accent)
+            )
+            Text(
+                text = insight.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = palette.textPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = insight.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.textSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun VitalityActions(
+    compact: Boolean,
+    activityOptions: List<QuickActivityType>,
+    onStartWorkout: (QuickActivityType) -> Unit,
+    onLogNutrition: () -> Unit
+) {
+    val workoutOptions = activityOptions.filter { it != QuickActivityType.NUTRITION }
+    val palette = homePalette()
+
+    if (compact) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ActivityCarousel(
+                options = workoutOptions,
+                accentColor = palette.accent,
+                onSelected = onStartWorkout
+            )
+            HomeActionButton(
+                text = "Log nutrition",
+                containerColor = palette.warm,
+                contentColor = palette.textPrimary,
+                onClick = onLogNutrition,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ActivityCarousel(
+                modifier = Modifier.weight(1f)
+                ,
+                options = workoutOptions,
+                accentColor = palette.accent,
+                onSelected = onStartWorkout
+            )
+            HomeActionButton(
+                text = "Log nutrition",
+                containerColor = palette.warm,
+                contentColor = palette.textPrimary,
+                onClick = onLogNutrition,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActivityCarousel(
+    options: List<QuickActivityType>,
+    accentColor: Color,
+    onSelected: (QuickActivityType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val palette = homePalette()
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        options.forEach { option ->
+            Surface(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable { onSelected(option) },
+                color = palette.surface,
+                shape = RoundedCornerShape(24.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 2.dp,
+                    color = accentColor.copy(alpha = 0.72f)
+                )
+            ) {
+                Box(
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    QuickActivityIcon(
+                        type = option,
+                        color = accentColor,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeActionButton(
+    text: String,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        shape = RoundedCornerShape(22.dp)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(vertical = 6.dp),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -149,12 +697,15 @@ private fun SummaryStrip(
     steps: Int,
     heartRateBpm: Int,
     fitScore: Int,
-    onStepsClick: () -> Unit
+    onStepsClick: () -> Unit,
+    compact: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
+    val arrangement = if (compact) Arrangement.spacedBy(12.dp) else Arrangement.spacedBy(10.dp)
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = arrangement
     ) {
         SummaryMetricTile(
             title = "Stappen",
@@ -162,6 +713,7 @@ private fun SummaryStrip(
             subtitle = "Vandaag • tik voor details",
             accent = palette.accent,
             onClick = onStepsClick,
+            compact = compact,
             modifier = Modifier.weight(1f)
         )
         SummaryMetricTile(
@@ -169,6 +721,7 @@ private fun SummaryStrip(
             value = "$heartRateBpm bpm",
             subtitle = "Rustgemiddelde",
             accent = palette.warning,
+            compact = compact,
             modifier = Modifier.weight(1f)
         )
         SummaryMetricTile(
@@ -176,6 +729,7 @@ private fun SummaryStrip(
             value = "$fitScore/100",
             subtitle = "Dagstatus",
             accent = palette.warm,
+            compact = compact,
             modifier = Modifier.weight(1f)
         )
     }
@@ -188,6 +742,7 @@ private fun SummaryMetricTile(
     subtitle: String,
     accent: Color,
     onClick: (() -> Unit)? = null,
+    compact: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
@@ -205,23 +760,23 @@ private fun SummaryMetricTile(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(horizontal = if (compact) 18.dp else 14.dp, vertical = if (compact) 18.dp else 16.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 8.dp)
         ) {
-            androidx.compose.foundation.layout.Box(
+            Box(
                 modifier = Modifier
-                    .size(12.dp)
+                    .size(if (compact) 12.dp else 10.dp)
                     .clip(CircleShape)
                     .background(accent)
             )
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.labelLarge,
                 color = palette.textPrimary
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall,
+                style = if (compact) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
                 color = palette.textPrimary,
                 fontWeight = FontWeight.SemiBold
             )
@@ -280,33 +835,14 @@ private fun StepsOverviewCard(
     }
 }
 
-@Composable
-private fun GuidanceCard(
+private fun focusOfDayText(
     fitScore: Int,
     heartRateBpm: Int
-) {
-    val palette = homePalette()
-    val guidance = when {
+) = when {
         fitScore >= 80 -> "Sterke dag. Houd je ritme vast en plan alleen lichte extra belasting."
         heartRateBpm >= 75 -> "Hartslag ligt hoger dan ideaal. Kies vandaag voor herstel of een korte sessie."
         else -> "Je basis is stabiel. Goed moment voor een geplande training of een stevige wandeling."
     }
-
-    HomePanel(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Focus voor vandaag",
-            style = MaterialTheme.typography.titleLarge,
-            color = palette.textPrimary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = guidance,
-            style = MaterialTheme.typography.bodyLarge,
-            color = palette.textSecondary
-        )
-    }
-}
 
 @Composable
 private fun QuickActivityLogCard(

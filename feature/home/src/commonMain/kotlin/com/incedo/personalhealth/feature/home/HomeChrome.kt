@@ -1,9 +1,11 @@
 package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -23,8 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -92,14 +100,16 @@ internal fun homePalette(): HomePalette = if (MaterialTheme.colorScheme.backgrou
 @Composable
 private fun tabAccent(tab: HomeTab): Color = when (tab) {
     HomeTab.DASHBOARD -> homePalette().accent
-    HomeTab.SYNC -> homePalette().warm
+    HomeTab.NEWS -> homePalette().warm
+    HomeTab.LOG -> homePalette().accent
     HomeTab.PROFILE -> homePalette().warning
 }
 
 @Composable
 private fun tabAccentSoft(tab: HomeTab): Color = when (tab) {
     HomeTab.DASHBOARD -> homePalette().accentSoft
-    HomeTab.SYNC -> homePalette().warmSoft
+    HomeTab.NEWS -> homePalette().warmSoft
+    HomeTab.LOG -> homePalette().accentSoft
     HomeTab.PROFILE -> homePalette().warningSoft
 }
 
@@ -207,16 +217,17 @@ internal fun HomeSidebar(
 @Composable
 internal fun HomeBottomTabs(
     selectedTab: HomeTab,
+    compact: Boolean,
     onTabSelected: (HomeTab) -> Unit
 ) {
     val palette = homePalette()
     HomePanel(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = 10.dp
+        contentPadding = 12.dp
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HomeTab.entries.forEach { tab ->
                 val selected = tab == selectedTab
@@ -237,16 +248,30 @@ internal fun HomeBottomTabs(
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(if (compact) 0.dp else 6.dp)
                     ) {
-                        Text(
-                            text = tab.label,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = palette.textPrimary,
-                            fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.Center
+                        HomeTabIcon(
+                            tab = tab,
+                            color = if (selected) tabAccent(tab) else palette.textPrimary,
+                            modifier = Modifier.size(if (compact) 28.dp else 30.dp)
                         )
+                        if (!compact) {
+                            Text(
+                                text = tab.label,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = palette.textPrimary,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = tab.navDescription,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = palette.textSecondary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -408,16 +433,153 @@ internal enum class HomeTab(
         sectionTitle = "Vandaag",
         sectionSubtitle = "Je centrale startpunt voor gezondheid en activiteit."
     ),
-    SYNC(
-        label = "Sync",
-        navDescription = "Brondatastatus en imports",
-        sectionTitle = "Sync",
-        sectionSubtitle = "Bronnen, kanaalstatus en importacties op een vaste plek."
+    NEWS(
+        label = "Nieuws",
+        navDescription = "Updates, community en inspiratie",
+        sectionTitle = "Nieuws & social",
+        sectionSubtitle = "Recente updates, coaching-signalen en communitymomenten."
+    ),
+    LOG(
+        label = "Log",
+        navDescription = "Eten, drinken en activiteit",
+        sectionTitle = "Logboek",
+        sectionSubtitle = "Alles wat je vandaag toevoegt op een vaste plek."
     ),
     PROFILE(
         label = "Profiel",
-        navDescription = "Persoonlijke gegevens en voorkeuren",
+        navDescription = "Voorkeuren, profiel en imports",
         sectionTitle = "Profiel",
-        sectionSubtitle = "Instellingen, status en accountinformatie."
+        sectionSubtitle = "Instellingen, profielkeuzes en handmatige imports."
     )
+}
+
+@Composable
+internal fun HomeTabIcon(
+    tab: HomeTab,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val stroke = size.minDimension * 0.09f
+        when (tab) {
+            HomeTab.DASHBOARD -> {
+                drawLine(color, Offset(size.width * 0.18f, size.height * 0.48f), Offset(size.width * 0.5f, size.height * 0.18f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.82f, size.height * 0.48f), Offset(size.width * 0.5f, size.height * 0.18f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.24f, size.height * 0.46f), Offset(size.width * 0.24f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.76f, size.height * 0.46f), Offset(size.width * 0.76f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.24f, size.height * 0.8f), Offset(size.width * 0.76f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            HomeTab.NEWS -> {
+                drawCircle(
+                    color = color,
+                    radius = size.minDimension * 0.28f,
+                    center = Offset(size.width * 0.5f, size.height * 0.5f),
+                    style = Stroke(width = stroke)
+                )
+                drawArc(
+                    color = color,
+                    startAngle = 200f,
+                    sweepAngle = 140f,
+                    useCenter = false,
+                    topLeft = Offset(size.width * 0.18f, size.height * 0.32f),
+                    size = Size(size.width * 0.64f, size.height * 0.28f),
+                    style = Stroke(width = stroke, cap = StrokeCap.Round)
+                )
+                drawArc(
+                    color = color,
+                    startAngle = 20f,
+                    sweepAngle = 140f,
+                    useCenter = false,
+                    topLeft = Offset(size.width * 0.18f, size.height * 0.4f),
+                    size = Size(size.width * 0.64f, size.height * 0.28f),
+                    style = Stroke(width = stroke, cap = StrokeCap.Round)
+                )
+                drawLine(color, Offset(size.width * 0.22f, size.height * 0.5f), Offset(size.width * 0.78f, size.height * 0.5f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            HomeTab.LOG -> {
+                drawLine(color, Offset(size.width * 0.3f, size.height * 0.2f), Offset(size.width * 0.7f, size.height * 0.2f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.3f, size.height * 0.2f), Offset(size.width * 0.3f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.7f, size.height * 0.2f), Offset(size.width * 0.7f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.3f, size.height * 0.8f), Offset(size.width * 0.7f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.38f, size.height * 0.38f), Offset(size.width * 0.62f, size.height * 0.38f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.38f, size.height * 0.52f), Offset(size.width * 0.62f, size.height * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.38f, size.height * 0.66f), Offset(size.width * 0.54f, size.height * 0.66f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            HomeTab.PROFILE -> {
+                drawCircle(color = color, radius = size.minDimension * 0.16f, center = Offset(size.width * 0.5f, size.height * 0.3f), style = Stroke(width = stroke))
+                drawArc(color = color, startAngle = 200f, sweepAngle = 140f, useCenter = false, topLeft = Offset(size.width * 0.2f, size.height * 0.38f), size = Size(size.width * 0.6f, size.height * 0.44f), style = Stroke(width = stroke, cap = StrokeCap.Round))
+            }
+        }
+    }
+}
+
+@Composable
+internal fun QuickActivityIcon(
+    type: QuickActivityType,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val stroke = size.minDimension * 0.08f
+        when (type) {
+            QuickActivityType.RUNNING -> {
+                drawCircle(color, radius = size.minDimension * 0.1f, center = Offset(size.width * 0.66f, size.height * 0.2f))
+                drawLine(color, Offset(size.width * 0.58f, size.height * 0.3f), Offset(size.width * 0.46f, size.height * 0.48f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.46f, size.height * 0.48f), Offset(size.width * 0.68f, size.height * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.46f, size.height * 0.48f), Offset(size.width * 0.28f, size.height * 0.64f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.56f, size.height * 0.54f), Offset(size.width * 0.74f, size.height * 0.74f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.42f, size.height * 0.54f), Offset(size.width * 0.24f, size.height * 0.82f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            QuickActivityType.WALKING -> {
+                drawCircle(color, radius = size.minDimension * 0.1f, center = Offset(size.width * 0.56f, size.height * 0.2f))
+                drawLine(color, Offset(size.width * 0.56f, size.height * 0.32f), Offset(size.width * 0.5f, size.height * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.5f, size.height * 0.42f), Offset(size.width * 0.32f, size.height * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.5f, size.height * 0.42f), Offset(size.width * 0.68f, size.height * 0.5f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.5f, size.height * 0.52f), Offset(size.width * 0.36f, size.height * 0.82f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.5f, size.height * 0.52f), Offset(size.width * 0.66f, size.height * 0.8f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            QuickActivityType.CYCLING -> {
+                drawCircle(color, radius = size.minDimension * 0.16f, center = Offset(size.width * 0.28f, size.height * 0.72f), style = Stroke(width = stroke))
+                drawCircle(color, radius = size.minDimension * 0.16f, center = Offset(size.width * 0.74f, size.height * 0.72f), style = Stroke(width = stroke))
+                drawLine(color, Offset(size.width * 0.28f, size.height * 0.72f), Offset(size.width * 0.46f, size.height * 0.48f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.46f, size.height * 0.48f), Offset(size.width * 0.58f, size.height * 0.72f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.58f, size.height * 0.72f), Offset(size.width * 0.28f, size.height * 0.72f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.46f, size.height * 0.48f), Offset(size.width * 0.66f, size.height * 0.46f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.66f, size.height * 0.46f), Offset(size.width * 0.74f, size.height * 0.72f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            QuickActivityType.SWIMMING -> {
+                drawArc(color = color, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(size.width * 0.16f, size.height * 0.6f), size = Size(size.width * 0.24f, size.height * 0.12f), style = Stroke(width = stroke, cap = StrokeCap.Round))
+                drawArc(color = color, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(size.width * 0.38f, size.height * 0.6f), size = Size(size.width * 0.24f, size.height * 0.12f), style = Stroke(width = stroke, cap = StrokeCap.Round))
+                drawArc(color = color, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(size.width * 0.60f, size.height * 0.6f), size = Size(size.width * 0.24f, size.height * 0.12f), style = Stroke(width = stroke, cap = StrokeCap.Round))
+                drawCircle(color, radius = size.minDimension * 0.08f, center = Offset(size.width * 0.38f, size.height * 0.34f))
+                drawLine(color, Offset(size.width * 0.44f, size.height * 0.4f), Offset(size.width * 0.64f, size.height * 0.5f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+            QuickActivityType.FITNESS -> {
+                drawLine(color, Offset(size.width * 0.22f, size.height * 0.5f), Offset(size.width * 0.78f, size.height * 0.5f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.3f, size.height * 0.32f), Offset(size.width * 0.3f, size.height * 0.68f), strokeWidth = stroke * 1.2f, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.7f, size.height * 0.32f), Offset(size.width * 0.7f, size.height * 0.68f), strokeWidth = stroke * 1.2f, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.2f, size.height * 0.36f), Offset(size.width * 0.2f, size.height * 0.64f), strokeWidth = stroke * 1.4f, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.8f, size.height * 0.36f), Offset(size.width * 0.8f, size.height * 0.64f), strokeWidth = stroke * 1.4f, cap = StrokeCap.Round)
+            }
+            QuickActivityType.NUTRITION -> {
+                val apple = Path().apply {
+                    moveTo(size.width * 0.5f, size.height * 0.82f)
+                    cubicTo(size.width * 0.18f, size.height * 0.7f, size.width * 0.18f, size.height * 0.34f, size.width * 0.38f, size.height * 0.34f)
+                    cubicTo(size.width * 0.46f, size.height * 0.34f, size.width * 0.5f, size.height * 0.4f, size.width * 0.5f, size.height * 0.4f)
+                    cubicTo(size.width * 0.5f, size.height * 0.4f, size.width * 0.54f, size.height * 0.34f, size.width * 0.62f, size.height * 0.34f)
+                    cubicTo(size.width * 0.82f, size.height * 0.34f, size.width * 0.82f, size.height * 0.7f, size.width * 0.5f, size.height * 0.82f)
+                    close()
+                }
+                drawPath(apple, color, style = Stroke(width = stroke))
+                drawLine(color, Offset(size.width * 0.5f, size.height * 0.2f), Offset(size.width * 0.5f, size.height * 0.34f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawArc(color = color, startAngle = 210f, sweepAngle = 120f, useCenter = false, topLeft = Offset(size.width * 0.48f, size.height * 0.08f), size = Size(size.width * 0.22f, size.height * 0.18f), style = Stroke(width = stroke, cap = StrokeCap.Round))
+            }
+            QuickActivityType.OTHER -> {
+                drawLine(color, Offset(size.width * 0.5f, size.height * 0.16f), Offset(size.width * 0.5f, size.height * 0.84f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.16f, size.height * 0.5f), Offset(size.width * 0.84f, size.height * 0.5f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.26f, size.height * 0.26f), Offset(size.width * 0.74f, size.height * 0.74f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.74f, size.height * 0.26f), Offset(size.width * 0.26f, size.height * 0.74f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+        }
+    }
 }

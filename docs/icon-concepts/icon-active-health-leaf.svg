@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgA" x1="124" y1="104" x2="890" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10293D"/>
+      <stop offset="1" stop-color="#0FA897"/>
+    </linearGradient>
+    <linearGradient id="leafA" x1="360" y1="264" x2="702" y2="742" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8CEB7B"/>
+      <stop offset="1" stop-color="#2FA84F"/>
+    </linearGradient>
+    <linearGradient id="heartA" x1="302" y1="326" x2="600" y2="710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7C8A"/>
+      <stop offset="1" stop-color="#E26376"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#bgA)"/>
+  <circle cx="512" cy="512" r="304" fill="#FFFFFF" fill-opacity="0.08"/>
+  <path d="M598 256C741 282 822 406 778 553C733 705 592 767 448 739C489 595 553 421 598 256Z" fill="url(#leafA)"/>
+  <path d="M412 702L465 652C604 523 688 449 688 341C688 265 627 204 551 204C506 204 464 225 438 263C412 225 370 204 325 204C249 204 188 265 188 341C188 449 272 523 411 652L412 702Z" fill="url(#heartA)"/>
+  <path d="M246 534H374L430 442L502 624L568 514H686" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
