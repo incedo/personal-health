@@ -4,7 +4,8 @@ import kotlin.math.roundToInt
 
 data class WeightTimelinePoint(
     val label: String,
-    val weightKg: Double?
+    val weightKg: Double?,
+    val periodLabel: String = label
 )
 
 data class WeightChartAxis(

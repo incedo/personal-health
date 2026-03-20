@@ -47,7 +47,9 @@ sealed interface FrontendEvent : AppEvent {
     )
 
     data class HealthSummaryItem(
+        val metricKey: String,
         val metricId: String,
+        val domainId: String,
         val title: String,
         val value: String,
         val detail: String,

@@ -12,98 +12,145 @@ internal fun buildHealthSummaryItems(
     dayStartEpochMillis: Long,
     dayEndEpochMillis: Long
 ): List<FrontendEvent.HealthSummaryItem> {
-    val preferredStepRecords = preferredMetricRecords(records, HealthMetricType.STEPS)
-    val preferredHeartRateRecords = preferredMetricRecords(records, HealthMetricType.HEART_RATE_BPM)
-    val preferredSleepRecords = preferredMetricRecords(records, HealthMetricType.SLEEP_DURATION_MINUTES)
-    val preferredEnergyRecords = preferredMetricRecords(records, HealthMetricType.ACTIVE_ENERGY_KCAL)
-    val preferredWeightRecords = preferredMetricRecords(records, HealthMetricType.BODY_WEIGHT_KG)
-    val preferredBodyFatRecords = preferredMetricRecords(records, HealthMetricType.BODY_FAT_PERCENTAGE)
-    val preferredSystolicRecords = preferredMetricRecords(records, HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG)
-    val preferredDiastolicRecords = preferredMetricRecords(records, HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG)
+    val availableMetrics = HealthMetricType.entries.filter { metric ->
+        preferredMetricRecords(records, metric).isNotEmpty()
+    }
 
-    val stepSnapshot = buildTodayStepsSnapshot(
-        records = preferredStepRecords,
-        dayStartEpochMillis = dayStartEpochMillis,
-        dayEndEpochMillis = dayEndEpochMillis,
-        bucketSizeHours = 1
-    )
-    val heartSnapshot = buildTodayHeartRateSnapshot(
-        records = preferredHeartRateRecords,
-        dayStartEpochMillis = dayStartEpochMillis,
-        dayEndEpochMillis = dayEndEpochMillis,
-        bucketSizeHours = 1
-    )
-    val sleepRecord = preferredSleepRecords.maxByOrNull { it.endEpochMillis }
-    val caloriesTotal = preferredEnergyRecords.sumOf { it.value }
-    val latestWeight = preferredWeightRecords.maxByOrNull { it.endEpochMillis }
-    val latestBodyFat = preferredBodyFatRecords.maxByOrNull { it.endEpochMillis }
-    val latestSystolic = preferredSystolicRecords.maxByOrNull { it.endEpochMillis }
-    val latestDiastolic = preferredDiastolicRecords.maxByOrNull { it.endEpochMillis }
-
-    return listOf(
-        FrontendEvent.HealthSummaryItem(
-            metricId = "steps",
-            title = "Stappen",
-            value = "${stepSnapshot.totalSteps}",
-            detail = "Vandaag totaal",
-            progress = (stepSnapshot.totalSteps / 10_000f).coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.STEPS)
-        ),
-        FrontendEvent.HealthSummaryItem(
-            metricId = "heart_rate",
-            title = "Hartslag",
-            value = heartSnapshot.latestHeartRateBpm?.let { "$it bpm" } ?: "Geen data",
-            detail = heartSnapshot.averageHeartRateBpm?.let { "Gemiddeld $it bpm vandaag" } ?: "Laatste meting ontbreekt",
-            progress = ((heartSnapshot.latestHeartRateBpm ?: 0) - 40).div(80f).coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.HEART_RATE_BPM)
-        ),
-        FrontendEvent.HealthSummaryItem(
-            metricId = "sleep",
-            title = "Slaap",
-            value = sleepRecord?.value?.roundToInt()?.let { "$it min" } ?: "Geen data",
-            detail = if (sleepRecord == null) "Laatste sessie ontbreekt" else "Laatste slaapsessie",
-            progress = ((sleepRecord?.value ?: 0.0) / 480.0).toFloat().coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.SLEEP_DURATION_MINUTES)
-        ),
-        FrontendEvent.HealthSummaryItem(
-            metricId = "active_energy",
-            title = "Actieve energie",
-            value = "${caloriesTotal.roundToInt()} kcal",
-            detail = "Vandaag verbrand",
-            progress = (caloriesTotal / 600.0).toFloat().coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.ACTIVE_ENERGY_KCAL)
-        ),
-        FrontendEvent.HealthSummaryItem(
-            metricId = "body_weight",
-            title = "Gewicht",
-            value = latestWeight?.value?.let { "${(it * 10).roundToInt() / 10.0} kg" } ?: "Geen data",
-            detail = if (latestWeight == null) "Laatste meting ontbreekt" else "Laatste meting",
-            progress = (((latestWeight?.value ?: 0.0) - 40.0) / 100.0).toFloat().coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.BODY_WEIGHT_KG)
-        ),
-        FrontendEvent.HealthSummaryItem(
-            metricId = "body_composition",
-            title = "Body composition",
-            value = latestBodyFat?.value?.roundToInt()?.let { "$it %" } ?: "Geen data",
-            detail = if (latestBodyFat == null) "Laatste body composition ontbreekt" else "Laatste vetpercentage",
-            progress = ((latestBodyFat?.value ?: 0.0) / 50.0).toFloat().coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.BODY_FAT_PERCENTAGE)
-        ),
-        FrontendEvent.HealthSummaryItem(
-            metricId = "blood_pressure",
-            title = "Bloeddruk",
-            value = if (latestSystolic == null || latestDiastolic == null) {
-                "Geen data"
-            } else {
-                "${latestSystolic.value.roundToInt()}/${latestDiastolic.value.roundToInt()} mmHg"
-            },
-            detail = if (latestSystolic == null || latestDiastolic == null) {
-                "Laatste bloeddruk ontbreekt"
-            } else {
-                "Laatste meting"
-            },
-            progress = (((latestSystolic?.value ?: 0.0) - 80.0) / 100.0).toFloat().coerceIn(0f, 1f),
-            sourceSummary = healthSourceSummary(records, HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG)
+    return availableMetrics.mapNotNull { metric ->
+        buildSummaryItem(
+            metric = metric,
+            records = records,
+            dayStartEpochMillis = dayStartEpochMillis,
+            dayEndEpochMillis = dayEndEpochMillis
         )
+    }
+}
+
+private fun buildSummaryItem(
+    metric: HealthMetricType,
+    records: List<HealthRecord>,
+    dayStartEpochMillis: Long,
+    dayEndEpochMillis: Long
+): FrontendEvent.HealthSummaryItem? {
+    val preferredRecords = preferredMetricRecords(records, metric)
+    if (preferredRecords.isEmpty()) return null
+
+    val presentation = when (metric) {
+        HealthMetricType.STEPS -> buildStepsPresentation(records, dayStartEpochMillis, dayEndEpochMillis)
+        HealthMetricType.HEART_RATE_BPM -> buildHeartRatePresentation(records, dayStartEpochMillis, dayEndEpochMillis)
+        HealthMetricType.SLEEP_DURATION_MINUTES -> buildSleepPresentation(preferredRecords)
+        HealthMetricType.ACTIVE_ENERGY_KCAL -> buildEnergyPresentation(preferredRecords)
+        else -> buildLatestValuePresentation(metric, preferredRecords)
+    }
+
+    return FrontendEvent.HealthSummaryItem(
+        metricKey = metric.key,
+        metricId = metric.metricId,
+        domainId = metric.dataType.domain.name,
+        title = metric.title,
+        value = presentation.value,
+        detail = presentation.detail,
+        progress = presentation.progress,
+        sourceSummary = healthSourceSummary(records, metric)
     )
 }
+
+private fun buildStepsPresentation(
+    records: List<HealthRecord>,
+    dayStartEpochMillis: Long,
+    dayEndEpochMillis: Long
+): SummaryPresentation {
+    val snapshot = buildTodayStepsSnapshot(
+        records = preferredMetricRecords(records, HealthMetricType.STEPS),
+        dayStartEpochMillis = dayStartEpochMillis,
+        dayEndEpochMillis = dayEndEpochMillis,
+        bucketSizeHours = 1
+    )
+    return SummaryPresentation(
+        value = "${snapshot.totalSteps}",
+        detail = "Vandaag totaal",
+        progress = (snapshot.totalSteps / 10_000f).coerceIn(0f, 1f)
+    )
+}
+
+private fun buildHeartRatePresentation(
+    records: List<HealthRecord>,
+    dayStartEpochMillis: Long,
+    dayEndEpochMillis: Long
+): SummaryPresentation {
+    val snapshot = buildTodayHeartRateSnapshot(
+        records = preferredMetricRecords(records, HealthMetricType.HEART_RATE_BPM),
+        dayStartEpochMillis = dayStartEpochMillis,
+        dayEndEpochMillis = dayEndEpochMillis,
+        bucketSizeHours = 1
+    )
+    return SummaryPresentation(
+        value = snapshot.latestHeartRateBpm?.let { "$it bpm" } ?: "Geen data",
+        detail = snapshot.averageHeartRateBpm?.let { "Gemiddeld $it bpm vandaag" } ?: "Laatste meting ontbreekt",
+        progress = ((snapshot.latestHeartRateBpm ?: 0) - 40).div(80f).coerceIn(0f, 1f)
+    )
+}
+
+private fun buildSleepPresentation(records: List<HealthRecord>): SummaryPresentation {
+    val latestRecord = records.maxByOrNull { it.endEpochMillis }
+    return SummaryPresentation(
+        value = latestRecord?.value?.roundToInt()?.let { "$it min" } ?: "Geen data",
+        detail = if (latestRecord == null) "Laatste slaapsessie ontbreekt" else "Laatste slaapsessie",
+        progress = ((latestRecord?.value ?: 0.0) / 480.0).toFloat().coerceIn(0f, 1f)
+    )
+}
+
+private fun buildEnergyPresentation(records: List<HealthRecord>): SummaryPresentation {
+    val total = records.sumOf { it.value }
+    return SummaryPresentation(
+        value = "${total.roundToInt()} kcal",
+        detail = "Binnen venster totaal",
+        progress = (total / 600.0).toFloat().coerceIn(0f, 1f)
+    )
+}
+
+private fun buildLatestValuePresentation(
+    metric: HealthMetricType,
+    records: List<HealthRecord>
+): SummaryPresentation {
+    val latestRecord = records.maxByOrNull { it.endEpochMillis }
+    val value = latestRecord?.let { formatMetricValue(metric, it.value) } ?: "Geen data"
+    return SummaryPresentation(
+        value = value,
+        detail = if (latestRecord == null) {
+            "Laatste meting ontbreekt"
+        } else {
+            "Laatste meting"
+        },
+        progress = latestRecord?.let { estimateProgress(metric, it.value) } ?: 0f
+    )
+}
+
+private fun formatMetricValue(metric: HealthMetricType, value: Double): String = when (metric.unit) {
+    "count" -> value.roundToInt().toString()
+    "bpm", "min", "kcal", "mL", "mg/dL", "mmHg" -> "${value.roundToInt()} ${metric.unit}"
+    "%" -> "${value.roundToInt()} %"
+    "kg" -> "${((value * 10).roundToInt()) / 10.0} kg"
+    "cm" -> "${value.roundToInt()} cm"
+    "C" -> "${((value * 10).roundToInt()) / 10.0} C"
+    "kg/m2" -> "${((value * 10).roundToInt()) / 10.0}"
+    else -> "${value.roundToInt()} ${metric.unit}"
+}
+
+private fun estimateProgress(metric: HealthMetricType, value: Double): Float = when (metric) {
+    HealthMetricType.BODY_WEIGHT_KG -> (((value - 40.0) / 100.0).toFloat()).coerceIn(0f, 1f)
+    HealthMetricType.BODY_FAT_PERCENTAGE -> (value / 50.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG -> (((value - 80.0) / 100.0).toFloat()).coerceIn(0f, 1f)
+    HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG -> (((value - 50.0) / 70.0).toFloat()).coerceIn(0f, 1f)
+    HealthMetricType.BLOOD_GLUCOSE_MGDL -> (value / 180.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.OXYGEN_SATURATION_PERCENTAGE -> (value / 100.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.BODY_TEMPERATURE_CELSIUS -> (((value - 34.0) / 6.0).toFloat()).coerceIn(0f, 1f)
+    HealthMetricType.HYDRATION_ML -> (value / 2_500.0).toFloat().coerceIn(0f, 1f)
+    else -> 0f
+}
+
+private data class SummaryPresentation(
+    val value: String,
+    val detail: String,
+    val progress: Float
+)

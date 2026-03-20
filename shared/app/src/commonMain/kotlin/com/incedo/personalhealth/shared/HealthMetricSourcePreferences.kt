@@ -20,12 +20,19 @@ internal fun preferredMetricRecords(
 
 private fun metricSourcePriority(metric: HealthMetricType): List<HealthDataSource> = when (metric) {
     HealthMetricType.BODY_WEIGHT_KG,
+    HealthMetricType.HEIGHT_CM,
     HealthMetricType.BODY_FAT_PERCENTAGE,
     HealthMetricType.MUSCLE_MASS_KG,
     HealthMetricType.BONE_MASS_KG,
+    HealthMetricType.WATER_MASS_KG,
     HealthMetricType.WATER_PERCENTAGE,
+    HealthMetricType.BODY_MASS_INDEX,
+    HealthMetricType.BASAL_METABOLIC_RATE_KCAL,
     HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
-    HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG -> listOf(
+    HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG,
+    HealthMetricType.BLOOD_GLUCOSE_MGDL,
+    HealthMetricType.OXYGEN_SATURATION_PERCENTAGE,
+    HealthMetricType.BODY_TEMPERATURE_CELSIUS -> listOf(
         HealthDataSource.WITHINGS,
         HealthDataSource.SAMSUNG_HEALTH,
         HealthDataSource.HEALTH_CONNECT,

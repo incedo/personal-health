@@ -199,6 +199,8 @@ class HomeMetricsTest {
         val metrics = listOf(
             HomeHealthMetricCard(
                 id = "body_weight",
+                metricKey = "BODY_WEIGHT_KG",
+                domainId = "BODY_MEASUREMENTS",
                 title = "Gewicht",
                 value = "78.4 kg",
                 detail = "Laatste meting",

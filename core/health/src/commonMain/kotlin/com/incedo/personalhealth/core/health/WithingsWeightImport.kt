@@ -21,10 +21,10 @@ fun parseWithingsWeightCsvImport(csv: String): CanonicalHealthImportDocument {
     require(rows.isNotEmpty()) { "Withings CSV is leeg" }
 
     val headers = parseCsvRow(rows.first())
-    val dateIndex = headers.indexOfFirst { it.normalizedHeader().contains("date") }
-    val timeIndex = headers.indexOfFirst { it.normalizedHeader() == "time" }
+    val dateIndex = headers.indexOfFirst { it.isWithingsDateHeader() }
+    val timeIndex = headers.indexOfFirst { it.isWithingsTimeHeader() }
     val metricColumns = WITHINGS_COLUMN_MAPPINGS.mapNotNull { mapping ->
-        headers.indexOfFirst { it.normalizedHeader() == mapping.headerKey }
+        headers.indexOfFirst { it.normalizedHeader() in mapping.headerKeys }
             .takeIf { it >= 0 }
             ?.let { index -> mapping to index }
     }
@@ -75,19 +75,28 @@ fun parseWithingsWeightCsvImport(csv: String): CanonicalHealthImportDocument {
 }
 
 private data class WithingsColumnMapping(
-    val headerKey: String,
+    val headerKeys: Set<String>,
     val metric: HealthMetricType,
     val unit: String
 )
 
 private val WITHINGS_COLUMN_MAPPINGS = listOf(
-    WithingsColumnMapping("weightkg", HealthMetricType.BODY_WEIGHT_KG, "kg"),
-    WithingsColumnMapping("fatmass%", HealthMetricType.BODY_FAT_PERCENTAGE, "%"),
-    WithingsColumnMapping("musclemasskg", HealthMetricType.MUSCLE_MASS_KG, "kg"),
-    WithingsColumnMapping("bonemasskg", HealthMetricType.BONE_MASS_KG, "kg"),
-    WithingsColumnMapping("watermass%", HealthMetricType.WATER_PERCENTAGE, "%"),
-    WithingsColumnMapping("systolicbloodpressuremmhg", HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG, "mmHg"),
-    WithingsColumnMapping("diastolicbloodpressuremmhg", HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG, "mmHg")
+    WithingsColumnMapping(setOf("weightkg", "gewichtkg"), HealthMetricType.BODY_WEIGHT_KG, "kg"),
+    WithingsColumnMapping(setOf("fatmass%"), HealthMetricType.BODY_FAT_PERCENTAGE, "%"),
+    WithingsColumnMapping(setOf("musclemasskg", "spiermassakg"), HealthMetricType.MUSCLE_MASS_KG, "kg"),
+    WithingsColumnMapping(setOf("bonemasskg", "botmassakg"), HealthMetricType.BONE_MASS_KG, "kg"),
+    WithingsColumnMapping(setOf("watermass%", "waterpercentage"), HealthMetricType.WATER_PERCENTAGE, "%"),
+    WithingsColumnMapping(setOf("watermasskg", "hydratatiekg"), HealthMetricType.WATER_MASS_KG, "kg"),
+    WithingsColumnMapping(
+        setOf("systolicbloodpressuremmhg", "bovendrukmmhg"),
+        HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
+        "mmHg"
+    ),
+    WithingsColumnMapping(
+        setOf("diastolicbloodpressuremmhg", "onderdrukmmhg"),
+        HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG,
+        "mmHg"
+    )
 )
 
 private fun parseCsvRow(row: String): List<String> {
@@ -122,3 +131,13 @@ private fun String.normalizedHeader(): String = lowercase()
     .replace("_", "")
     .replace("(", "")
     .replace(")", "")
+
+private fun String.isWithingsDateHeader(): Boolean {
+    val normalized = normalizedHeader()
+    return normalized == "date" || normalized == "datum" || normalized.contains("date")
+}
+
+private fun String.isWithingsTimeHeader(): Boolean {
+    val normalized = normalizedHeader()
+    return normalized == "time" || normalized == "tijd"
+}

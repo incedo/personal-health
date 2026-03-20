@@ -31,6 +31,13 @@ class HealthModelsCoverageTest {
     }
 
     @Test
+    fun healthMetricType_resolvesFromCanonicalKeyAndMetricId() {
+        assertEquals(HealthMetricType.STEPS, HealthMetricType.fromSerializedName("STEPS"))
+        assertEquals(HealthMetricType.BLOOD_GLUCOSE_MGDL, HealthMetricType.fromSerializedName("blood_glucose"))
+        assertEquals("mg/dL", HealthMetricType.BLOOD_GLUCOSE_MGDL.unit)
+    }
+
+    @Test
     fun healthEvents_canBeConstructedForAllIntentTypes() {
         val now = 123L
         val received = HealthEvent.LiveSyncIntentReceived(

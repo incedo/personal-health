@@ -43,7 +43,17 @@ actual fun startIosHealthHistoryImportInternal() {
                         HealthMetricType.HEART_RATE_BPM,
                         HealthMetricType.SLEEP_DURATION_MINUTES,
                         HealthMetricType.ACTIVE_ENERGY_KCAL,
-                        HealthMetricType.BODY_WEIGHT_KG
+                        HealthMetricType.BODY_WEIGHT_KG,
+                        HealthMetricType.HEIGHT_CM,
+                        HealthMetricType.BODY_FAT_PERCENTAGE,
+                        HealthMetricType.BODY_MASS_INDEX,
+                        HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
+                        HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG,
+                        HealthMetricType.BLOOD_GLUCOSE_MGDL,
+                        HealthMetricType.OXYGEN_SATURATION_PERCENTAGE,
+                        HealthMetricType.BODY_TEMPERATURE_CELSIUS,
+                        HealthMetricType.HYDRATION_ML,
+                        HealthMetricType.DIETARY_ENERGY_KCAL
                     ),
                     startEpochMillis = nowEpochMillis - lookbackMillis,
                     endEpochMillis = nowEpochMillis
@@ -78,7 +88,17 @@ actual fun startIosHealthLiveSyncInternal() {
                         HealthMetricType.HEART_RATE_BPM,
                         HealthMetricType.SLEEP_DURATION_MINUTES,
                         HealthMetricType.ACTIVE_ENERGY_KCAL,
-                        HealthMetricType.BODY_WEIGHT_KG
+                        HealthMetricType.BODY_WEIGHT_KG,
+                        HealthMetricType.HEIGHT_CM,
+                        HealthMetricType.BODY_FAT_PERCENTAGE,
+                        HealthMetricType.BODY_MASS_INDEX,
+                        HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
+                        HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG,
+                        HealthMetricType.BLOOD_GLUCOSE_MGDL,
+                        HealthMetricType.OXYGEN_SATURATION_PERCENTAGE,
+                        HealthMetricType.BODY_TEMPERATURE_CELSIUS,
+                        HealthMetricType.HYDRATION_ML,
+                        HealthMetricType.DIETARY_ENERGY_KCAL
                     ),
                     lookbackMillis = 24L * 60L * 60L * 1000L
                 )
