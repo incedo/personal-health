@@ -29,10 +29,26 @@ internal actual fun yearOfEpochMillis(epochMillis: Long): Int {
     return components.year.toInt()
 }
 
+internal actual fun monthOfEpochMillis(epochMillis: Long): Int {
+    val date = NSDate.dateWithTimeIntervalSince1970(epochMillis.toDouble() / 1000.0)
+    val components = NSCalendar.currentCalendar.components(NSCalendarUnitMonth, fromDate = date)
+    return components.month.toInt()
+}
+
 internal actual fun startOfYearEpochMillis(year: Int): Long {
     val components = NSDateComponents().apply {
         this.year = year.toLong()
         month = 1
+        day = 1
+    }
+    val date = NSCalendar.currentCalendar.dateFromComponents(components) ?: NSDate()
+    return (date.timeIntervalSince1970 * 1000.0).toLong()
+}
+
+internal actual fun startOfMonthEpochMillis(year: Int, month: Int): Long {
+    val components = NSDateComponents().apply {
+        this.year = year.toLong()
+        this.month = month.toLong()
         day = 1
     }
     val date = NSCalendar.currentCalendar.dateFromComponents(components) ?: NSDate()

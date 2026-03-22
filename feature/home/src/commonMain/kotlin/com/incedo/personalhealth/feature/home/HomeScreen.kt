@@ -1,7 +1,6 @@
 package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,7 +19,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -89,27 +87,6 @@ fun HomeScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .pointerInput(activeDetailDestination, selectedTab) {
-                        var dragOffset = 0f
-                        detectHorizontalDragGestures(
-                            onHorizontalDrag = { change, dragAmount ->
-                                change.consume()
-                                dragOffset += dragAmount
-                            },
-                            onDragEnd = {
-                                when {
-                                    activeDetailDestination != null && dragOffset > 80f -> onCloseDetail()
-                                    activeDetailDestination == null && dragOffset > 80f -> {
-                                        selectedTab = selectedTab.previous()
-                                    }
-                                    activeDetailDestination == null && dragOffset < -80f -> {
-                                        selectedTab = selectedTab.next()
-                                    }
-                                }
-                                dragOffset = 0f
-                            }
-                        )
-                    }
             ) {
                 when (activeDetailDestination) {
                     HomeDetailDestination.STEPS -> StepDetailScreen(
@@ -215,14 +192,4 @@ fun HomeScreen(
             )
         }
     }
-}
-
-private fun HomeTab.previous(): HomeTab {
-    val index = HomeTab.entries.indexOf(this)
-    return HomeTab.entries[(index - 1).coerceAtLeast(0)]
-}
-
-private fun HomeTab.next(): HomeTab {
-    val index = HomeTab.entries.indexOf(this)
-    return HomeTab.entries[(index + 1).coerceAtMost(HomeTab.entries.lastIndex)]
 }
