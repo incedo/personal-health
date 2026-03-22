@@ -1,31 +1,19 @@
 package com.incedo.personalhealth.feature.onboarding
 
 import androidx.compose.runtime.saveable.Saver
-import kotlin.math.max
-import kotlin.math.min
 
-enum class OnboardingLayoutClass {
-    Compact,
-    Medium,
-    Expanded
+typealias OnboardingGoal = com.incedo.personalhealth.core.onboarding.OnboardingGoal
+typealias OnboardingLayoutClass = com.incedo.personalhealth.core.onboarding.OnboardingLayoutClass
+typealias OnboardingStep = com.incedo.personalhealth.core.onboarding.OnboardingStep
+typealias OnboardingUiState = com.incedo.personalhealth.core.onboarding.OnboardingUiState
+
+sealed interface OnboardingEvent {
+    data object Next : OnboardingEvent
+    data object Back : OnboardingEvent
+    data object Skip : OnboardingEvent
+    data object Finish : OnboardingEvent
+    data class GoalSelected(val goal: OnboardingGoal) : OnboardingEvent
 }
-
-enum class OnboardingGoal {
-    Activity,
-    BetterSleep,
-    Nutrition
-}
-
-data class OnboardingStep(
-    val title: String,
-    val description: String
-)
-
-data class OnboardingUiState(
-    val stepIndex: Int = 0,
-    val selectedGoal: OnboardingGoal? = null,
-    val completed: Boolean = false
-)
 
 val OnboardingUiStateSaver: Saver<OnboardingUiState, List<Any?>> = Saver(
     save = { state ->
@@ -46,60 +34,27 @@ val OnboardingUiStateSaver: Saver<OnboardingUiState, List<Any?>> = Saver(
         )
     }
 )
+val onboardingSteps = com.incedo.personalhealth.core.onboarding.onboardingSteps
 
-sealed interface OnboardingEvent {
-    data object Next : OnboardingEvent
-    data object Back : OnboardingEvent
-    data object Skip : OnboardingEvent
-    data object Finish : OnboardingEvent
-    data class GoalSelected(val goal: OnboardingGoal) : OnboardingEvent
-}
-
-val onboardingSteps: List<OnboardingStep> = listOf(
-    OnboardingStep(
-        title = "Welcome",
-        description = "Track daily habits and build routines that improve your energy and focus."
-    ),
-    OnboardingStep(
-        title = "Insights",
-        description = "See clear trends for activity, sleep, and hydration in one shared dashboard."
-    ),
-    OnboardingStep(
-        title = "Your Goal",
-        description = "Pick your current focus so the app can prioritize the metrics that matter most."
-    )
-)
-
-fun classifyLayout(maxWidthDp: Float): OnboardingLayoutClass {
-    return when {
-        maxWidthDp < 600f -> OnboardingLayoutClass.Compact
-        maxWidthDp < 840f -> OnboardingLayoutClass.Medium
-        else -> OnboardingLayoutClass.Expanded
-    }
-}
+fun classifyLayout(maxWidthDp: Float): OnboardingLayoutClass =
+    com.incedo.personalhealth.core.onboarding.classifyLayout(maxWidthDp)
 
 fun reduceOnboardingState(
     state: OnboardingUiState,
     event: OnboardingEvent,
     totalSteps: Int = onboardingSteps.size
-): OnboardingUiState {
-    if (state.completed) {
-        return state
-    }
+): OnboardingUiState = com.incedo.personalhealth.core.onboarding.reduceOnboardingState(
+    state = state,
+    event = event.toCoreEvent(),
+    totalSteps = totalSteps
+)
 
-    val maxStepIndex = max(0, totalSteps - 1)
-
-    return when (event) {
-        OnboardingEvent.Back -> state.copy(stepIndex = max(0, state.stepIndex - 1))
-        OnboardingEvent.Next -> {
-            if (state.stepIndex >= maxStepIndex) {
-                state.copy(completed = true)
-            } else {
-                state.copy(stepIndex = min(maxStepIndex, state.stepIndex + 1))
-            }
-        }
-        OnboardingEvent.Skip,
-        OnboardingEvent.Finish -> state.copy(completed = true)
-        is OnboardingEvent.GoalSelected -> state.copy(selectedGoal = event.goal)
+private fun OnboardingEvent.toCoreEvent(): com.incedo.personalhealth.core.onboarding.OnboardingEvent {
+    return when (this) {
+        OnboardingEvent.Next -> com.incedo.personalhealth.core.onboarding.OnboardingEvent.Next
+        OnboardingEvent.Back -> com.incedo.personalhealth.core.onboarding.OnboardingEvent.Back
+        OnboardingEvent.Skip -> com.incedo.personalhealth.core.onboarding.OnboardingEvent.Skip
+        OnboardingEvent.Finish -> com.incedo.personalhealth.core.onboarding.OnboardingEvent.Finish
+        is OnboardingEvent.GoalSelected -> com.incedo.personalhealth.core.onboarding.OnboardingEvent.GoalSelected(goal)
     }
 }

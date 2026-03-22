@@ -53,6 +53,8 @@ dependencies {
     implementation(project(":shared:app"))
     implementation(project(":core:events"))
     implementation(project(":core:health"))
+    implementation(project(":core:wellbeing"))
+    implementation(project(":integration:app-usage"))
     implementation(project(":integration:health-connect"))
     implementation(project(":integration:samsung-health"))
     implementation(files(rootProject.file("integration/samsung-health/libs/samsung-health-data-api-1.1.0.aar")))

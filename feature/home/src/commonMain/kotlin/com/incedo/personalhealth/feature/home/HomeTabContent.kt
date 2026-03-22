@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.goals.CoachFocusGoal
 
 @Composable
 internal fun HomeTabContent(
@@ -18,6 +19,7 @@ internal fun HomeTabContent(
     healthMetricCards: List<HomeHealthMetricCard>,
     activityMinutesToday: Int,
     heartRateBpm: Int,
+    onboardingFocusGoal: CoachFocusGoal?,
     profileName: String,
     themeMode: HomeThemeMode,
     onThemeModeSelected: (HomeThemeMode) -> Unit,
@@ -37,6 +39,8 @@ internal fun HomeTabContent(
     onOpenHeartRateDetail: () -> Unit,
     onOpenWeightDetail: () -> Unit,
     onOpenHealthDataDetail: () -> Unit,
+    onOpenCoachDetail: (HomeDetailDestination) -> Unit,
+    onNavigateToTab: (HomeTab) -> Unit,
     syncContent: @Composable ColumnScope.() -> Unit,
     profileContent: @Composable ColumnScope.() -> Unit,
     compact: Boolean
@@ -87,6 +91,19 @@ internal fun HomeTabContent(
             bodyContent = {
                 NewsSocialSection()
             }
+        )
+
+        HomeTab.COACH -> CoachSectionScreen(
+            page = CoachPage.OVERVIEW,
+            compact = compact,
+            onboardingFocusGoal = onboardingFocusGoal,
+            onCloseCoachDetail = {},
+            onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
+            onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
+            onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+            onOpenDashboard = { onNavigateToTab(HomeTab.DASHBOARD) },
+            onOpenLogbook = { onNavigateToTab(HomeTab.LOG) },
+            onOpenProfile = { onNavigateToTab(HomeTab.PROFILE) }
         )
 
         HomeTab.LOG -> HomeSectionScreen(

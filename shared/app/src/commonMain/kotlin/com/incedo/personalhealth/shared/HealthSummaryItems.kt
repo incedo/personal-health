@@ -40,6 +40,7 @@ private fun buildSummaryItem(
         HealthMetricType.HEART_RATE_BPM -> buildHeartRatePresentation(records, dayStartEpochMillis, dayEndEpochMillis)
         HealthMetricType.SLEEP_DURATION_MINUTES -> buildSleepPresentation(preferredRecords)
         HealthMetricType.ACTIVE_ENERGY_KCAL -> buildEnergyPresentation(preferredRecords)
+        in aggregateMetrics -> buildAggregatePresentation(metric, preferredRecords)
         else -> buildLatestValuePresentation(metric, preferredRecords)
     }
 
@@ -109,6 +110,18 @@ private fun buildEnergyPresentation(records: List<HealthRecord>): SummaryPresent
     )
 }
 
+private fun buildAggregatePresentation(
+    metric: HealthMetricType,
+    records: List<HealthRecord>
+): SummaryPresentation {
+    val total = records.sumOf { it.value }
+    return SummaryPresentation(
+        value = formatMetricValue(metric, total),
+        detail = "Binnen venster totaal",
+        progress = estimateProgress(metric, total)
+    )
+}
+
 private fun buildLatestValuePresentation(
     metric: HealthMetricType,
     records: List<HealthRecord>
@@ -128,8 +141,9 @@ private fun buildLatestValuePresentation(
 
 private fun formatMetricValue(metric: HealthMetricType, value: Double): String = when (metric.unit) {
     "count" -> value.roundToInt().toString()
-    "bpm", "min", "kcal", "mL", "mg/dL", "mmHg" -> "${value.roundToInt()} ${metric.unit}"
+    "bpm", "min", "kcal", "mL", "mg/dL", "mmHg", "mg", "mcg" -> "${value.roundToInt()} ${metric.unit}"
     "%" -> "${value.roundToInt()} %"
+    "g" -> "${((value * 10).roundToInt()) / 10.0} g"
     "kg" -> "${((value * 10).roundToInt()) / 10.0} kg"
     "cm" -> "${value.roundToInt()} cm"
     "C" -> "${((value * 10).roundToInt()) / 10.0} C"
@@ -140,14 +154,57 @@ private fun formatMetricValue(metric: HealthMetricType, value: Double): String =
 private fun estimateProgress(metric: HealthMetricType, value: Double): Float = when (metric) {
     HealthMetricType.BODY_WEIGHT_KG -> (((value - 40.0) / 100.0).toFloat()).coerceIn(0f, 1f)
     HealthMetricType.BODY_FAT_PERCENTAGE -> (value / 50.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.BODY_FAT_MASS_KG -> (value / 50.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.MUSCLE_MASS_KG, HealthMetricType.FAT_FREE_MASS_KG -> (value / 100.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.MUSCLE_PERCENTAGE, HealthMetricType.SKELETAL_MUSCLE_PERCENTAGE, HealthMetricType.FAT_FREE_PERCENTAGE -> (value / 100.0).toFloat().coerceIn(0f, 1f)
     HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG -> (((value - 80.0) / 100.0).toFloat()).coerceIn(0f, 1f)
     HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG -> (((value - 50.0) / 70.0).toFloat()).coerceIn(0f, 1f)
+    HealthMetricType.MEAN_BLOOD_PRESSURE_MMHG -> (((value - 60.0) / 80.0).toFloat()).coerceIn(0f, 1f)
+    HealthMetricType.PULSE_RATE_BPM -> (((value - 40.0) / 100.0).toFloat()).coerceIn(0f, 1f)
     HealthMetricType.BLOOD_GLUCOSE_MGDL -> (value / 180.0).toFloat().coerceIn(0f, 1f)
     HealthMetricType.OXYGEN_SATURATION_PERCENTAGE -> (value / 100.0).toFloat().coerceIn(0f, 1f)
     HealthMetricType.BODY_TEMPERATURE_CELSIUS -> (((value - 34.0) / 6.0).toFloat()).coerceIn(0f, 1f)
     HealthMetricType.HYDRATION_ML -> (value / 2_500.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.DIETARY_ENERGY_KCAL -> (value / 2_500.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.PROTEIN_G -> (value / 150.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.CARBOHYDRATE_G -> (value / 350.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.TOTAL_FAT_G -> (value / 120.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.SATURATED_FAT_G -> (value / 40.0).toFloat().coerceIn(0f, 1f)
+    HealthMetricType.POLYUNSATURATED_FAT_G,
+    HealthMetricType.MONOUNSATURATED_FAT_G,
+    HealthMetricType.TRANS_FAT_G,
+    HealthMetricType.DIETARY_FIBER_G,
+    HealthMetricType.SUGAR_G,
+    HealthMetricType.CHOLESTEROL_MG,
+    HealthMetricType.SODIUM_MG,
+    HealthMetricType.POTASSIUM_MG,
+    HealthMetricType.CALCIUM_MG,
+    HealthMetricType.IRON_MG,
+    HealthMetricType.VITAMIN_A_MCG,
+    HealthMetricType.VITAMIN_C_MG -> 0f
     else -> 0f
 }
+
+private val aggregateMetrics = setOf(
+    HealthMetricType.HYDRATION_ML,
+    HealthMetricType.DIETARY_ENERGY_KCAL,
+    HealthMetricType.PROTEIN_G,
+    HealthMetricType.CARBOHYDRATE_G,
+    HealthMetricType.TOTAL_FAT_G,
+    HealthMetricType.SATURATED_FAT_G,
+    HealthMetricType.POLYUNSATURATED_FAT_G,
+    HealthMetricType.MONOUNSATURATED_FAT_G,
+    HealthMetricType.TRANS_FAT_G,
+    HealthMetricType.DIETARY_FIBER_G,
+    HealthMetricType.SUGAR_G,
+    HealthMetricType.CHOLESTEROL_MG,
+    HealthMetricType.SODIUM_MG,
+    HealthMetricType.POTASSIUM_MG,
+    HealthMetricType.CALCIUM_MG,
+    HealthMetricType.IRON_MG,
+    HealthMetricType.VITAMIN_A_MCG,
+    HealthMetricType.VITAMIN_C_MG
+)
 
 private data class SummaryPresentation(
     val value: String,

@@ -1,12 +1,6 @@
 package com.incedo.personalhealth.shared
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +18,11 @@ import com.incedo.personalhealth.core.health.CanonicalHealthImportDocument
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
 import com.incedo.personalhealth.core.health.currentEpochMillis
+import com.incedo.personalhealth.core.onboarding.OnboardingUiState
+import com.incedo.personalhealth.core.wellbeing.WellbeingEvent
+import com.incedo.personalhealth.core.wellbeing.defaultSelectedSocialAppPackages
+import com.incedo.personalhealth.core.wellbeing.emptyScreenTimeSummary
+import com.incedo.personalhealth.core.wellbeing.resolveSelectedSocialApps
 import com.incedo.personalhealth.feature.home.HeartRateTimelinePoint
 import com.incedo.personalhealth.feature.home.HomeDetailDestination
 import com.incedo.personalhealth.feature.home.HomeHealthMetricCard
@@ -54,8 +53,6 @@ import com.incedo.personalhealth.feature.home.toQuickActivityEntry
 import com.incedo.personalhealth.feature.home.totalFitnessActivityMinutes
 import com.incedo.personalhealth.feature.home.totalTrackedActivityMinutes
 import com.incedo.personalhealth.feature.onboarding.OnboardingRoute
-import com.incedo.personalhealth.feature.onboarding.OnboardingGoal
-import com.incedo.personalhealth.feature.onboarding.OnboardingUiState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,10 +73,11 @@ fun PersonalHealthApp() {
     val initialOnboardingState = remember {
         OnboardingUiState(
             stepIndex = OnboardingPreferenceStore.stepIndex(),
-            selectedGoal = OnboardingPreferenceStore.selectedGoalId()?.let(OnboardingGoal::valueOf),
+            selectedGoal = onboardingGoalFromId(OnboardingPreferenceStore.selectedGoalId()),
             completed = OnboardingPreferenceStore.isCompleted()
         )
     }
+    var onboardingGoal by remember { mutableStateOf(initialOnboardingState.selectedGoal) }
     var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
     var lastReadSummary by remember { mutableStateOf("Nog geen health records gelezen") }
@@ -89,11 +87,13 @@ fun PersonalHealthApp() {
     var todayHeartRateBpm by remember { mutableStateOf<Int?>(null) }
     var todayHeartRateTimeline by remember { mutableStateOf(emptyList<HeartRateTimelinePoint>()) }
     var bodyWeightCatalog by remember { mutableStateOf(initialDashboardHealthState.bodyWeightCatalog) }
-    var healthMetricCards by remember { mutableStateOf(initialDashboardHealthState.healthMetricCards) }
+    var dashboardHealthMetricCards by remember { mutableStateOf(initialDashboardHealthState.healthMetricCards) }
     var lastDashboardEventCache by remember { mutableStateOf<DashboardHealthEventCache?>(null) }
     var nutritionEntries by remember { mutableStateOf(nutritionLogStore.readEntries()) }
     var fitnessSessions by remember { mutableStateOf(fitnessActivityStore.readSessions()) }
     var trackedActivitySnapshot by remember { mutableStateOf(activityTrackingStore.readSnapshot()) }
+    var selectedSocialPackages by remember { mutableStateOf(ProfilePreferenceStore.selectedSocialAppPackageIds() ?: defaultSelectedSocialAppPackages()) }
+    var screenTimeSummary by remember { mutableStateOf(emptyScreenTimeSummary(resolveSelectedSocialApps(selectedSocialPackages))) }
     var themeMode by rememberSaveable { mutableStateOf(HomeThemeMode.SYSTEM) }
     var fitnessBodyProfile by rememberSaveable {
         mutableStateOf(
@@ -108,13 +108,17 @@ fun PersonalHealthApp() {
     var intentSkippedCount by remember { mutableStateOf(0) }
     var intentAppliedCount by remember { mutableStateOf(0) }
     var intentFailedCount by remember { mutableStateOf(0) }
-    var metricEventCounts by remember { mutableStateOf(mapOf(
-        HealthMetricType.STEPS to 0,
-        HealthMetricType.HEART_RATE_BPM to 0,
-        HealthMetricType.SLEEP_DURATION_MINUTES to 0,
-        HealthMetricType.ACTIVE_ENERGY_KCAL to 0,
-        HealthMetricType.BODY_WEIGHT_KG to 0
-    )) }
+    var metricEventCounts by remember {
+        mutableStateOf(
+            mapOf(
+                HealthMetricType.STEPS to 0,
+                HealthMetricType.HEART_RATE_BPM to 0,
+                HealthMetricType.SLEEP_DURATION_MINUTES to 0,
+                HealthMetricType.ACTIVE_ENERGY_KCAL to 0,
+                HealthMetricType.BODY_WEIGHT_KG to 0
+            )
+        )
+    }
 
     PlatformDemoSeedEffect(fitnessActivityStore, activityTrackingStore, nutritionLogStore) { seeded, refreshedNutritionEntries, refreshedFitnessSessions, refreshedActivitySnapshot ->
         onboardingComplete = OnboardingPreferenceStore.isCompleted()
@@ -149,11 +153,12 @@ fun PersonalHealthApp() {
                 is HealthEvent.DashboardRecordsUpdated -> {
                     lastDashboardEventCache = event.toCache()
                     val dashboardHealthUiState = persistDashboardHealthUiState(event)
-                    healthMetricCards = dashboardHealthUiState.healthMetricCards
+                    dashboardHealthMetricCards = dashboardHealthUiState.healthMetricCards
                     bodyWeightCatalog = dashboardHealthUiState.bodyWeightCatalog
                 }
 
                 is FrontendEvent.TodayHealthSummariesUpdated -> Unit
+                is WellbeingEvent.ScreenTimeSummaryUpdated -> screenTimeSummary = event.summary
 
                 is HealthEvent.RecordsRead -> {
                     val sourceLabel = event.source.name.lowercase()
@@ -196,6 +201,7 @@ fun PersonalHealthApp() {
             }
         }
     }
+    val healthMetricCards = buildScreenTimeMetricCards(screenTimeSummary) + dashboardHealthMetricCards
 
     val derivedSteps = 4500 + (metricEventCounts[HealthMetricType.STEPS] ?: 0) * 250
     val dashboardSteps = todaySteps ?: derivedSteps
@@ -237,6 +243,10 @@ fun PersonalHealthApp() {
 
     PersonalHealthTheme(darkTheme = darkTheme) {
         if (onboardingComplete) {
+            fun openDetail(destination: HomeDetailDestination, fromRoute: String = "home") {
+                activeDetailDestination = destination
+                publishNavigationChange(appScope, fromRoute = fromRoute, toRoute = destination.routeName())
+            }
             HomeScreen(
                 fitScore = fitScore,
                 steps = dashboardSteps,
@@ -249,6 +259,7 @@ fun PersonalHealthApp() {
                 fitnessSessions = fitnessSessions,
                 fitnessBodyProfile = fitnessBodyProfile,
                 heartRateBpm = dashboardHeartRate,
+                onboardingFocusGoal = onboardingGoal?.toCoachFocusGoal(),
                 profileName = "Kees",
                 themeMode = themeMode,
                 activeDetailDestination = activeDetailDestination,
@@ -257,34 +268,13 @@ fun PersonalHealthApp() {
                     fitnessBodyProfile = profile
                     ProfilePreferenceStore.setFitnessBodyProfileId(profile.name)
                 },
-                onOpenStepsDetail = {
-                    activeDetailDestination = HomeDetailDestination.STEPS
-                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.STEPS.routeName())
-                },
-                onOpenHeartRateDetail = {
-                    activeDetailDestination = HomeDetailDestination.HEART_RATE
-                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.HEART_RATE.routeName())
-                },
-                onOpenWeightDetail = {
-                    activeDetailDestination = HomeDetailDestination.WEIGHT
-                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.WEIGHT.routeName())
-                },
-                onOpenHealthDataDetail = {
-                    activeDetailDestination = HomeDetailDestination.HEALTH_DATA
-                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.HEALTH_DATA.routeName())
-                },
-                onOpenFitnessDetail = {
-                    activeDetailDestination = HomeDetailDestination.FITNESS
-                    publishNavigationChange(appScope, fromRoute = "home", toRoute = HomeDetailDestination.FITNESS.routeName())
-                },
-                onOpenFitnessEditorDebug = {
-                    activeDetailDestination = HomeDetailDestination.FITNESS_EDITOR_DEBUG
-                    publishNavigationChange(
-                        appScope,
-                        fromRoute = HomeDetailDestination.FITNESS.routeName(),
-                        toRoute = HomeDetailDestination.FITNESS_EDITOR_DEBUG.routeName()
-                    )
-                },
+                onOpenStepsDetail = { openDetail(HomeDetailDestination.STEPS) },
+                onOpenHeartRateDetail = { openDetail(HomeDetailDestination.HEART_RATE) },
+                onOpenWeightDetail = { openDetail(HomeDetailDestination.WEIGHT) },
+                onOpenHealthDataDetail = { openDetail(HomeDetailDestination.HEALTH_DATA) },
+                onOpenFitnessDetail = { openDetail(HomeDetailDestination.FITNESS) },
+                onOpenCoachDetail = { destination -> openDetail(destination) },
+                onOpenFitnessEditorDebug = { openDetail(HomeDetailDestination.FITNESS_EDITOR_DEBUG, HomeDetailDestination.FITNESS.routeName()) },
                 onCloseDetail = {
                     val fromRoute = activeDetailDestination?.routeName() ?: "home"
                     activeDetailDestination = null
@@ -327,6 +317,7 @@ fun PersonalHealthApp() {
                 onRefreshHealthData = {
                     appScope.launch {
                         AppBus.events.publish(HealthEvent.SyncRequested(DEFAULT_IMPORT_METRICS, currentEpochMillis()))
+                        AppBus.events.publish(WellbeingEvent.ScreenTimeRefreshRequested(currentEpochMillis()))
                     }
                 },
                 onAddNutrition = {
@@ -344,25 +335,23 @@ fun PersonalHealthApp() {
                     latestUiMessage = "Nutrition entry bijgewerkt."
                 },
                 syncContent = {
-                    HealthSyncStatusCard(
-                        syncState = healthSyncState,
-                        channel = healthSyncChannel,
-                        lastReadSummary = lastReadSummary
-                    )
-                    HealthSyncStatsCard(
-                        strategy = importStrategy,
+                    HealthSyncToolsContent(
+                        healthSyncState = healthSyncState,
+                        healthSyncChannel = healthSyncChannel,
+                        lastReadSummary = lastReadSummary,
+                        importStrategy = importStrategy,
                         intentReceivedCount = intentReceivedCount,
                         intentSkippedCount = intentSkippedCount,
                         intentAppliedCount = intentAppliedCount,
                         intentFailedCount = intentFailedCount,
                         metricEventCounts = metricEventCounts,
-                        onAction = { actionId ->
+                        latestUiMessage = latestUiMessage,
+                        importRequestCount = importRequestCount,
+                        onImportAction = { actionId ->
                             appScope.launch {
                                 executeHealthImportAction(
                                     actionId = actionId,
-                                    publishHealthEvent = { event ->
-                                        AppBus.events.publish(event)
-                                    },
+                                    publishHealthEvent = { event -> AppBus.events.publish(event) },
                                     publishUiMessage = { message ->
                                         AppBus.events.publish(
                                             FrontendEvent.UiFeedbackRequested(
@@ -382,14 +371,7 @@ fun PersonalHealthApp() {
                                 }
                             }
                         },
-                        latestUiMessage = latestUiMessage,
-                        importRequestCount = importRequestCount,
-                        importInProgress = healthSyncState == SyncState.SYNCING
-                    )
-                    PlatformHealthImportPanel(
-                        onImportDocument = { document ->
-                            applyImportedHealthDocument(document)
-                        },
+                        onImportDocument = { document -> applyImportedHealthDocument(document) },
                         onImportMessage = { message ->
                             AppBus.events.publish(
                                 FrontendEvent.UiFeedbackRequested(
@@ -401,22 +383,20 @@ fun PersonalHealthApp() {
                     )
                 },
                 profileContent = {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 2.dp
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Laatste status", style = MaterialTheme.typography.titleSmall)
-                            Text(latestUiMessage, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
+                    ProfileWellbeingContent(
+                        appScope = appScope,
+                        screenTimeSummary = screenTimeSummary,
+                        selectedSocialPackages = selectedSocialPackages,
+                        latestUiMessage = latestUiMessage,
+                        onSelectedPackagesChanged = { selectedSocialPackages = it }
+                    )
                 }
             )
         } else {
             OnboardingRoute(
                 initialState = initialOnboardingState,
                 onStateChanged = { state ->
+                    onboardingGoal = state.selectedGoal
                     OnboardingPreferenceStore.setStepIndex(state.stepIndex)
                     OnboardingPreferenceStore.setSelectedGoalId(state.selectedGoal?.name)
                     OnboardingPreferenceStore.setCompleted(state.completed)

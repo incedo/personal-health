@@ -80,8 +80,9 @@ internal fun WeightDetailScreen(
             selectedRange = selectedRange,
             zoomLevel = zoomLevel,
             onRangeSelected = { selectedRange = it },
-            onZoomIn = { zoomLevel = (zoomLevel + 0.2f).coerceAtMost(3.2f) },
-            onZoomOut = { zoomLevel = (zoomLevel - 0.2f).coerceAtLeast(0.8f) },
+            onZoomIn = { zoomLevel = nextChartZoomLevel(zoomLevel, zoomIn = true) },
+            onZoomOut = { zoomLevel = nextChartZoomLevel(zoomLevel, zoomIn = false) },
+            onZoomLevelChange = { zoomLevel = it },
             modifier = Modifier.fillMaxWidth()
         )
     }

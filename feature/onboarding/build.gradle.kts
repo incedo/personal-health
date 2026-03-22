@@ -22,6 +22,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:onboarding"))
             implementation(project(":core:designsystem"))
             implementation(compose.runtime)
             implementation(compose.foundation)

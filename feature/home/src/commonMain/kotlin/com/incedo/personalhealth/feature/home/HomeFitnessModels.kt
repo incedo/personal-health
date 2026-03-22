@@ -6,6 +6,9 @@ enum class HomeDetailDestination {
     WEIGHT,
     HEALTH_DATA,
     FITNESS,
+    COACH_INTAKE,
+    COACH_GOALS,
+    COACH_DETAILS,
     FITNESS_EDITOR_DEBUG
 }
 

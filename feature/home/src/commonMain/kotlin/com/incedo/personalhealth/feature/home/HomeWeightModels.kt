@@ -1,17 +1,12 @@
 package com.incedo.personalhealth.feature.home
 
+import com.incedo.personalhealth.core.designsystem.LineChartAxis
 import kotlin.math.roundToInt
 
 data class WeightTimelinePoint(
     val label: String,
     val weightKg: Double?,
     val periodLabel: String = label
-)
-
-data class WeightChartAxis(
-    val yAxisLabels: List<String>,
-    val minWeightKg: Double,
-    val maxWeightKg: Double
 )
 
 data class WeightDetailStats(
@@ -44,13 +39,13 @@ internal fun formatWeightKg(weightKg: Double?): String = weightKg?.let {
     "${((it * 10).roundToInt()) / 10.0} kg"
 } ?: "Geen data"
 
-internal fun weightChartAxis(points: List<WeightTimelinePoint>): WeightChartAxis {
+internal fun weightChartAxis(points: List<WeightTimelinePoint>): LineChartAxis {
     val values = points.mapNotNull { it.weightKg }
     if (values.isEmpty()) {
-        return WeightChartAxis(
+        return LineChartAxis(
             yAxisLabels = listOf("0.0 kg", "0.0 kg", "0.0 kg", "0.0 kg"),
-            minWeightKg = 0.0,
-            maxWeightKg = 0.0
+            minValue = 0.0,
+            maxValue = 0.0
         )
     }
 
@@ -61,11 +56,11 @@ internal fun weightChartAxis(points: List<WeightTimelinePoint>): WeightChartAxis
     val axisMax = ((maxValue + padding) * 10).roundToInt() / 10.0
     val step = (axisMax - axisMin) / 3.0
 
-    return WeightChartAxis(
+    return LineChartAxis(
         yAxisLabels = listOf(3, 2, 1, 0).map { index ->
             formatWeightKg(axisMin + step * index)
         },
-        minWeightKg = axisMin,
-        maxWeightKg = axisMax
+        minValue = axisMin,
+        maxValue = axisMax
     )
 }

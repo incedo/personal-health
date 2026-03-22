@@ -23,6 +23,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:coaches"))
+            implementation(project(":core:goals"))
+            implementation(project(":core:media"))
             implementation(project(":core:designsystem"))
             implementation(compose.runtime)
             implementation(compose.foundation)

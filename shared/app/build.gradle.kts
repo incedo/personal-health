@@ -37,7 +37,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:events"))
+            implementation(project(":core:goals"))
+            implementation(project(":core:onboarding"))
             implementation(project(":core:health"))
+            implementation(project(":core:wellbeing"))
             implementation(project(":feature:home"))
             implementation(project(":feature:onboarding"))
             implementation(project(":core:designsystem"))

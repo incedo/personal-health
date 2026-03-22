@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val requiredPermissions: Set<String> by lazy { HealthConnectGateway.requiredPermissions() }
     private var healthConnectLiveSyncSubscription: HealthSignalSubscription? = null
-    private var pendingHistoryMetrics: Set<HealthMetricType> = SYNC_METRICS
+    private var pendingHistoryMetrics: Set<HealthMetricType> = androidSyncMetrics
     private var startImportAfterPermissionGrant: Boolean = true
     private var samsungHealthPermissionAttempted: Boolean = false
 
@@ -52,7 +52,9 @@ class MainActivity : ComponentActivity() {
             PersonalHealthApp()
         }
         observeUiHealthSyncRequests()
+        observeUiWellbeingRequests()
         refreshTodayDashboardMetrics()
+        refreshScreenTimeMetrics()
         samsungHealthAvailabilityMessage(this)?.let(::publishUiFeedback)
         publishUiFeedback("Klaar. Gebruik 'Geef permissies' of 'Importeer historie' om te starten.")
     }
@@ -60,6 +62,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         refreshTodayDashboardMetrics()
+        refreshScreenTimeMetrics()
     }
 
     private fun requestAndroidHealthPermissionsOnly() {
@@ -74,7 +77,7 @@ class MainActivity : ComponentActivity() {
                 publishUiFeedback("Samsung Health permissies zijn actief.")
             }
             requestHealthConnectPermissionsIfNeeded(
-                requestedMetrics = SYNC_METRICS,
+                requestedMetrics = androidSyncMetrics,
                 reason = "stappen en hartslag"
             )
         }
@@ -106,7 +109,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startAndroidHealthHistoryImport(
-        metrics: Set<HealthMetricType> = SYNC_METRICS
+        metrics: Set<HealthMetricType> = androidSyncMetrics
     ) {
         lifecycleScope.launch {
             val nowEpochMillis = System.currentTimeMillis()
@@ -210,7 +213,7 @@ class MainActivity : ComponentActivity() {
             runCatching {
                 processor.processSignal(
                     signal = signal,
-                    metrics = SYNC_METRICS,
+                    metrics = androidSyncMetrics,
                     lookbackMillis = LIVE_SYNC_LOOKBACK_MILLIS
                 )
                 publishTodayDashboardMetrics(
@@ -237,7 +240,7 @@ class MainActivity : ComponentActivity() {
             )
             samsungHealthPermissionAttempted = true
             val healthConnectGateway = healthConnectGatewayOrRequest(
-                requestedMetrics = SYNC_METRICS,
+                requestedMetrics = androidSyncMetrics,
                 requestPermissions = false,
                 reason = "dashboard refresh"
             )
@@ -332,26 +335,5 @@ class MainActivity : ComponentActivity() {
         private const val HEALTH_CONNECT_PROVIDER_PACKAGE = "com.google.android.apps.healthdata"
         private const val ONE_YEAR_MILLIS = 365L * 24L * 60L * 60L * 1000L
         private const val LIVE_SYNC_LOOKBACK_MILLIS = 24L * 60L * 60L * 1000L
-        private val SYNC_METRICS = setOf(
-            HealthMetricType.STEPS,
-            HealthMetricType.HEART_RATE_BPM,
-            HealthMetricType.SLEEP_DURATION_MINUTES,
-            HealthMetricType.ACTIVE_ENERGY_KCAL,
-            HealthMetricType.BODY_WEIGHT_KG,
-            HealthMetricType.HEIGHT_CM,
-            HealthMetricType.BODY_FAT_PERCENTAGE,
-            HealthMetricType.MUSCLE_MASS_KG,
-            HealthMetricType.WATER_MASS_KG,
-            HealthMetricType.WATER_PERCENTAGE,
-            HealthMetricType.BODY_MASS_INDEX,
-            HealthMetricType.BASAL_METABOLIC_RATE_KCAL,
-            HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
-            HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG,
-            HealthMetricType.BLOOD_GLUCOSE_MGDL,
-            HealthMetricType.OXYGEN_SATURATION_PERCENTAGE,
-            HealthMetricType.BODY_TEMPERATURE_CELSIUS,
-            HealthMetricType.HYDRATION_ML,
-            HealthMetricType.DIETARY_ENERGY_KCAL
-        )
     }
 }

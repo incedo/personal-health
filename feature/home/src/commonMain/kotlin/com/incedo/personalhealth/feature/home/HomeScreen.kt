@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.goals.CoachFocusGoal
 
 @Composable
 fun HomeScreen(
@@ -34,6 +35,7 @@ fun HomeScreen(
     fitnessSessions: List<FitnessActivitySession>,
     fitnessBodyProfile: FitnessBodyProfile,
     heartRateBpm: Int,
+    onboardingFocusGoal: CoachFocusGoal?,
     profileName: String,
     themeMode: HomeThemeMode,
     activeDetailDestination: HomeDetailDestination?,
@@ -44,6 +46,7 @@ fun HomeScreen(
     onOpenWeightDetail: () -> Unit,
     onOpenHealthDataDetail: () -> Unit,
     onOpenFitnessDetail: () -> Unit,
+    onOpenCoachDetail: (HomeDetailDestination) -> Unit,
     onOpenFitnessEditorDebug: () -> Unit,
     onCloseDetail: () -> Unit,
     onSaveFitnessSession: (FitnessActivitySession) -> Unit,
@@ -63,6 +66,13 @@ fun HomeScreen(
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.DASHBOARD) }
     var activeHealthMetricDetailId by rememberSaveable { mutableStateOf<String?>(null) }
     val palette = homePalette()
+    val switchToTab: (HomeTab) -> Unit = { tab ->
+        activeHealthMetricDetailId = null
+        selectedTab = tab
+        if (activeDetailDestination != null) {
+            onCloseDetail()
+        }
+    }
 
     LaunchedEffect(activeDetailDestination) {
         if (activeDetailDestination != HomeDetailDestination.HEALTH_DATA) {
@@ -149,6 +159,45 @@ fun HomeScreen(
                         compact = compact
                     )
 
+                    HomeDetailDestination.COACH_INTAKE -> CoachSectionScreen(
+                        page = CoachPage.INTAKE,
+                        compact = compact,
+                        onboardingFocusGoal = onboardingFocusGoal,
+                        onCloseCoachDetail = onCloseDetail,
+                        onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
+                        onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
+                        onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
+                        onOpenLogbook = { switchToTab(HomeTab.LOG) },
+                        onOpenProfile = { switchToTab(HomeTab.PROFILE) }
+                    )
+
+                    HomeDetailDestination.COACH_GOALS -> CoachSectionScreen(
+                        page = CoachPage.GOALS,
+                        compact = compact,
+                        onboardingFocusGoal = onboardingFocusGoal,
+                        onCloseCoachDetail = onCloseDetail,
+                        onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
+                        onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
+                        onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
+                        onOpenLogbook = { switchToTab(HomeTab.LOG) },
+                        onOpenProfile = { switchToTab(HomeTab.PROFILE) }
+                    )
+
+                    HomeDetailDestination.COACH_DETAILS -> CoachSectionScreen(
+                        page = CoachPage.DETAILS,
+                        compact = compact,
+                        onboardingFocusGoal = onboardingFocusGoal,
+                        onCloseCoachDetail = onCloseDetail,
+                        onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
+                        onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
+                        onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
+                        onOpenLogbook = { switchToTab(HomeTab.LOG) },
+                        onOpenProfile = { switchToTab(HomeTab.PROFILE) }
+                    )
+
                     null -> {
                         HomeTabContent(
                             selectedTab = selectedTab,
@@ -158,6 +207,7 @@ fun HomeScreen(
                             healthMetricCards = healthMetricCards,
                             activityMinutesToday = activityMinutesToday,
                             heartRateBpm = heartRateBpm,
+                            onboardingFocusGoal = onboardingFocusGoal,
                             profileName = profileName,
                             themeMode = themeMode,
                             onThemeModeSelected = onThemeModeSelected,
@@ -177,6 +227,8 @@ fun HomeScreen(
                             onOpenStepsDetail = onOpenStepsDetail,
                             onOpenHeartRateDetail = onOpenHeartRateDetail,
                             onOpenWeightDetail = onOpenWeightDetail,
+                            onNavigateToTab = switchToTab,
+                            onOpenCoachDetail = onOpenCoachDetail,
                             syncContent = syncContent,
                             profileContent = profileContent,
                             compact = compact
@@ -188,7 +240,7 @@ fun HomeScreen(
             HomeBottomTabs(
                 selectedTab = selectedTab,
                 compact = compact,
-                onTabSelected = { selectedTab = it }
+                onTabSelected = switchToTab
             )
         }
     }
