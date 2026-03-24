@@ -247,17 +247,11 @@ fun PersonalHealthApp() {
     ) {
         value = recommendationApi.getRecommendationOfDay(recommendationRequest)
     }
-    val detailHeartRateTimeline = todayHeartRateTimeline.ifEmpty {
-        fallbackHeartRateTimeline(
-            averageBpm = dashboardHeartRate,
-            sampleCount = metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0
-        )
-    }
-    val darkTheme = when (themeMode) {
-        HomeThemeMode.SYSTEM -> isSystemInDarkTheme()
-        HomeThemeMode.DARK -> true
-        HomeThemeMode.LIGHT -> false
-    }
+    val detailHeartRateTimeline = todayHeartRateTimeline.ifEmpty { fallbackHeartRateTimeline(
+        averageBpm = dashboardHeartRate,
+        sampleCount = metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0
+    ) }
+    val darkTheme = when (themeMode) { HomeThemeMode.SYSTEM -> isSystemInDarkTheme(); HomeThemeMode.DARK -> true; HomeThemeMode.LIGHT -> false }
     val activityEntries = (
         fitnessSessions.map(::fitnessSessionToQuickActivityEntry) +
             trackedActivitySnapshot.completedSessions.map { it.toQuickActivityEntry() }
@@ -296,7 +290,7 @@ fun PersonalHealthApp() {
                 onOpenWeightDetail = { openDetail(HomeDetailDestination.WEIGHT) },
                 onOpenHealthDataDetail = { openDetail(HomeDetailDestination.HEALTH_DATA) },
                 onOpenFitnessDetail = { openDetail(HomeDetailDestination.FITNESS) },
-                onOpenCoachDetail = { destination -> openDetail(destination) },
+                onOpenCoachDetail = ::openDetail,
                 onOpenFitnessEditorDebug = { openDetail(HomeDetailDestination.FITNESS_EDITOR_DEBUG, HomeDetailDestination.FITNESS.routeName()) },
                 onCloseDetail = {
                     val fromRoute = activeDetailDestination?.routeName() ?: "home"
