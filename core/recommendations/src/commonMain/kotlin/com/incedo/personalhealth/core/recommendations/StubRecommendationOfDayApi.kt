@@ -15,6 +15,7 @@ class StubRecommendationOfDayApi : RecommendationOfDayApi {
             title = "Focus van de dag",
             summary = variant.summary,
             guidance = variant.guidance,
+            insights = recommendationInsights(request, variantIndex = callCount - 1),
             source = RecommendationSource.STUB
         )
     }

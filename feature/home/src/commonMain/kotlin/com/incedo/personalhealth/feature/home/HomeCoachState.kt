@@ -37,7 +37,8 @@ internal enum class CoachPage {
     OVERVIEW,
     INTAKE,
     GOALS,
-    DETAILS
+    DETAILS,
+    TRAINING_PROGRAM
 }
 internal fun coachIntakeProfileSaver(): Saver<CoachIntakeProfile, Any> = Saver(
     save = { profile ->

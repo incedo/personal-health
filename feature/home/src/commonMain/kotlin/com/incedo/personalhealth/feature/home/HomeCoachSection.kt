@@ -47,6 +47,7 @@ internal fun CoachSectionScreen(
     onOpenCoachIntake: () -> Unit,
     onOpenCoachGoals: () -> Unit,
     onOpenCoachDetails: () -> Unit,
+    onOpenCoachTrainingProgram: () -> Unit,
     onOpenDashboard: () -> Unit,
     onOpenLogbook: () -> Unit,
     onOpenProfile: () -> Unit
@@ -250,6 +251,7 @@ internal fun CoachSectionScreen(
                     onOpenIntake = onOpenCoachIntake,
                     onOpenGoals = onOpenCoachGoals,
                     onOpenDetails = onOpenCoachDetails,
+                    onOpenTrainingProgram = onOpenCoachTrainingProgram,
                     onOpenDashboard = onOpenDashboard,
                     onOpenLogbook = onOpenLogbook,
                     onOpenProfile = onOpenProfile

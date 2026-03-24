@@ -104,6 +104,7 @@ internal fun HomeTabContent(
             onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
             onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
             onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+            onOpenCoachTrainingProgram = { onOpenCoachDetail(HomeDetailDestination.COACH_TRAINING_PROGRAM) },
             onOpenDashboard = { onNavigateToTab(HomeTab.DASHBOARD) },
             onOpenLogbook = { onNavigateToTab(HomeTab.LOG) },
             onOpenProfile = { onNavigateToTab(HomeTab.PROFILE) }

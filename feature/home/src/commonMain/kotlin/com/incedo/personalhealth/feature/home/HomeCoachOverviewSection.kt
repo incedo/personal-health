@@ -27,6 +27,7 @@ internal fun CoachOverviewContent(
     onOpenIntake: () -> Unit,
     onOpenGoals: () -> Unit,
     onOpenDetails: () -> Unit,
+    onOpenTrainingProgram: () -> Unit,
     onOpenDashboard: () -> Unit,
     onOpenLogbook: () -> Unit,
     onOpenProfile: () -> Unit
@@ -46,7 +47,8 @@ internal fun CoachOverviewContent(
     CoachActionsCard(
         onOpenIntake = onOpenIntake,
         onOpenGoals = onOpenGoals,
-        onOpenDetails = onOpenDetails
+        onOpenDetails = onOpenDetails,
+        onOpenTrainingProgram = onOpenTrainingProgram
     )
 }
 
@@ -54,7 +56,8 @@ internal fun CoachOverviewContent(
 private fun CoachActionsCard(
     onOpenIntake: () -> Unit,
     onOpenGoals: () -> Unit,
-    onOpenDetails: () -> Unit
+    onOpenDetails: () -> Unit,
+    onOpenTrainingProgram: () -> Unit
 ) {
     val palette = homePalette()
     HomePanel(modifier = Modifier.fillMaxWidth()) {
@@ -66,7 +69,7 @@ private fun CoachActionsCard(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Werk de intake bij, stuur je doelen bij of open persoonlijke details zoals je gekozen coaches.",
+            text = "Werk de intake bij, stuur je doelen bij, open je coachdetails of ga direct naar een trainingsprogramma.",
             style = MaterialTheme.typography.bodyLarge,
             color = palette.textSecondary
         )
@@ -87,6 +90,11 @@ private fun CoachActionsCard(
                 title = "Persoonlijke details",
                 subtitle = "Beheer je coachkeuzes en andere persoonlijke accenten.",
                 onClick = onOpenDetails
+            )
+            CoachActionButton(
+                title = "Trainingsprogramma",
+                subtitle = "Open een detailpagina met coach-gestuurde weekopbouw.",
+                onClick = onOpenTrainingProgram
             )
         }
     }

@@ -51,12 +51,14 @@ internal fun CoachSubScreen(
         CoachPage.INTAKE -> "Coach intake"
         CoachPage.GOALS -> "Persoonlijke doelen"
         CoachPage.DETAILS -> "Persoonlijke details"
+        CoachPage.TRAINING_PROGRAM -> "Trainingsprogramma"
         CoachPage.OVERVIEW -> "Coach"
     }
     val subtitle = when (page) {
         CoachPage.INTAKE -> "Werk je profieldefinitie en protocolvoorstel bij."
         CoachPage.GOALS -> "Beheer al je persoonlijke doelen in een los scherm."
         CoachPage.DETAILS -> "Beheer je coachkeuzes en persoonlijke accenten."
+        CoachPage.TRAINING_PROGRAM -> "Bekijk de trainingsopbouw die coach aan je protocol koppelt."
         CoachPage.OVERVIEW -> ""
     }
 
@@ -124,6 +126,12 @@ internal fun CoachSubScreen(
                             onOpenDashboard = onOpenDashboard,
                             onOpenLogbook = onOpenLogbook,
                             onOpenProfile = onOpenProfile
+                        )
+                    }
+                    CoachPage.TRAINING_PROGRAM -> {
+                        CoachTrainingProgramContent(
+                            recommendation = recommendation,
+                            selectedProtocol = selectedProtocol
                         )
                     }
                     CoachPage.OVERVIEW -> Unit

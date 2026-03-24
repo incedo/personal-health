@@ -24,6 +24,8 @@ class StubRecommendationOfDayApiTest {
         assertTrue(recommendation.summary.contains("82"))
         assertTrue(recommendation.summary.contains("8420"))
         assertTrue(recommendation.guidance.contains("61"))
+        assertEquals(3, recommendation.insights.size)
+        assertTrue(recommendation.insights.first().description.contains("61"))
         assertEquals(RecommendationSource.STUB, recommendation.source)
     }
 
@@ -41,6 +43,7 @@ class StubRecommendationOfDayApiTest {
 
         assertTrue(recommendation.summary.contains("64"))
         assertTrue(recommendation.guidance.contains("78"))
+        assertTrue(recommendation.insights.first().description.contains("78"))
     }
 
     @Test
@@ -59,5 +62,7 @@ class StubRecommendationOfDayApiTest {
 
         assertTrue(first.summary != second.summary || first.guidance != second.guidance)
         assertTrue(second.summary != third.summary || second.guidance != third.guidance)
+        assertTrue(first.insights != second.insights)
+        assertTrue(second.insights != third.insights)
     }
 }

@@ -169,6 +169,7 @@ fun HomeScreen(
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
                         onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
                         onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenCoachTrainingProgram = { onOpenCoachDetail(HomeDetailDestination.COACH_TRAINING_PROGRAM) },
                         onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
                         onOpenLogbook = { switchToTab(HomeTab.LOG) },
                         onOpenProfile = { switchToTab(HomeTab.PROFILE) }
@@ -182,6 +183,7 @@ fun HomeScreen(
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
                         onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
                         onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenCoachTrainingProgram = { onOpenCoachDetail(HomeDetailDestination.COACH_TRAINING_PROGRAM) },
                         onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
                         onOpenLogbook = { switchToTab(HomeTab.LOG) },
                         onOpenProfile = { switchToTab(HomeTab.PROFILE) }
@@ -195,6 +197,21 @@ fun HomeScreen(
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
                         onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
                         onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenCoachTrainingProgram = { onOpenCoachDetail(HomeDetailDestination.COACH_TRAINING_PROGRAM) },
+                        onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
+                        onOpenLogbook = { switchToTab(HomeTab.LOG) },
+                        onOpenProfile = { switchToTab(HomeTab.PROFILE) }
+                    )
+
+                    HomeDetailDestination.COACH_TRAINING_PROGRAM -> CoachSectionScreen(
+                        page = CoachPage.TRAINING_PROGRAM,
+                        compact = compact,
+                        onboardingFocusGoal = onboardingFocusGoal,
+                        onCloseCoachDetail = onCloseDetail,
+                        onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
+                        onOpenCoachGoals = { onOpenCoachDetail(HomeDetailDestination.COACH_GOALS) },
+                        onOpenCoachDetails = { onOpenCoachDetail(HomeDetailDestination.COACH_DETAILS) },
+                        onOpenCoachTrainingProgram = { onOpenCoachDetail(HomeDetailDestination.COACH_TRAINING_PROGRAM) },
                         onOpenDashboard = { switchToTab(HomeTab.DASHBOARD) },
                         onOpenLogbook = { switchToTab(HomeTab.LOG) },
                         onOpenProfile = { switchToTab(HomeTab.PROFILE) }

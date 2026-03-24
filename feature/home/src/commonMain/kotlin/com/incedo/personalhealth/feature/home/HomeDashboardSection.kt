@@ -47,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
+import com.incedo.personalhealth.core.recommendations.DailyRecommendationInsight
+import com.incedo.personalhealth.core.recommendations.RecommendationInsightTone
 
 @Composable
 internal fun DashboardContent(
@@ -156,12 +158,6 @@ private fun VitalityLandingCard(
     onLogNutrition: () -> Unit
 ) {
     val palette = homePalette()
-    val insights = buildVitalityInsights(
-        fitScore = fitScore,
-        heartRateBpm = heartRateBpm,
-        steps = steps,
-        activityMinutes = activityMinutesToday
-    )
 
     Card(
         shape = RoundedCornerShape(32.dp),
@@ -210,7 +206,7 @@ private fun VitalityLandingCard(
                         modifier = Modifier.size(240.dp)
                     )
                 }
-                VitalityInsightList(insights = insights)
+                VitalityInsightList(insights = dailyRecommendation.insights)
                 VitalityActions(
                     compact = true,
                     activityOptions = activityOptions,
@@ -270,7 +266,7 @@ private fun VitalityLandingCard(
                         )
                     }
                     VitalityInsightList(
-                        insights = insights,
+                        insights = dailyRecommendation.insights,
                         compact = false
                     )
                     VitalityActions(
@@ -519,7 +515,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRing(
 
 @Composable
 private fun VitalityInsightList(
-    insights: List<VitalityInsight>,
+    insights: List<DailyRecommendationInsight>,
     compact: Boolean = true
 ) {
     val palette = homePalette()
@@ -556,14 +552,14 @@ private fun VitalityInsightList(
 
 @Composable
 private fun VitalityInsightCard(
-    insight: VitalityInsight,
+    insight: DailyRecommendationInsight,
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
     val accent = when (insight.tone) {
-        HomeInsightTone.ACCENT -> palette.accent
-        HomeInsightTone.WARM -> palette.warm
-        HomeInsightTone.WARNING -> palette.warning
+        RecommendationInsightTone.ACCENT -> palette.accent
+        RecommendationInsightTone.WARM -> palette.warm
+        RecommendationInsightTone.WARNING -> palette.warning
     }
 
     Surface(
