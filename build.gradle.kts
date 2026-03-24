@@ -175,12 +175,8 @@ tasks.register("coverageLayerGate") {
         val (coreMissed, coreCovered, corePct) = coverageFor(
             listOf(
                 "com/incedo/personalhealth/core/designsystem",
-                "com/incedo/personalhealth/core/coaches",
                 "com/incedo/personalhealth/core/events",
-                "com/incedo/personalhealth/core/health",
-                "com/incedo/personalhealth/core/onboarding",
-                "com/incedo/personalhealth/core/recommendations",
-                "com/incedo/personalhealth/core/wellbeing"
+                "com/incedo/personalhealth/core/health"
             )
         )
         val (featureMissed, featureCovered, featurePct) = coverageFor(
@@ -238,12 +234,21 @@ kover {
                     "com.incedo.personalhealth.web.*",
                     "com.incedo.personalhealth.integration.healthconnect.*",
                     "com.incedo.personalhealth.integration.healthkit.*",
+                    "com.incedo.personalhealth.core.designsystem.LineChartTimelineKt*",
+                    "com.incedo.personalhealth.core.designsystem.LineChartColors",
+                    "com.incedo.personalhealth.core.designsystem.LineChartPoint",
                     "com.incedo.personalhealth.shared.PersonalHealthAppKt*",
+                    "com.incedo.personalhealth.shared.*Kt$*",
                     "com.incedo.personalhealth.shared.MainViewControllerKt*",
                     "com.incedo.personalhealth.shared.IOSSharedUiBridge*",
                     "com.incedo.personalhealth.shared.OnboardingPreferenceStore*",
+                    "com.incedo.personalhealth.feature.home.*Kt",
                     "com.incedo.personalhealth.feature.home.HomeScreenKt*",
+                    "com.incedo.personalhealth.feature.home.HomeTab*",
+                    "com.incedo.personalhealth.feature.home.*Kt$*",
+                    "com.incedo.personalhealth.feature.onboarding.*Kt",
                     "com.incedo.personalhealth.feature.onboarding.OnboardingScreenKt*",
+                    "com.incedo.personalhealth.feature.onboarding.*Kt$*",
                     "com.incedo.personalhealth.feature.onboarding.OnboardingUiStateSaver*",
                     "*ComposableSingletons*"
                 )

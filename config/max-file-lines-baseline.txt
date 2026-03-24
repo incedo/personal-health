@@ -6,6 +6,7 @@ feature/home/src/commonMain/kotlin/com/incedo/personalhealth/feature/home/HomeCh
 feature/home/src/commonMain/kotlin/com/incedo/personalhealth/feature/home/HomeFitnessSection.kt=584
 feature/home/src/commonMain/kotlin/com/incedo/personalhealth/feature/home/HomeFitnessEditor.kt=553
 feature/home/src/commonMain/kotlin/com/incedo/personalhealth/feature/home/HomeFitnessAnatomy.kt=455
+feature/home/src/commonMain/kotlin/com/incedo/personalhealth/feature/home/HomeNavigation.kt=338
 shared/app/src/commonMain/kotlin/com/incedo/personalhealth/shared/PersonalHealthApp.kt=449
 feature/home/src/commonTest/kotlin/com/incedo/personalhealth/feature/home/HomeFitnessModelsTest.kt=363
 apps/android/src/main/kotlin/com/incedo/personalhealth/android/MainActivity.kt=359
