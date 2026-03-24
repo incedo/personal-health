@@ -75,12 +75,6 @@ internal fun CoachConversationCard(
             title = "Coach stelt voor",
             value = protocol.title
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            recommendation.rationale.forEach { reason ->
-                ConversationReason(reason = reason)
-            }
-        }
     }
 }
 
@@ -113,24 +107,5 @@ private fun ConversationBubble(
                 color = palette.textPrimary
             )
         }
-    }
-}
-
-@Composable
-private fun ConversationReason(
-    reason: String
-) {
-    val palette = homePalette()
-    Surface(
-        color = palette.surface,
-        shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, palette.surfaceMuted)
-    ) {
-        Text(
-            text = reason,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.textSecondary
-        )
     }
 }

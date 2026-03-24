@@ -3,6 +3,7 @@ package com.incedo.personalhealth.feature.home
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -43,7 +44,8 @@ internal fun CoachSubScreen(
     onAddSuggestion: (com.incedo.personalhealth.core.goals.CoachGoal) -> Unit,
     onAddCoach: () -> Unit,
     onEditCoach: (CoachProfile) -> Unit,
-    onToggleCoachSelection: (String) -> Unit
+    onToggleCoachSelection: (String) -> Unit,
+    onDeleteCoach: (String) -> Unit
 ) {
     val title = when (page) {
         CoachPage.INTAKE -> "Coach intake"
@@ -111,7 +113,8 @@ internal fun CoachSubScreen(
                             coaches = coaches,
                             onAddCoach = onAddCoach,
                             onEditCoach = onEditCoach,
-                            onToggleCoachSelection = onToggleCoachSelection
+                            onToggleCoachSelection = onToggleCoachSelection,
+                            onDeleteCoach = onDeleteCoach
                         )
                         Spacer(modifier = Modifier.height(18.dp))
                         CoachProtocolCard(
@@ -130,7 +133,12 @@ internal fun CoachSubScreen(
         FloatingCoachDock(
             coaches = coaches,
             onAddCoach = onAddCoach,
-            modifier = Modifier.align(Alignment.TopStart)
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    end = if (compact) 16.dp else 24.dp,
+                    bottom = if (compact) 108.dp else 124.dp
+                )
         )
     }
 }

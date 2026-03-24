@@ -38,7 +38,8 @@ internal fun CoachDirectoryCard(
     coaches: List<CoachProfile>,
     onAddCoach: () -> Unit,
     onEditCoach: (CoachProfile) -> Unit,
-    onToggleCoachSelection: (String) -> Unit
+    onToggleCoachSelection: (String) -> Unit,
+    onDeleteCoach: (String) -> Unit
 ) {
     val palette = homePalette()
     HomePanel(modifier = Modifier.fillMaxWidth()) {
@@ -79,7 +80,8 @@ internal fun CoachDirectoryCard(
                     CoachDirectoryItem(
                         coach = coach,
                         onEditCoach = { onEditCoach(coach) },
-                        onToggleCoachSelection = { onToggleCoachSelection(coach.id) }
+                        onToggleCoachSelection = { onToggleCoachSelection(coach.id) },
+                        onDeleteCoach = { onDeleteCoach(coach.id) }
                     )
                 }
             }
@@ -129,7 +131,8 @@ internal fun FloatingCoachDock(
 private fun CoachDirectoryItem(
     coach: CoachProfile,
     onEditCoach: () -> Unit,
-    onToggleCoachSelection: () -> Unit
+    onToggleCoachSelection: () -> Unit,
+    onDeleteCoach: () -> Unit
 ) {
     val palette = homePalette()
     Surface(
@@ -157,7 +160,11 @@ private fun CoachDirectoryItem(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${coachTypeLabel(coach.type)} · ${coach.location}",
+                        text = listOf(
+                            coachTypeLabel(coach.type),
+                            coach.companyName.takeIf(String::isNotBlank),
+                            coach.location.takeIf(String::isNotBlank)
+                        ).joinToString(" · "),
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.textSecondary
                     )
@@ -176,6 +183,9 @@ private fun CoachDirectoryItem(
                 }
                 OutlinedButton(onClick = onEditCoach, shape = RoundedCornerShape(16.dp)) {
                     Text("Bewerken")
+                }
+                OutlinedButton(onClick = onDeleteCoach, shape = RoundedCornerShape(16.dp)) {
+                    Text("Verwijderen")
                 }
             }
         }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -19,6 +20,9 @@ import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
 import com.incedo.personalhealth.core.health.currentEpochMillis
 import com.incedo.personalhealth.core.onboarding.OnboardingUiState
+import com.incedo.personalhealth.core.recommendations.DailyRecommendationRequest
+import com.incedo.personalhealth.core.recommendations.StubRecommendationOfDayApi
+import com.incedo.personalhealth.core.recommendations.defaultDailyRecommendation
 import com.incedo.personalhealth.core.wellbeing.WellbeingEvent
 import com.incedo.personalhealth.core.wellbeing.defaultSelectedSocialAppPackages
 import com.incedo.personalhealth.core.wellbeing.emptyScreenTimeSummary
@@ -62,6 +66,7 @@ fun PersonalHealthApp() {
     val fitnessActivityStore = remember { PersistedFitnessActivityStore(PlatformFitnessActivityPersistenceDriver) }
     val activityTrackingStore = remember { PersistedActivityTrackingStore(PlatformActivityTrackingPersistenceDriver) }
     val nutritionLogStore = remember { PersistedNutritionLogStore(PlatformNutritionLogPersistenceDriver) }
+    val recommendationApi = remember { StubRecommendationOfDayApi() }
     val initialDashboardHealthState = remember { readPersistedDashboardHealthUiState() }
     remember {
         runHomeStorageMaintenance(
@@ -224,13 +229,30 @@ fun PersonalHealthApp() {
     )
     val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90)
     val dashboardHeartRate = todayHeartRateBpm ?: derivedHeartRate
+    val fitScore = (35 + (dashboardSteps / 180) - ((dashboardHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
+    val recommendationRequest = DailyRecommendationRequest(
+        fitScore = fitScore,
+        heartRateBpm = dashboardHeartRate,
+        steps = dashboardSteps,
+        activityMinutesToday = activityMinutesToday,
+        profileName = "Kees"
+    )
+    val dailyRecommendation by produceState(
+        initialValue = defaultDailyRecommendation(recommendationRequest),
+        recommendationRequest.fitScore,
+        recommendationRequest.heartRateBpm,
+        recommendationRequest.steps,
+        recommendationRequest.activityMinutesToday,
+        recommendationRequest.profileName
+    ) {
+        value = recommendationApi.getRecommendationOfDay(recommendationRequest)
+    }
     val detailHeartRateTimeline = todayHeartRateTimeline.ifEmpty {
         fallbackHeartRateTimeline(
             averageBpm = dashboardHeartRate,
             sampleCount = metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0
         )
     }
-    val fitScore = (35 + (dashboardSteps / 180) - ((dashboardHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
     val darkTheme = when (themeMode) {
         HomeThemeMode.SYSTEM -> isSystemInDarkTheme()
         HomeThemeMode.DARK -> true
@@ -259,6 +281,7 @@ fun PersonalHealthApp() {
                 fitnessSessions = fitnessSessions,
                 fitnessBodyProfile = fitnessBodyProfile,
                 heartRateBpm = dashboardHeartRate,
+                dailyRecommendation = dailyRecommendation,
                 onboardingFocusGoal = onboardingGoal?.toCoachFocusGoal(),
                 profileName = "Kees",
                 themeMode = themeMode,

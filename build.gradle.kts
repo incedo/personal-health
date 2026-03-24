@@ -28,6 +28,7 @@ dependencies {
     kover(project(":core:events"))
     kover(project(":core:health"))
     kover(project(":core:onboarding"))
+    kover(project(":core:recommendations"))
     kover(project(":core:wellbeing"))
     kover(project(":feature:home"))
     kover(project(":feature:home-test"))
@@ -52,6 +53,7 @@ tasks.register("qualityGateBase") {
         ":core:events:compileKotlinDesktop",
         ":core:health:compileKotlinDesktop",
         ":core:onboarding:allTests",
+        ":core:recommendations:allTests",
         ":core:wellbeing:compileKotlinDesktop",
         ":integration:app-usage:compileDebugKotlin",
         ":integration:health-connect:compileDebugKotlin",
@@ -177,6 +179,7 @@ tasks.register("coverageLayerGate") {
                 "com/incedo/personalhealth/core/events",
                 "com/incedo/personalhealth/core/health",
                 "com/incedo/personalhealth/core/onboarding",
+                "com/incedo/personalhealth/core/recommendations",
                 "com/incedo/personalhealth/core/wellbeing"
             )
         )

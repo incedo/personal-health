@@ -1,5 +1,6 @@
 package com.incedo.personalhealth.feature.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -157,16 +159,26 @@ internal fun HomeBottomTabs(
     compact: Boolean,
     onTabSelected: (HomeTab) -> Unit
 ) {
-    val centerGap = if (compact) 88.dp else 116.dp
+    val desktopWebStyle = HomeBuildFlags.usesDesktopBottomBarStyle && !compact
+    val centerGap = when {
+        compact -> 88.dp
+        desktopWebStyle -> 72.dp
+        else -> 116.dp
+    }
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.TopCenter
     ) {
-        HomePanel(
+        HomeBottomTabsPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if (compact) 26.dp else 34.dp),
-            contentPadding = 12.dp
+                .padding(top = when {
+                    compact -> 26.dp
+                    desktopWebStyle -> 18.dp
+                    else -> 34.dp
+                }),
+            desktopWebStyle = desktopWebStyle,
+            contentPadding = if (desktopWebStyle) 8.dp else 12.dp
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -182,6 +194,7 @@ internal fun HomeBottomTabs(
                             tab = tab,
                             selected = tab == selectedTab,
                             compact = compact,
+                            desktopWebStyle = desktopWebStyle,
                             onClick = { onTabSelected(tab) },
                             modifier = Modifier.weight(1f)
                         )
@@ -197,6 +210,7 @@ internal fun HomeBottomTabs(
                             tab = tab,
                             selected = tab == selectedTab,
                             compact = compact,
+                            desktopWebStyle = desktopWebStyle,
                             onClick = { onTabSelected(tab) },
                             modifier = Modifier.weight(1f)
                         )
@@ -205,9 +219,14 @@ internal fun HomeBottomTabs(
             }
         }
         CoachBottomBarButton(
-            modifier = Modifier.padding(top = if (compact) 0.dp else 6.dp),
+            modifier = Modifier.padding(top = when {
+                compact -> 0.dp
+                desktopWebStyle -> 2.dp
+                else -> 6.dp
+            }),
             selected = selectedTab == HomeTab.COACH,
             compact = compact,
+            desktopWebStyle = desktopWebStyle,
             onClick = { onTabSelected(HomeTab.COACH) }
         )
     }
@@ -218,6 +237,7 @@ private fun HomeBottomTabButton(
     tab: HomeTab,
     selected: Boolean,
     compact: Boolean,
+    desktopWebStyle: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -238,14 +258,33 @@ private fun HomeBottomTabButton(
         )
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp),
+            modifier = Modifier.padding(
+                vertical = when {
+                    compact -> 14.dp
+                    desktopWebStyle -> 7.dp
+                    else -> 14.dp
+                },
+                horizontal = if (desktopWebStyle) 10.dp else 12.dp
+            ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(if (compact) 0.dp else 6.dp)
+            verticalArrangement = Arrangement.spacedBy(
+                when {
+                    compact -> 0.dp
+                    desktopWebStyle -> 3.dp
+                    else -> 6.dp
+                }
+            )
         ) {
             HomeTabIcon(
                 tab = tab,
                 color = if (selected) tabAccent(tab) else palette.textPrimary,
-                modifier = Modifier.size(if (compact) 28.dp else 30.dp)
+                modifier = Modifier.size(
+                    when {
+                        compact -> 28.dp
+                        desktopWebStyle -> 24.dp
+                        else -> 30.dp
+                    }
+                )
             )
             if (!compact) {
                 Text(
@@ -257,5 +296,43 @@ private fun HomeBottomTabButton(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun HomeBottomTabsPanel(
+    modifier: Modifier = Modifier,
+    desktopWebStyle: Boolean,
+    contentPadding: androidx.compose.ui.unit.Dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val palette = homePalette()
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(28.dp),
+        color = Color.Transparent,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = if (desktopWebStyle) {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                palette.surface.copy(alpha = 0.72f),
+                                palette.surface
+                            )
+                        )
+                    } else {
+                        Brush.verticalGradient(listOf(palette.surface, palette.surface))
+                    }
+                )
+                .padding(contentPadding),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            content = content
+        )
     }
 }

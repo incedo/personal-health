@@ -3,6 +3,7 @@ package com.incedo.personalhealth.feature.home
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import com.incedo.personalhealth.core.coaches.CoachProfile
+import com.incedo.personalhealth.core.coaches.CoachSearchItem
 import com.incedo.personalhealth.core.coaches.CoachType
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
 import com.incedo.personalhealth.core.goals.CoachGoalsState
@@ -13,10 +14,23 @@ import com.incedo.personalhealth.core.goals.defaultCoachGoals
 
 internal data class CoachEditorState(
     val editingCoachId: String? = null,
+    val searchQuery: String = "",
+    val selectedSearchItemId: String? = null,
     val selectedType: CoachType = CoachType.AI_COACH,
     val name: String = "",
+    val companyName: String = "",
     val location: String = "",
     val imageDataUrl: String? = null
+)
+
+internal fun CoachEditorState.applySearchItem(item: CoachSearchItem): CoachEditorState = copy(
+    searchQuery = item.name,
+    selectedSearchItemId = item.id,
+    selectedType = item.type,
+    name = item.name,
+    companyName = item.companyName,
+    location = item.location,
+    imageDataUrl = imageDataUrl ?: item.imageDataUrl
 )
 
 internal enum class CoachPage {
@@ -61,6 +75,7 @@ internal fun coachProfilesSaver() = listSaver<List<CoachProfile>, String>(
                 add(profile.id)
                 add(profile.type.name)
                 add(profile.name)
+                add(profile.companyName)
                 add(profile.location)
                 add(profile.imageDataUrl.orEmpty())
                 add(profile.isSelected.toString())
@@ -68,8 +83,9 @@ internal fun coachProfilesSaver() = listSaver<List<CoachProfile>, String>(
         }
     },
     restore = { raw ->
-        raw.chunked(6).mapNotNull { chunk ->
-            if (chunk.size < 6) {
+        val chunkSize = if (raw.size % 7 == 0) 7 else 6
+        raw.chunked(chunkSize).mapNotNull { chunk ->
+            if (chunk.size < chunkSize) {
                 null
             } else {
                 val type = runCatching { CoachType.valueOf(chunk[1]) }.getOrNull() ?: return@mapNotNull null
@@ -77,9 +93,10 @@ internal fun coachProfilesSaver() = listSaver<List<CoachProfile>, String>(
                     id = chunk[0],
                     type = type,
                     name = chunk[2],
-                    location = chunk[3],
-                    imageDataUrl = chunk[4].ifBlank { null },
-                    isSelected = chunk[5].toBooleanStrictOrNull() ?: true
+                    companyName = if (chunkSize == 7) chunk[3] else "",
+                    location = if (chunkSize == 7) chunk[4] else chunk[3],
+                    imageDataUrl = if (chunkSize == 7) chunk[5].ifBlank { null } else chunk[4].ifBlank { null },
+                    isSelected = if (chunkSize == 7) chunk[6].toBooleanStrictOrNull() ?: true else chunk[5].toBooleanStrictOrNull() ?: true
                 )
             }
         }
@@ -93,8 +110,11 @@ internal fun coachEditorStateSaver() = listSaver<CoachEditorState?, String>(
         } else {
             listOf(
                 state.editingCoachId.orEmpty(),
+                state.searchQuery,
+                state.selectedSearchItemId.orEmpty(),
                 state.selectedType.name,
                 state.name,
+                state.companyName,
                 state.location,
                 state.imageDataUrl.orEmpty()
             )
@@ -104,12 +124,16 @@ internal fun coachEditorStateSaver() = listSaver<CoachEditorState?, String>(
         if (raw.isEmpty()) {
             null
         } else {
+            val legacy = raw.size <= 5
             CoachEditorState(
                 editingCoachId = raw.getOrNull(0).orEmpty().ifBlank { null },
-                selectedType = raw.getOrNull(1)?.let(CoachType::valueOf) ?: CoachType.AI_COACH,
-                name = raw.getOrNull(2).orEmpty(),
-                location = raw.getOrNull(3).orEmpty(),
-                imageDataUrl = raw.getOrNull(4).orEmpty().ifBlank { null }
+                searchQuery = if (legacy) raw.getOrNull(2).orEmpty() else raw.getOrNull(1).orEmpty(),
+                selectedSearchItemId = if (legacy) null else raw.getOrNull(2).orEmpty().ifBlank { null },
+                selectedType = raw.getOrNull(if (legacy) 1 else 3)?.let(CoachType::valueOf) ?: CoachType.AI_COACH,
+                name = raw.getOrNull(if (legacy) 2 else 4).orEmpty(),
+                companyName = if (legacy) "" else raw.getOrNull(5).orEmpty(),
+                location = raw.getOrNull(if (legacy) 3 else 6).orEmpty(),
+                imageDataUrl = raw.getOrNull(if (legacy) 4 else 7).orEmpty().ifBlank { null }
             )
         }
     }

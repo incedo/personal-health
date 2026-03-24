@@ -1,7 +1,6 @@
 package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,16 +17,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.incedo.personalhealth.core.coaches.CoachType
+import com.incedo.personalhealth.core.coaches.CoachProfile
+import com.incedo.personalhealth.core.coaches.CoachSearchItem
 import com.incedo.personalhealth.core.coaches.coachTypeLabel
 
 @Composable
 internal fun CoachEditorScreen(
     compact: Boolean,
     editorState: CoachEditorState,
+    searchResults: List<CoachSearchItem>,
     onBack: () -> Unit,
-    onTypeSelected: (CoachType) -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
+    onSearchResultSelected: (CoachSearchItem) -> Unit,
     onNameChanged: (String) -> Unit,
+    onCompanyNameChanged: (String) -> Unit,
     onLocationChanged: (String) -> Unit,
     onPickImage: () -> Unit,
     onSave: () -> Unit
@@ -40,7 +43,7 @@ internal fun CoachEditorScreen(
             HomeHeroCard(
                 eyebrow = "Coach",
                 title = if (editorState.editingCoachId == null) "Coach toevoegen" else "Coach bewerken",
-                subtitle = "Voeg een naam, locatie, type en afbeelding toe. De coach komt daarna direct terug in je coachdirectory en kan actief worden gekozen.",
+                subtitle = "Zoek eerst een coach op naam, bedrijfsnaam of type. Daarna kun je de details nog aanpassen voordat de coach lokaal wordt opgeslagen.",
                 accent = palette.warning,
                 compact = compact,
                 sideContent = {
@@ -60,7 +63,7 @@ internal fun CoachEditorScreen(
                     Button(
                         onClick = onSave,
                         shape = RoundedCornerShape(16.dp),
-                        enabled = editorState.name.isNotBlank() && editorState.location.isNotBlank(),
+                        enabled = editorState.name.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = palette.warning,
                             contentColor = palette.buttonContent
@@ -71,15 +74,18 @@ internal fun CoachEditorScreen(
                 }
                 Spacer(modifier = Modifier.height(18.dp))
                 Text(
-                    text = "Type coach",
+                    text = "Coach zoeken",
                     style = MaterialTheme.typography.titleMedium,
                     color = palette.textPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                CoachTypePicker(
-                    selectedType = editorState.selectedType,
-                    onTypeSelected = onTypeSelected
+                CoachSearchSection(
+                    query = editorState.searchQuery,
+                    selectedItemId = editorState.selectedSearchItemId,
+                    results = searchResults,
+                    onQueryChanged = onSearchQueryChanged,
+                    onSelectItem = onSearchResultSelected
                 )
                 Spacer(modifier = Modifier.height(18.dp))
                 OutlinedTextField(
@@ -93,10 +99,20 @@ internal fun CoachEditorScreen(
                 )
                 Spacer(modifier = Modifier.height(14.dp))
                 OutlinedTextField(
+                    value = editorState.companyName,
+                    onValueChange = onCompanyNameChanged,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Bedrijfsnaam") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(18.dp),
+                    colors = coachEditorFieldColors()
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                OutlinedTextField(
                     value = editorState.location,
                     onValueChange = onLocationChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Locatie") },
+                    label = { Text("Locatie (optioneel)") },
                     singleLine = true,
                     shape = RoundedCornerShape(18.dp),
                     colors = coachEditorFieldColors()
@@ -111,10 +127,11 @@ internal fun CoachEditorScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 if (editorState.imageDataUrl != null) {
                     CoachAvatar(
-                        coach = com.incedo.personalhealth.core.coaches.CoachProfile(
+                        coach = CoachProfile(
                             id = editorState.editingCoachId ?: "draft",
                             type = editorState.selectedType,
                             name = editorState.name.ifBlank { "Coach" },
+                            companyName = editorState.companyName,
                             location = editorState.location,
                             imageDataUrl = editorState.imageDataUrl
                         ),
@@ -138,27 +155,7 @@ internal fun CoachEditorScreen(
 }
 
 @Composable
-private fun CoachTypePicker(
-    selectedType: CoachType,
-    onTypeSelected: (CoachType) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        CoachType.entries.forEach { type ->
-            OutlinedButton(
-                onClick = { onTypeSelected(type) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-                Text(
-                    text = if (type == selectedType) "${coachTypeLabel(type)} · gekozen" else coachTypeLabel(type)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun coachEditorFieldColors() = OutlinedTextFieldDefaults.colors(
+internal fun coachEditorFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = homePalette().warning,
     focusedLabelColor = homePalette().warning,
     cursorColor = homePalette().warning

@@ -96,13 +96,6 @@ internal fun CoachProtocolCard(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Onderbouwing",
-            style = MaterialTheme.typography.titleMedium,
-            color = palette.textPrimary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             supportTabs.forEach { tab ->
                 CoachProtocolLinkButton(

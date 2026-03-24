@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.recommendations.DailyRecommendation
 
 @Composable
 internal fun DashboardContent(
@@ -55,6 +56,7 @@ internal fun DashboardContent(
     weightSummary: String,
     activityMinutesToday: Int,
     heartRateBpm: Int,
+    dailyRecommendation: DailyRecommendation,
     profileName: String,
     activityOptions: List<QuickActivityType>,
     activeActivity: ActiveQuickActivitySession?,
@@ -86,6 +88,7 @@ internal fun DashboardContent(
                 weightSummary = weightSummary,
                 activityMinutesToday = activityMinutesToday,
                 heartRateBpm = heartRateBpm,
+                dailyRecommendation = dailyRecommendation,
                 profileName = profileName,
                 activityOptions = activityOptions,
                 activeActivity = activeActivity,
@@ -140,6 +143,7 @@ private fun VitalityLandingCard(
     weightSummary: String,
     activityMinutesToday: Int,
     heartRateBpm: Int,
+    dailyRecommendation: DailyRecommendation,
     profileName: String,
     activityOptions: List<QuickActivityType>,
     activeActivity: ActiveQuickActivitySession?,
@@ -190,9 +194,7 @@ private fun VitalityLandingCard(
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 VitalityHeader(
-                    fitScore = fitScore,
-                    steps = steps,
-                    heartRateBpm = heartRateBpm,
+                    dailyRecommendation = dailyRecommendation,
                     profileName = profileName,
                     compact = true
                 )
@@ -238,9 +240,7 @@ private fun VitalityLandingCard(
                         verticalAlignment = Alignment.Top
                     ) {
                         VitalityHeader(
-                            fitScore = fitScore,
-                            steps = steps,
-                            heartRateBpm = heartRateBpm,
+                            dailyRecommendation = dailyRecommendation,
                             profileName = profileName,
                             compact = false,
                             modifier = Modifier.weight(1.15f)
@@ -290,23 +290,12 @@ private fun VitalityLandingCard(
 
 @Composable
 private fun VitalityHeader(
-    fitScore: Int,
-    steps: Int,
-    heartRateBpm: Int,
+    dailyRecommendation: DailyRecommendation,
     profileName: String,
     compact: Boolean,
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
-    val subtitle = when {
-        fitScore >= 80 -> "Je start is sterk. Gebruik dit moment voor een geplande workout of hou je ritme vast."
-        fitScore >= 65 -> "Je dag staat stevig. Met slimme voeding en beweging hou je het momentum vast."
-        else -> "Je basis vraagt aandacht. Kies vandaag bewust voor herstel, brandstof en een haalbare trainingsprikkel."
-    }
-    val guidance = focusOfDayText(
-        fitScore = fitScore,
-        heartRateBpm = heartRateBpm
-    )
 
     Column(
         modifier = modifier,
@@ -318,18 +307,18 @@ private fun VitalityHeader(
             color = palette.textSecondary
         )
         Text(
-            text = "Focus van de dag",
+            text = dailyRecommendation.title,
             style = MaterialTheme.typography.displaySmall,
             color = palette.textPrimary,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            text = "Welkom terug, $profileName. $subtitle",
+            text = "Welkom terug, $profileName. ${dailyRecommendation.summary}",
             style = MaterialTheme.typography.bodyLarge,
             color = palette.textSecondary
         )
         Text(
-            text = guidance,
+            text = dailyRecommendation.guidance,
             style = MaterialTheme.typography.titleMedium,
             color = palette.textPrimary,
             fontWeight = FontWeight.SemiBold
@@ -793,15 +782,6 @@ private fun StepsOverviewCard(
         )
     }
 }
-
-private fun focusOfDayText(
-    fitScore: Int,
-    heartRateBpm: Int
-) = when {
-        fitScore >= 80 -> "Sterke dag. Houd je ritme vast en plan alleen lichte extra belasting."
-        heartRateBpm >= 75 -> "Hartslag ligt hoger dan ideaal. Kies vandaag voor herstel of een korte sessie."
-        else -> "Je basis is stabiel. Goed moment voor een geplande training of een stevige wandeling."
-    }
 
 @Composable
 private fun QuickActivityLogCard(

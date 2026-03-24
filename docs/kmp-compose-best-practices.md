@@ -108,6 +108,7 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Keep this guide aligned with actual build configuration.
 - Current feature modules in this repository include `feature/home` and `feature/onboarding`.
 - Current core domain modules in this repository include `core/health`, `core/wellbeing`, `core/goals`, `core/coaches`, and `core/onboarding`.
+- Recommendation contracts and deterministic fallback logic should live in `core/recommendations`, while the feature layer only renders the returned recommendation payload.
 - Shared video feeds, YouTube links, downloadable support clips, and backend-ready media repository contracts should live in `core/media`, while presentation of those items stays in feature modules such as `feature/home`.
 - Cross-feature onboarding state should live in `core/onboarding`, while the onboarding Compose flow itself stays in `feature/onboarding`.
 - Coach directory data, coach selection, and persisted coach profiles should live in `core/coaches`, while coach-screen presentation stays in `feature/home`.

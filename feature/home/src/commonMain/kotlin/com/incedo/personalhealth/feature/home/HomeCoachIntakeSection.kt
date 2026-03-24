@@ -100,11 +100,5 @@ internal fun CoachIntakeCard(
             title = "Voorgesteld protocol",
             value = coachProtocolById(recommendation.protocolId).title
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = recommendation.rationale.firstOrNull() ?: "Coach wacht nog op meer intake-informatie.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.textSecondary
-        )
     }
 }

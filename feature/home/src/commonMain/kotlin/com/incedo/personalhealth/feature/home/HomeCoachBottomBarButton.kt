@@ -23,13 +23,26 @@ internal fun CoachBottomBarButton(
     modifier: Modifier = Modifier,
     selected: Boolean,
     compact: Boolean,
+    desktopWebStyle: Boolean = false,
     onClick: () -> Unit
 ) {
     val palette = homePalette()
     val accent = tabAccent(HomeTab.COACH)
-    val outerSize = if (compact) 78.dp else 98.dp
-    val innerSize = if (compact) 66.dp else 84.dp
-    val iconSize = if (compact) 30.dp else 36.dp
+    val outerSize = when {
+        compact -> 78.dp
+        desktopWebStyle -> 58.dp
+        else -> 98.dp
+    }
+    val innerSize = when {
+        compact -> 66.dp
+        desktopWebStyle -> 48.dp
+        else -> 84.dp
+    }
+    val iconSize = when {
+        compact -> 30.dp
+        desktopWebStyle -> 24.dp
+        else -> 36.dp
+    }
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -68,7 +81,7 @@ internal fun CoachBottomBarButton(
             }
         }
         if (!compact) {
-            Spacer(modifier = Modifier.size(6.dp))
+            Spacer(modifier = Modifier.size(if (desktopWebStyle) 3.dp else 6.dp))
             Text(
                 text = HomeTab.COACH.label,
                 style = MaterialTheme.typography.titleMedium,

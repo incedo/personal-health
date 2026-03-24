@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
+import com.incedo.personalhealth.core.recommendations.DailyRecommendation
 
 @Composable
 internal fun HomeTabContent(
@@ -19,6 +20,7 @@ internal fun HomeTabContent(
     healthMetricCards: List<HomeHealthMetricCard>,
     activityMinutesToday: Int,
     heartRateBpm: Int,
+    dailyRecommendation: DailyRecommendation,
     onboardingFocusGoal: CoachFocusGoal?,
     profileName: String,
     themeMode: HomeThemeMode,
@@ -56,6 +58,7 @@ internal fun HomeTabContent(
             ),
             activityMinutesToday = activityMinutesToday,
             heartRateBpm = heartRateBpm,
+            dailyRecommendation = dailyRecommendation,
             profileName = profileName,
             activityOptions = activityOptions,
             activeActivity = activeActivity,

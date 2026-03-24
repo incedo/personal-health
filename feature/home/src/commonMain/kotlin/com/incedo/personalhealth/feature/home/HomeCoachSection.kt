@@ -19,7 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.coaches.CoachDirectoryStore
 import com.incedo.personalhealth.core.coaches.CoachProfile
+import com.incedo.personalhealth.core.coaches.CoachSearchStubService
 import com.incedo.personalhealth.core.coaches.createCoachId
+import com.incedo.personalhealth.core.coaches.removeCoachProfile
+import com.incedo.personalhealth.core.coaches.selectedCoachProfiles
 import com.incedo.personalhealth.core.coaches.toggleCoachSelection
 import com.incedo.personalhealth.core.coaches.upsertCoachProfile
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
@@ -74,6 +77,13 @@ internal fun CoachSectionScreen(
         )
     }
     val selectedProtocol = coachProtocolById(selectedProtocolId ?: recommendation.protocolId)
+    val selectedCoachCount = selectedCoachProfiles(coachProfiles).size
+    val focusProgress = coachFocusProgress(intakeProfile)
+    val goalsProgress = coachGoalsProgress(goalsState.goals.size)
+    val coachProgress = coachSelectionProgress(
+        totalCoaches = coachProfiles.size,
+        selectedCoaches = selectedCoachCount
+    )
     fun applySuggestedProtocol(updatedProfile: CoachIntakeProfile) {
         val suggested = buildCoachRecommendation(
             CoachRecommendationInput(
@@ -92,6 +102,7 @@ internal fun CoachSectionScreen(
             editingCoachId = coach.id,
             selectedType = coach.type,
             name = coach.name,
+            companyName = coach.companyName,
             location = coach.location,
             imageDataUrl = coach.imageDataUrl
         )
@@ -111,6 +122,7 @@ internal fun CoachSectionScreen(
                 id = nextId,
                 type = draft.selectedType,
                 name = draft.name.trim(),
+                companyName = draft.companyName.trim(),
                 location = draft.location.trim(),
                 imageDataUrl = draft.imageDataUrl,
                 isSelected = existingProfile?.isSelected ?: true
@@ -122,15 +134,25 @@ internal fun CoachSectionScreen(
     }
 
     if (editorState != null) {
+        val searchResults = remember(editorState?.searchQuery) {
+            CoachSearchStubService.search(editorState?.searchQuery.orEmpty())
+        }
         CoachEditorScreen(
             compact = compact,
             editorState = editorState ?: CoachEditorState(),
+            searchResults = searchResults,
             onBack = { editorState = null },
-            onTypeSelected = { selectedType ->
-                editorState = editorState?.copy(selectedType = selectedType)
+            onSearchQueryChanged = { query ->
+                editorState = editorState?.copy(searchQuery = query, selectedSearchItemId = null)
+            },
+            onSearchResultSelected = { item ->
+                editorState = editorState?.applySearchItem(item)
             },
             onNameChanged = { name ->
                 editorState = editorState?.copy(name = name)
+            },
+            onCompanyNameChanged = { companyName ->
+                editorState = editorState?.copy(companyName = companyName)
             },
             onLocationChanged = { location ->
                 editorState = editorState?.copy(location = location)
@@ -197,6 +219,11 @@ internal fun CoachSectionScreen(
                 val updatedProfiles = toggleCoachSelection(coachProfiles, coachId)
                 coachProfiles = updatedProfiles
                 CoachDirectoryStore.setCoaches(updatedProfiles)
+            },
+            onDeleteCoach = { coachId ->
+                val updatedProfiles = removeCoachProfile(coachProfiles, coachId)
+                coachProfiles = updatedProfiles
+                CoachDirectoryStore.setCoaches(updatedProfiles)
             }
         )
         return
@@ -207,18 +234,12 @@ internal fun CoachSectionScreen(
             tab = HomeTab.COACH,
             compact = compact,
             leadingContent = {
-                HomeHeroCard(
-                    eyebrow = "Coach",
-                    title = "Je dagelijkse begeleiding",
-                    subtitle = "Zie in een oogopslag je protocol en doelen, en open losse coachschermen voor intake, persoonlijke doelen en persoonlijke details.",
-                    accent = homePalette().warning,
+                CoachHeaderCard(
                     compact = compact,
-                    sideContent = {
-                        HomeStatusBadge(
-                            label = "Protocol",
-                            value = selectedProtocol.title
-                        )
-                    }
+                    title = "Coach",
+                    focusProgress = focusProgress,
+                    goalsProgress = goalsProgress,
+                    coachProgress = coachProgress
                 )
             },
             bodyContent = {
@@ -238,7 +259,34 @@ internal fun CoachSectionScreen(
         FloatingCoachDock(
             coaches = coachProfiles,
             onAddCoach = ::openNewCoachEditor,
-            modifier = Modifier.padding(top = if (compact) 10.dp else 16.dp, start = 10.dp)
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .padding(
+                    end = if (compact) 16.dp else 24.dp,
+                    bottom = if (compact) 108.dp else 124.dp
+                )
         )
     }
+}
+
+private fun coachFocusProgress(
+    intakeProfile: CoachIntakeProfile
+): Float {
+    val completedFields = listOf(
+        intakeProfile.focusGoal != null,
+        intakeProfile.traits.isNotEmpty()
+    ).count { it }
+    return completedFields / 2f
+}
+
+private fun coachGoalsProgress(
+    goalCount: Int
+): Float = (goalCount.coerceAtMost(3)) / 3f
+
+private fun coachSelectionProgress(
+    totalCoaches: Int,
+    selectedCoaches: Int
+): Float = when {
+    totalCoaches <= 0 -> 0.34f
+    else -> selectedCoaches.toFloat() / totalCoaches.toFloat()
 }

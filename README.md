@@ -25,6 +25,7 @@ Kotlin multi-module Compose project with a modular architecture for:
 - `core/health` Canonical health data model + gateway contract
 - `core/media` Shared video/news media catalog and backend-ready repository contracts
 - `core/onboarding` Shared onboarding state, reducer, and goal contract
+- `core/recommendations` Shared recommendation-of-the-day API, models, and stub client implementation
 - `core/wellbeing` Shared wellbeing model for app usage and screen-time summaries
 - `integration/health-connect` Android-only Health Connect integration
 - `integration/app-usage` Android-only UsageStats integration for screen time and selected social apps

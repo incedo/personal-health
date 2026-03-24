@@ -12,6 +12,7 @@ data class CoachProfile(
     val id: String,
     val type: CoachType,
     val name: String,
+    val companyName: String = "",
     val location: String,
     val imageDataUrl: String? = null,
     val isSelected: Boolean = true
@@ -57,5 +58,10 @@ fun toggleCoachSelection(
 ): List<CoachProfile> = profiles.map { profile ->
     if (profile.id == coachId) profile.copy(isSelected = !profile.isSelected) else profile
 }
+
+fun removeCoachProfile(
+    profiles: List<CoachProfile>,
+    coachId: String
+): List<CoachProfile> = profiles.filterNot { it.id == coachId }
 
 fun selectedCoachProfiles(profiles: List<CoachProfile>): List<CoachProfile> = profiles.filter { it.isSelected }
