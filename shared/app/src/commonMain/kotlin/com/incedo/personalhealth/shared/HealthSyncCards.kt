@@ -85,10 +85,6 @@ internal fun HealthSyncStatsCard(
                 style = MaterialTheme.typography.bodySmall
             )
             Text(
-                "Nu zichtbaar: Withings krijgt voorrang voor gewicht, body composition en bloeddruk. Samsung/Health Connect blijven voor de overige Android data.",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
                 "import clicks=$importRequestCount status=${if (importInProgress) "bezig" else "idle"}",
                 style = MaterialTheme.typography.bodySmall
             )

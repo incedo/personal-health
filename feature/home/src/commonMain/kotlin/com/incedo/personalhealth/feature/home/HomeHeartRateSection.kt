@@ -1,9 +1,6 @@
 package com.incedo.personalhealth.feature.home
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -21,15 +17,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.designsystem.LineChartColors
+import com.incedo.personalhealth.core.designsystem.LineChartPoint
+import com.incedo.personalhealth.core.designsystem.LineChartTimeline
 
 @Composable
 internal fun HeartRateDetailScreen(
@@ -129,6 +127,7 @@ internal fun HeartRateTimelineCard(
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
+    var zoomLevel by remember(timeline) { mutableFloatStateOf(MinChartZoomLevel) }
     Surface(
         modifier = modifier,
         color = palette.surfaceRaised,
@@ -174,93 +173,34 @@ internal fun HeartRateTimelineCard(
                         .padding(horizontal = 16.dp, vertical = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    val chartWidth = (timeline.size * 56).dp
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                    ) {
-                        Column(modifier = Modifier.width(chartWidth)) {
-                            HeartRateLineChart(
-                                timeline = timeline,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(164.dp)
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                timeline.forEach { point ->
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(
-                                            text = point.label,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = palette.textSecondary
-                                        )
-                                        Text(
-                                            text = "${point.bpm}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = palette.textPrimary,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                }
-                            }
+                    HomeChartZoomControls(
+                        onZoomOut = { zoomLevel = nextChartZoomLevel(zoomLevel, zoomIn = false) },
+                        onZoomIn = { zoomLevel = nextChartZoomLevel(zoomLevel, zoomIn = true) }
+                    )
+                    LineChartTimeline(
+                        points = timeline.map { LineChartPoint(label = it.label, value = it.bpm.toDouble()) },
+                        axis = heartRateChartAxis(timeline),
+                        colors = LineChartColors(
+                            line = palette.warning,
+                            point = palette.warning,
+                            selectedOuterPoint = palette.warning,
+                            selectedInnerPoint = palette.warning,
+                            grid = palette.surfaceMuted.copy(alpha = 0.7f),
+                            axisLabel = palette.textSecondary,
+                            bottomLabel = palette.textSecondary,
+                            bottomValue = palette.textPrimary
+                        ),
+                        chartHeight = 164.dp,
+                        pointWidth = 56.dp,
+                        zoomLevel = zoomLevel,
+                        minZoomLevel = MinChartZoomLevel,
+                        maxZoomLevel = MaxChartZoomLevel,
+                        onZoomLevelChange = { zoomLevel = it },
+                        valueLabel = { point ->
+                            "${point.value?.toInt() ?: 0}"
                         }
-                    }
+                    )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HeartRateLineChart(
-    timeline: List<HeartRateTimelinePoint>,
-    modifier: Modifier = Modifier
-) {
-    val palette = homePalette()
-    val minValue = timeline.minOfOrNull { it.bpm } ?: 0
-    val maxValue = timeline.maxOfOrNull { it.bpm } ?: 1
-    val range = (maxValue - minValue).coerceAtLeast(1)
-
-    Box(modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val stepX = if (timeline.size <= 1) 0f else size.width / (timeline.size - 1)
-            val path = Path()
-
-            timeline.forEachIndexed { index, point ->
-                val x = stepX * index
-                val ratio = (point.bpm - minValue).toFloat() / range.toFloat()
-                val y = size.height - (ratio * (size.height * 0.82f)) - 12f
-                if (index == 0) {
-                    path.moveTo(x, y)
-                } else {
-                    path.lineTo(x, y)
-                }
-                drawCircle(
-                    color = palette.warning,
-                    radius = 6f,
-                    center = Offset(x, y)
-                )
-            }
-
-            drawPath(
-                path = path,
-                color = palette.warning,
-                style = Stroke(width = 6f, cap = StrokeCap.Round)
-            )
-
-            repeat(3) { index ->
-                val y = size.height * (index + 1) / 4f
-                drawLine(
-                    color = palette.surfaceMuted.copy(alpha = 0.7f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = 2f
-                )
             }
         }
     }

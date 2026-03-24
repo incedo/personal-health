@@ -1,5 +1,7 @@
 package com.incedo.personalhealth.feature.home
 
+import com.incedo.personalhealth.core.designsystem.LineChartAxis
+
 data class HeartRateTimelinePoint(
     val label: String,
     val bpm: Int
@@ -47,5 +49,28 @@ fun heartRateDetailStats(points: List<HeartRateTimelinePoint>): HeartRateDetailS
             averageBpm <= 80 -> "Licht verhoogd"
             else -> "Herstel bewaken"
         }
+    )
+}
+
+internal fun heartRateChartAxis(points: List<HeartRateTimelinePoint>): LineChartAxis {
+    if (points.isEmpty()) {
+        return LineChartAxis(
+            yAxisLabels = listOf("0 bpm", "0 bpm", "0 bpm", "0 bpm"),
+            minValue = 0.0,
+            maxValue = 0.0
+        )
+    }
+    val minValue = points.minOf { it.bpm }
+    val maxValue = points.maxOf { it.bpm }
+    val padding = ((maxValue - minValue).coerceAtLeast(6)) * 0.2
+    val axisMin = (minValue - padding).coerceAtLeast(0.0)
+    val axisMax = maxValue + padding
+    val step = (axisMax - axisMin) / 3.0
+    return LineChartAxis(
+        yAxisLabels = listOf(3, 2, 1, 0).map { index ->
+            "${(axisMin + step * index).toInt()} bpm"
+        },
+        minValue = axisMin,
+        maxValue = axisMax
     )
 }

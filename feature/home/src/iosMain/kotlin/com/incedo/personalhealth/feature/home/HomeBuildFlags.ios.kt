@@ -7,4 +7,5 @@ actual object HomeBuildFlags {
     @OptIn(ExperimentalNativeApi::class)
     actual val isDebugEditorEnabled: Boolean
         get() = Platform.isDebugBinary
+    actual val usesDesktopBottomBarStyle: Boolean = false
 }

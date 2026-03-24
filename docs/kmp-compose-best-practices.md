@@ -66,6 +66,7 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Use one shared canonical model for domain data in `core/*` modules.
 - Platform integrations (for example Android Health Connect and iOS HealthKit) must map into that canonical model.
 - Additional vendor integrations, such as Samsung Health Data SDK on Android, must also map into the same canonical model and stay isolated inside dedicated integration modules.
+- Adjacent wellbeing data that is not part of Health Connect or HealthKit, such as Android screen time via `UsageStatsManager`, should live in a separate shared `core/*` model and dedicated integration module instead of being mixed into canonical health provider contracts.
 - UI/features must consume only canonical models, never raw platform framework types.
 
 ## 10. Event-based communication
@@ -106,6 +107,11 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Update README module layout when adding, removing, or renaming modules.
 - Keep this guide aligned with actual build configuration.
 - Current feature modules in this repository include `feature/home` and `feature/onboarding`.
+- Current core domain modules in this repository include `core/health`, `core/wellbeing`, `core/goals`, `core/coaches`, and `core/onboarding`.
+- Recommendation contracts and deterministic fallback logic should live in `core/recommendations`, while the feature layer only renders the returned recommendation payload.
+- Shared video feeds, YouTube links, downloadable support clips, and backend-ready media repository contracts should live in `core/media`, while presentation of those items stays in feature modules such as `feature/home`.
+- Cross-feature onboarding state should live in `core/onboarding`, while the onboarding Compose flow itself stays in `feature/onboarding`.
+- Coach directory data, coach selection, and persisted coach profiles should live in `core/coaches`, while coach-screen presentation stays in `feature/home`.
 
 ## 15. Sports and training feature direction
 - Keep `activity tracking`, `strength logging`, and `training recommendations` as separate concerns even when they appear in one user flow.

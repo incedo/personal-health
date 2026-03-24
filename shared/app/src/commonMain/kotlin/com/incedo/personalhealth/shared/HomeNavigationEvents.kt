@@ -12,6 +12,10 @@ internal fun HomeDetailDestination.routeName(): String = when (this) {
     HomeDetailDestination.WEIGHT -> "weight-detail"
     HomeDetailDestination.HEALTH_DATA -> "health-data-detail"
     HomeDetailDestination.FITNESS -> "fitness-detail"
+    HomeDetailDestination.COACH_INTAKE -> "coach-intake"
+    HomeDetailDestination.COACH_GOALS -> "coach-goals"
+    HomeDetailDestination.COACH_DETAILS -> "coach-details"
+    HomeDetailDestination.COACH_TRAINING_PROGRAM -> "coach-training-program"
     HomeDetailDestination.FITNESS_EDITOR_DEBUG -> "fitness-editor-debug"
 }
 

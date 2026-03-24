@@ -38,7 +38,12 @@ internal val samsungRecordReaders = listOf(
             HealthMetricType.BODY_WEIGHT_KG,
             HealthMetricType.HEIGHT_CM,
             HealthMetricType.BODY_FAT_PERCENTAGE,
+            HealthMetricType.BODY_FAT_MASS_KG,
             HealthMetricType.MUSCLE_MASS_KG,
+            HealthMetricType.MUSCLE_PERCENTAGE,
+            HealthMetricType.SKELETAL_MUSCLE_PERCENTAGE,
+            HealthMetricType.FAT_FREE_PERCENTAGE,
+            HealthMetricType.FAT_FREE_MASS_KG,
             HealthMetricType.WATER_MASS_KG,
             HealthMetricType.BODY_MASS_INDEX,
             HealthMetricType.BASAL_METABOLIC_RATE_KCAL
@@ -47,14 +52,16 @@ internal val samsungRecordReaders = listOf(
     SamsungRecordReader(
         setOf(
             HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG,
-            HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG
+            HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG,
+            HealthMetricType.MEAN_BLOOD_PRESSURE_MMHG,
+            HealthMetricType.PULSE_RATE_BPM
         )
     ) { store, request -> readBloodPressureRecords(store, request) },
     SamsungRecordReader(setOf(HealthMetricType.BLOOD_GLUCOSE_MGDL)) { store, request -> readBloodGlucoseRecords(store, request) },
     SamsungRecordReader(setOf(HealthMetricType.OXYGEN_SATURATION_PERCENTAGE)) { store, request -> readBloodOxygenRecords(store, request) },
     SamsungRecordReader(setOf(HealthMetricType.BODY_TEMPERATURE_CELSIUS)) { store, request -> readBodyTemperatureRecords(store, request) },
     SamsungRecordReader(setOf(HealthMetricType.HYDRATION_ML)) { store, request -> readHydrationRecords(store, request) },
-    SamsungRecordReader(setOf(HealthMetricType.DIETARY_ENERGY_KCAL)) { store, request -> readNutritionRecords(store, request) }
+    SamsungRecordReader(samsungNutritionMetrics) { store, request -> readNutritionRecords(store, request) }
 )
 
 internal class SamsungRecordReader(
@@ -148,7 +155,12 @@ private suspend fun readBodyCompositionRecords(store: HealthDataStore, request: 
             addMetricIfRequested(request, point, DataType.BodyCompositionType.WEIGHT, HealthMetricType.BODY_WEIGHT_KG, start, end)
             addMetricIfRequested(request, point, DataType.BodyCompositionType.HEIGHT, HealthMetricType.HEIGHT_CM, start, end)
             addMetricIfRequested(request, point, DataType.BodyCompositionType.BODY_FAT, HealthMetricType.BODY_FAT_PERCENTAGE, start, end)
-            addMetricIfRequested(request, point, DataType.BodyCompositionType.MUSCLE_MASS, HealthMetricType.MUSCLE_MASS_KG, start, end)
+            addMetricIfRequested(request, point, DataType.BodyCompositionType.BODY_FAT_MASS, HealthMetricType.BODY_FAT_MASS_KG, start, end)
+            addMetricIfRequested(request, point, DataType.BodyCompositionType.SKELETAL_MUSCLE_MASS, HealthMetricType.MUSCLE_MASS_KG, start, end)
+            addMetricIfRequested(request, point, DataType.BodyCompositionType.MUSCLE_MASS, HealthMetricType.MUSCLE_PERCENTAGE, start, end)
+            addMetricIfRequested(request, point, DataType.BodyCompositionType.SKELETAL_MUSCLE, HealthMetricType.SKELETAL_MUSCLE_PERCENTAGE, start, end)
+            addMetricIfRequested(request, point, DataType.BodyCompositionType.FAT_FREE, HealthMetricType.FAT_FREE_PERCENTAGE, start, end)
+            addMetricIfRequested(request, point, DataType.BodyCompositionType.FAT_FREE_MASS, HealthMetricType.FAT_FREE_MASS_KG, start, end)
             addMetricIfRequested(request, point, DataType.BodyCompositionType.TOTAL_BODY_WATER, HealthMetricType.WATER_MASS_KG, start, end)
             addMetricIfRequested(request, point, DataType.BodyCompositionType.BODY_MASS_INDEX, HealthMetricType.BODY_MASS_INDEX, start, end)
             addMetricIfRequested(request, point, DataType.BodyCompositionType.BASAL_METABOLIC_RATE, HealthMetricType.BASAL_METABOLIC_RATE_KCAL, start, end)
@@ -168,6 +180,8 @@ private suspend fun readBloodPressureRecords(store: HealthDataStore, request: He
         buildList {
             addMetricIfRequested(request, point, DataType.BloodPressureType.SYSTOLIC, HealthMetricType.SYSTOLIC_BLOOD_PRESSURE_MMHG, start, end)
             addMetricIfRequested(request, point, DataType.BloodPressureType.DIASTOLIC, HealthMetricType.DIASTOLIC_BLOOD_PRESSURE_MMHG, start, end)
+            addMetricIfRequested(request, point, DataType.BloodPressureType.MEAN, HealthMetricType.MEAN_BLOOD_PRESSURE_MMHG, start, end)
+            addMetricIfRequested(request, point, DataType.BloodPressureType.PULSE_RATE, HealthMetricType.PULSE_RATE_BPM, start, end)
         }
     }
 
@@ -223,21 +237,7 @@ private suspend fun readHydrationRecords(store: HealthDataStore, request: Health
         point.toRecord(metric = HealthMetricType.HYDRATION_ML, value = value.toDouble(), start = time.toEpochMilli(), end = time.toEpochMilli())
     }
 
-private suspend fun readNutritionRecords(store: HealthDataStore, request: HealthReadRequest): List<HealthRecord> =
-    store.readData(
-        DataTypes.NUTRITION.readDataRequestBuilder
-            .setLocalTimeFilter(request.toLocalTimeFilter())
-            .setOrdering(Ordering.DESC)
-            .setLimit(request.limit)
-            .build()
-    ).dataList.mapNotNull { point ->
-        val value = point.getValue(DataType.NutritionType.CALORIES) ?: return@mapNotNull null
-        val start = point.startTime?.toEpochMilli() ?: return@mapNotNull null
-        val end = (point.endTime ?: point.startTime)?.toEpochMilli() ?: start
-        point.toRecord(metric = HealthMetricType.DIETARY_ENERGY_KCAL, value = value.toDouble(), start = start, end = end)
-    }
-
-private fun <T : Number> MutableList<HealthRecord>.addMetricIfRequested(
+internal fun <T : Number> MutableList<HealthRecord>.addMetricIfRequested(
     request: HealthReadRequest,
     point: HealthDataPoint,
     field: com.samsung.android.sdk.health.data.data.Field<T>,
@@ -250,7 +250,7 @@ private fun <T : Number> MutableList<HealthRecord>.addMetricIfRequested(
     add(point.toRecord(metric = metric, value = value.toDouble(), start = start, end = end))
 }
 
-private fun HealthDataPoint.toRecord(metric: HealthMetricType, value: Double, start: Long, end: Long): HealthRecord = HealthRecord(
+internal fun HealthDataPoint.toRecord(metric: HealthMetricType, value: Double, start: Long, end: Long): HealthRecord = HealthRecord(
     id = "${uid ?: metric.metricId}-$start-${metric.metricId}",
     metric = metric,
     value = value,
@@ -260,9 +260,9 @@ private fun HealthDataPoint.toRecord(metric: HealthMetricType, value: Double, st
     metadata = samsungMetadata()
 )
 
-private fun samsungMetadata(): Map<String, String> = mapOf("provider" to "samsung_health")
+internal fun samsungMetadata(): Map<String, String> = mapOf("provider" to "samsung_health")
 
-private fun HealthReadRequest.toLocalTimeFilter(): LocalTimeFilter = LocalTimeFilter.of(
+internal fun HealthReadRequest.toLocalTimeFilter(): LocalTimeFilter = LocalTimeFilter.of(
     LocalDateTime.ofInstant(Instant.ofEpochMilli(startEpochMillis), ZoneId.systemDefault()),
     LocalDateTime.ofInstant(Instant.ofEpochMilli(endEpochMillis), ZoneId.systemDefault())
 )

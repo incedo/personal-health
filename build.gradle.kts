@@ -23,13 +23,18 @@ dependencies {
     kover(project(":apps:desktop"))
     kover(project(":apps:web"))
     kover(project(":shared:app"))
+    kover(project(":core:coaches"))
     kover(project(":core:designsystem"))
     kover(project(":core:events"))
     kover(project(":core:health"))
+    kover(project(":core:onboarding"))
+    kover(project(":core:recommendations"))
+    kover(project(":core:wellbeing"))
     kover(project(":feature:home"))
     kover(project(":feature:home-test"))
     kover(project(":feature:onboarding"))
     kover(project(":feature:onboarding-test"))
+    kover(project(":integration:app-usage"))
     kover(project(":integration:health-connect"))
     kover(project(":integration:healthkit"))
 }
@@ -44,8 +49,13 @@ tasks.register("qualityGateBase") {
         ":shared:app:compileKotlinDesktop",
         ":feature:home-test:desktopTest",
         ":feature:onboarding-test:desktopTest",
+        ":core:coaches:allTests",
         ":core:events:compileKotlinDesktop",
         ":core:health:compileKotlinDesktop",
+        ":core:onboarding:allTests",
+        ":core:recommendations:allTests",
+        ":core:wellbeing:compileKotlinDesktop",
+        ":integration:app-usage:compileDebugKotlin",
         ":integration:health-connect:compileDebugKotlin",
         ":apps:android:lintDebug",
         "koverXmlReport",
@@ -224,12 +234,21 @@ kover {
                     "com.incedo.personalhealth.web.*",
                     "com.incedo.personalhealth.integration.healthconnect.*",
                     "com.incedo.personalhealth.integration.healthkit.*",
+                    "com.incedo.personalhealth.core.designsystem.LineChartTimelineKt*",
+                    "com.incedo.personalhealth.core.designsystem.LineChartColors",
+                    "com.incedo.personalhealth.core.designsystem.LineChartPoint",
                     "com.incedo.personalhealth.shared.PersonalHealthAppKt*",
+                    "com.incedo.personalhealth.shared.*Kt$*",
                     "com.incedo.personalhealth.shared.MainViewControllerKt*",
                     "com.incedo.personalhealth.shared.IOSSharedUiBridge*",
                     "com.incedo.personalhealth.shared.OnboardingPreferenceStore*",
+                    "com.incedo.personalhealth.feature.home.*Kt",
                     "com.incedo.personalhealth.feature.home.HomeScreenKt*",
+                    "com.incedo.personalhealth.feature.home.HomeTab*",
+                    "com.incedo.personalhealth.feature.home.*Kt$*",
+                    "com.incedo.personalhealth.feature.onboarding.*Kt",
                     "com.incedo.personalhealth.feature.onboarding.OnboardingScreenKt*",
+                    "com.incedo.personalhealth.feature.onboarding.*Kt$*",
                     "com.incedo.personalhealth.feature.onboarding.OnboardingUiStateSaver*",
                     "*ComposableSingletons*"
                 )

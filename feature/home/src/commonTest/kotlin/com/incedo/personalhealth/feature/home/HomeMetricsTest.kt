@@ -1,5 +1,8 @@
 package com.incedo.personalhealth.feature.home
 
+import com.incedo.personalhealth.core.recommendations.DailyRecommendationRequest
+import com.incedo.personalhealth.core.recommendations.RecommendationInsightTone
+import com.incedo.personalhealth.core.recommendations.defaultDailyRecommendation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -157,32 +160,38 @@ class HomeMetricsTest {
     }
 
     @Test
-    fun buildVitalityInsights_returnsThreeOrderedInsights() {
-        val insights = buildVitalityInsights(
-            fitScore = 72,
-            heartRateBpm = 67,
-            steps = 4_800,
-            activityMinutes = 24
-        )
+    fun dailyRecommendation_returnsThreeOrderedInsights() {
+        val insights = defaultDailyRecommendation(
+            DailyRecommendationRequest(
+                fitScore = 72,
+                heartRateBpm = 67,
+                steps = 4_800,
+                activityMinutesToday = 24,
+                profileName = "Kees"
+            )
+        ).insights
 
         assertEquals(3, insights.size)
         assertEquals("Herstel in balans", insights[0].title)
-        assertEquals(HomeInsightTone.ACCENT, insights[0].tone)
+        assertEquals(RecommendationInsightTone.ACCENT, insights[0].tone)
         assertEquals("Activiteit bouwt op", insights[1].title)
         assertEquals("Brandstof aanvullen", insights[2].title)
     }
 
     @Test
-    fun buildVitalityInsights_flagsLowRecoveryAndLowActivity() {
-        val insights = buildVitalityInsights(
-            fitScore = 54,
-            heartRateBpm = 79,
-            steps = 1_800,
-            activityMinutes = 8
-        )
+    fun dailyRecommendation_flagsLowRecoveryAndLowActivity() {
+        val insights = defaultDailyRecommendation(
+            DailyRecommendationRequest(
+                fitScore = 54,
+                heartRateBpm = 79,
+                steps = 1_800,
+                activityMinutesToday = 8,
+                profileName = "Kees"
+            )
+        ).insights
 
         assertEquals("Herstel bewaken", insights[0].title)
-        assertEquals(HomeInsightTone.WARNING, insights[0].tone)
+        assertEquals(RecommendationInsightTone.WARNING, insights[0].tone)
         assertEquals("Meer actieve tijd nodig", insights[1].title)
         assertEquals("Brandstof aanvullen", insights[2].title)
     }
