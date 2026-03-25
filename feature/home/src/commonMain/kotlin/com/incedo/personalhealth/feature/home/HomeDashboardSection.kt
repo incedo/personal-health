@@ -103,37 +103,6 @@ internal fun DashboardContent(
                 onLogNutrition = onLogNutrition
             )
 
-            if (expanded) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(spacing)
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(spacing)
-                    ) {
-                        SummaryStrip(
-                            steps = steps,
-                            heartRateBpm = heartRateBpm,
-                            weightSummary = weightSummary,
-                            fitScore = fitScore,
-                            onStepsClick = onOpenStepsDetail,
-                            onHeartRateClick = onOpenHeartRateDetail,
-                            onWeightClick = onOpenWeightDetail
-                        )
-                    }
-                }
-            } else {
-                SummaryStrip(
-                    steps = steps,
-                    heartRateBpm = heartRateBpm,
-                    weightSummary = weightSummary,
-                    fitScore = fitScore,
-                    onStepsClick = onOpenStepsDetail,
-                    onHeartRateClick = onOpenHeartRateDetail,
-                    onWeightClick = onOpenWeightDetail
-                )
-            }
         }
     }
 }
@@ -230,29 +199,12 @@ private fun VitalityLandingCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(24.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        VitalityHeader(
-                            dailyRecommendation = dailyRecommendation,
-                            profileName = profileName,
-                            compact = false,
-                            modifier = Modifier.weight(1.15f)
-                        )
-                        SummaryStrip(
-                            steps = steps,
-                            heartRateBpm = heartRateBpm,
-                            weightSummary = weightSummary,
-                            fitScore = fitScore,
-                            onStepsClick = { },
-                            onHeartRateClick = { },
-                            onWeightClick = onOpenWeightDetail,
-                            compact = false,
-                            modifier = Modifier.weight(0.95f)
-                        )
-                    }
+                    VitalityHeader(
+                        dailyRecommendation = dailyRecommendation,
+                        profileName = profileName,
+                        compact = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center

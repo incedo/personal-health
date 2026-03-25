@@ -19,6 +19,9 @@ import com.incedo.personalhealth.core.health.CanonicalHealthImportDocument
 import com.incedo.personalhealth.core.health.HealthEvent
 import com.incedo.personalhealth.core.health.HealthMetricType
 import com.incedo.personalhealth.core.health.currentEpochMillis
+import com.incedo.personalhealth.core.newssocial.NewsSocialFeedRequest
+import com.incedo.personalhealth.core.newssocial.StubNewsSocialFeedApi
+import com.incedo.personalhealth.core.newssocial.defaultNewsSocialFeed
 import com.incedo.personalhealth.core.onboarding.OnboardingUiState
 import com.incedo.personalhealth.core.recommendations.DailyRecommendationRequest
 import com.incedo.personalhealth.core.recommendations.StubRecommendationOfDayApi
@@ -66,14 +69,10 @@ fun PersonalHealthApp() {
     val fitnessActivityStore = remember { PersistedFitnessActivityStore(PlatformFitnessActivityPersistenceDriver) }
     val activityTrackingStore = remember { PersistedActivityTrackingStore(PlatformActivityTrackingPersistenceDriver) }
     val nutritionLogStore = remember { PersistedNutritionLogStore(PlatformNutritionLogPersistenceDriver) }
+    val newsSocialFeedApi = remember { StubNewsSocialFeedApi() }
     val recommendationApi = remember { StubRecommendationOfDayApi() }
     val initialDashboardHealthState = remember { readPersistedDashboardHealthUiState() }
-    remember {
-        runHomeStorageMaintenance(
-            fitnessActivityStore = fitnessActivityStore,
-            activityTrackingStore = activityTrackingStore
-        )
-    }
+    remember { runHomeStorageMaintenance(fitnessActivityStore = fitnessActivityStore, activityTrackingStore = activityTrackingStore) }
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
     val initialOnboardingState = remember {
         OnboardingUiState(
@@ -82,8 +81,7 @@ fun PersonalHealthApp() {
             completed = OnboardingPreferenceStore.isCompleted()
         )
     }
-    var onboardingGoal by remember { mutableStateOf(initialOnboardingState.selectedGoal) }
-    var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
+    var onboardingGoal by remember { mutableStateOf(initialOnboardingState.selectedGoal) }; var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
     var lastReadSummary by remember { mutableStateOf("Nog geen health records gelezen") }
     var latestUiMessage by remember { mutableStateOf("Nog geen acties uitgevoerd") }
@@ -227,8 +225,7 @@ fun PersonalHealthApp() {
         sessions = fitnessSessions,
         dayWindow = activityDayWindow
     )
-    val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90)
-    val dashboardHeartRate = todayHeartRateBpm ?: derivedHeartRate
+    val derivedHeartRate = (68 - (metricEventCounts[HealthMetricType.HEART_RATE_BPM] ?: 0)).coerceIn(52, 90); val dashboardHeartRate = todayHeartRateBpm ?: derivedHeartRate
     val fitScore = (35 + (dashboardSteps / 180) - ((dashboardHeartRate - 60).coerceAtLeast(0) / 2)).coerceIn(0, 100)
     val recommendationRequest = DailyRecommendationRequest(
         fitScore = fitScore,
@@ -246,6 +243,11 @@ fun PersonalHealthApp() {
         recommendationRequest.profileName
     ) {
         value = recommendationApi.getRecommendationOfDay(recommendationRequest)
+    }
+    val newsSocialRequest = NewsSocialFeedRequest(profileName = "Kees"); val newsSocialFeed by produceState(
+        initialValue = defaultNewsSocialFeed(newsSocialRequest), newsSocialRequest.profileName
+    ) {
+        value = newsSocialFeedApi.getFeed(newsSocialRequest)
     }
     val detailHeartRateTimeline = todayHeartRateTimeline.ifEmpty { fallbackHeartRateTimeline(
         averageBpm = dashboardHeartRate,
@@ -276,6 +278,7 @@ fun PersonalHealthApp() {
                 fitnessBodyProfile = fitnessBodyProfile,
                 heartRateBpm = dashboardHeartRate,
                 dailyRecommendation = dailyRecommendation,
+                newsSocialFeed = newsSocialFeed,
                 onboardingFocusGoal = onboardingGoal?.toCoachFocusGoal(),
                 profileName = "Kees",
                 themeMode = themeMode,

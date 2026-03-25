@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
+import com.incedo.personalhealth.core.newssocial.NewsSocialFeed
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
 
 @Composable
@@ -37,6 +38,7 @@ fun HomeScreen(
     fitnessBodyProfile: FitnessBodyProfile,
     heartRateBpm: Int,
     dailyRecommendation: DailyRecommendation,
+    newsSocialFeed: NewsSocialFeed,
     onboardingFocusGoal: CoachFocusGoal?,
     profileName: String,
     themeMode: HomeThemeMode,
@@ -227,6 +229,7 @@ fun HomeScreen(
                             activityMinutesToday = activityMinutesToday,
                             heartRateBpm = heartRateBpm,
                             dailyRecommendation = dailyRecommendation,
+                            newsSocialFeed = newsSocialFeed,
                             onboardingFocusGoal = onboardingFocusGoal,
                             profileName = profileName,
                             themeMode = themeMode,

@@ -38,6 +38,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:events"))
             implementation(project(":core:goals"))
+            implementation(project(":core:newssocial"))
             implementation(project(":core:onboarding"))
             implementation(project(":core:recommendations"))
             implementation(project(":core:health"))

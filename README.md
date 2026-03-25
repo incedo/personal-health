@@ -24,6 +24,7 @@ Kotlin multi-module Compose project with a modular architecture for:
 - `core/goals` Shared coach goals model and add/update rules
 - `core/health` Canonical health data model + gateway contract
 - `core/media` Shared video/news media catalog and backend-ready repository contracts
+- `core/newssocial` Shared news/social feed API, rotating stub feed, and backend-ready tab payloads
 - `core/onboarding` Shared onboarding state, reducer, and goal contract
 - `core/recommendations` Shared recommendation-of-the-day API, models, and stub client implementation
 - `core/wellbeing` Shared wellbeing model for app usage and screen-time summaries

@@ -20,22 +20,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.newssocial.NewsSocialAccent
+import com.incedo.personalhealth.core.newssocial.NewsSocialFeed
 
 @Composable
-internal fun NewsSocialSection() {
+internal fun NewsSocialSection(
+    feed: NewsSocialFeed
+) {
     val palette = homePalette()
-    val highlights = listOf(
-        Triple("Community run", "Zaterdag 08:30 • Vondelpark", "24 mensen gaan"),
-        Triple("Herstel-tip", "Korte mobility-flow van 8 minuten", "Past goed na krachttraining"),
-        Triple("Voedingstrend", "Meer eiwit bij ontbijt blijft populair", "Bekijk wat vandaag werkt")
-    )
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        highlights.forEachIndexed { index, item ->
-            val accent = when (index) {
-                0 -> palette.accent
-                1 -> palette.warning
-                else -> palette.warm
+        feed.highlights.forEach { item ->
+            val accent = when (item.accent) {
+                NewsSocialAccent.ACCENT -> palette.accent
+                NewsSocialAccent.WARNING -> palette.warning
+                NewsSocialAccent.WARM -> palette.warm
             }
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -60,18 +59,23 @@ internal fun NewsSocialSection() {
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = item.first,
+                            text = item.title,
                             style = MaterialTheme.typography.titleMedium,
                             color = palette.textPrimary,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = item.second,
+                            text = item.summary,
                             style = MaterialTheme.typography.bodyMedium,
                             color = palette.textPrimary
                         )
                         Text(
-                            text = item.third,
+                            text = "${item.metadata} · ${item.author.name} (${item.author.role})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = palette.textSecondary
+                        )
+                        Text(
+                            text = "Beeld: ${item.imageUrl.imageLabel()}",
                             style = MaterialTheme.typography.bodySmall,
                             color = palette.textSecondary
                         )
@@ -80,6 +84,8 @@ internal fun NewsSocialSection() {
             }
         }
         Spacer(modifier = Modifier.height(6.dp))
-        NewsTrainingVideoStrip()
+        NewsTrainingVideoStrip(videos = feed.videoPosts)
     }
 }
+
+private fun String.imageLabel(): String = substringAfter("://").substringBefore("/").ifBlank { this }
