@@ -6,6 +6,7 @@ data class NewsSocialFeed(
     val statusLabel: String,
     val statusValue: String,
     val highlights: List<NewsSocialHighlight>,
+    val imagePosts: List<NewsSocialImagePost>,
     val videoPosts: List<NewsSocialVideoPost>,
     val source: NewsSocialSource
 )
@@ -18,6 +19,21 @@ data class NewsSocialHighlight(
     val author: NewsSocialAuthor,
     val imageUrl: String,
     val accent: NewsSocialAccent
+)
+
+data class NewsSocialImagePost(
+    val id: String,
+    val title: String,
+    val description: String,
+    val sourceLabel: String,
+    val engagementLabel: String,
+    val author: NewsSocialAuthor,
+    val images: List<NewsSocialImage>
+)
+
+data class NewsSocialImage(
+    val imageUrl: String,
+    val caption: String
 )
 
 data class NewsSocialVideoPost(

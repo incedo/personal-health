@@ -55,6 +55,44 @@ private val highlights = listOf(
     )
 )
 
+private val imagePosts = listOf(
+    NewsSocialImagePost(
+        id = "recovery-photo-dump",
+        title = "Recovery photo dump na de avondrun",
+        description = "Een voorbeeldpost met meerdere beelden uit dezelfde sessie, zodat de nieuws-tab ook image carrousels kan tonen.",
+        sourceLabel = "Community gallery",
+        engagementLabel = "8 foto's · 41 saves",
+        author = NewsSocialAuthor("Tess de Bruin", "@tess.runs", "Runner"),
+        images = listOf(
+            NewsSocialImage("https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80", "Start op de brug"),
+            NewsSocialImage("https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80", "Cooling down stretch"),
+            NewsSocialImage("https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&w=1200&q=80", "Teammoment na afloop"),
+            NewsSocialImage("https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80", "Avondlicht in het park"),
+            NewsSocialImage("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80", "Foam roll station"),
+            NewsSocialImage("https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80", "Rustmoment op het gras"),
+            NewsSocialImage("https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=1200&q=80", "Groepsfoto voor vertrek"),
+            NewsSocialImage("https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=1200&q=80", "Water en herstel"),
+            NewsSocialImage("https://images.unsplash.com/photo-1517837016564-bfcf6ca84b2a?auto=format&fit=crop&w=1200&q=80", "Tempo blok onderweg"),
+            NewsSocialImage("https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1200&q=80", "Laatste ronde"),
+            NewsSocialImage("https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&w=1200&q=80", "Reservebeeld dat wordt afgekapt")
+        )
+    ),
+    NewsSocialImagePost(
+        id = "meal-prep-carousel",
+        title = "Meal prep shots voor trainingsdagen",
+        description = "Een tweede voorbeeld met minder beelden, zodat je compact en expanded gedrag allebei ziet in dezelfde carousel-opzet.",
+        sourceLabel = "Nutrition snapshots",
+        engagementLabel = "4 foto's · 19 reacties",
+        author = NewsSocialAuthor("Jurre Bakker", "@jurre.fuels", "Nutrition editor"),
+        images = listOf(
+            NewsSocialImage("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80", "Ontbijt met yoghurt en fruit"),
+            NewsSocialImage("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80", "Lunch bowl met granen"),
+            NewsSocialImage("https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80", "Snack box voor later"),
+            NewsSocialImage("https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80", "Diner na training")
+        )
+    )
+)
+
 private val videoPosts = listOf(
     NewsSocialVideoPost(
         id = "mobility-hips-lower-back",
@@ -115,8 +153,9 @@ private fun stubNewsSocialFeed(
         heroTitle = heroTitles[rotation.mod(heroTitles.size)],
         heroSubtitle = subtitles[rotation.mod(subtitles.size)],
         statusLabel = "Live",
-        statusValue = "${videoPosts.size} updates",
+        statusValue = "${imagePosts.size + videoPosts.size} updates",
         highlights = rotate(highlights, rotation),
+        imagePosts = rotate(imagePosts, rotation).map { it.copy(images = it.images.take(10)) },
         videoPosts = rotate(videoPosts, rotation),
         source = NewsSocialSource.STUB
     )

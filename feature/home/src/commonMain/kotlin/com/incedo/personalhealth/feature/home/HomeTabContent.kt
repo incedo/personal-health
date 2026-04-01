@@ -101,6 +101,9 @@ internal fun HomeTabContent(
         HomeTab.COACH -> CoachSectionScreen(
             page = CoachPage.OVERVIEW,
             compact = compact,
+            fitScore = fitScore,
+            steps = steps,
+            heartRateBpm = heartRateBpm,
             onboardingFocusGoal = onboardingFocusGoal,
             onCloseCoachDetail = {},
             onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },

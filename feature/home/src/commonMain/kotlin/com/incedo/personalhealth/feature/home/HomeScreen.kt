@@ -166,6 +166,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_INTAKE -> CoachSectionScreen(
                         page = CoachPage.INTAKE,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -180,6 +183,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_GOALS -> CoachSectionScreen(
                         page = CoachPage.GOALS,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -194,6 +200,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_DETAILS -> CoachSectionScreen(
                         page = CoachPage.DETAILS,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -208,6 +217,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_TRAINING_PROGRAM -> CoachSectionScreen(
                         page = CoachPage.TRAINING_PROGRAM,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },

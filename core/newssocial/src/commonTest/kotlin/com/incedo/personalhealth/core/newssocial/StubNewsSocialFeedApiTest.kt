@@ -14,8 +14,12 @@ class StubNewsSocialFeedApiTest {
 
         assertEquals("Live", feed.statusLabel)
         assertEquals(3, feed.highlights.size)
+        assertEquals(2, feed.imagePosts.size)
         assertEquals(3, feed.videoPosts.size)
         assertTrue(feed.highlights.all { it.imageUrl.startsWith("https://") })
+        assertTrue(feed.imagePosts.all { it.images.isNotEmpty() })
+        assertTrue(feed.imagePosts.all { it.images.size <= 10 })
+        assertTrue(feed.imagePosts.flatMap { it.images }.all { it.imageUrl.startsWith("https://") })
         assertTrue(feed.videoPosts.all { it.imageUrl.startsWith("https://") })
         assertTrue(feed.videoPosts.all { it.video.launchUrl.startsWith("https://") })
         assertTrue(feed.videoPosts.all { it.author.name.isNotBlank() })
@@ -31,6 +35,7 @@ class StubNewsSocialFeedApiTest {
 
         assertTrue(first.heroTitle != second.heroTitle || first.heroSubtitle != second.heroSubtitle)
         assertTrue(first.highlights.first().id != second.highlights.first().id)
+        assertTrue(first.imagePosts.first().id != second.imagePosts.first().id)
         assertTrue(first.videoPosts.first().id != second.videoPosts.first().id)
     }
 }

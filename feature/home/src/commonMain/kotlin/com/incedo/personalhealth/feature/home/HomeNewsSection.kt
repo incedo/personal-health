@@ -83,6 +83,7 @@ internal fun NewsSocialSection(
                 }
             }
         }
+        NewsImageGallerySection(posts = feed.imagePosts)
         Spacer(modifier = Modifier.height(6.dp))
         NewsTrainingVideoStrip(videos = feed.videoPosts)
     }
