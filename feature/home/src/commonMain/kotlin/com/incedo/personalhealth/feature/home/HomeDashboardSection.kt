@@ -431,20 +431,28 @@ private fun VitalityScoreRings(
         modifier = modifier,
         onClick = onOpenHealthDataDetail,
         centerSizeFraction = centerSize / ringSize,
+        strokeWidthPx = homeRingStrokeWidth(ringSize),
+        ringGapPx = homeRingGap(ringSize),
         centerState = HomeRingCenterState(
             heartProgress = vitalityProgress,
             scoreText = fitScore.coerceIn(0, 100).toString(),
-            heartSizeFraction = 0.62f,
+            heartSizeFraction = 0.78f,
             scoreTextStyle = MaterialTheme.typography.headlineMedium
         )
     )
 }
 
 private fun homeRingSize(compact: Boolean): androidx.compose.ui.unit.Dp =
-    if (compact) 116.dp else 144.dp
+    if (compact) 104.dp else 144.dp
 
 private fun homeRingCenterSize(ringSize: androidx.compose.ui.unit.Dp): androidx.compose.ui.unit.Dp =
-    (ringSize * 0.46f).coerceIn(104.dp, 128.dp)
+    (ringSize * 0.38f).coerceIn(46.dp, 58.dp)
+
+private fun homeRingStrokeWidth(ringSize: androidx.compose.ui.unit.Dp): Float =
+    if (ringSize <= 120.dp) 8f else 10f
+
+private fun homeRingGap(ringSize: androidx.compose.ui.unit.Dp): Float =
+    if (ringSize <= 120.dp) 4f else 5f
 
 @Composable
 private fun VitalityInsightList(

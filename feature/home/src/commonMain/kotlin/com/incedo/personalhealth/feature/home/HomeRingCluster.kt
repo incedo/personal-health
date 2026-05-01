@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -61,7 +58,7 @@ internal fun HomeRingCluster(
         val density = androidx.compose.ui.platform.LocalDensity.current
         val ringGap = with(density) { ringGapPx.toDp() }
         val strokeWidth = with(density) { strokeWidthPx.toDp() }
-        val innerRingDiameter = minSize - ringGap * 4f
+        val innerRingDiameter = minSize - (strokeWidth + ringGap) * 4f
         val maxCenterSize = (innerRingDiameter + strokeWidth - minVisibleInnerRing * 2f).coerceAtLeast(64.dp)
         val centerSize = minOf(requestedCenterSize, maxCenterSize)
 
@@ -72,16 +69,14 @@ internal fun HomeRingCluster(
                     color = colors[index],
                     trackColor = trackColors[index],
                     strokeWidth = strokeWidthPx,
-                    inset = ringGapPx * index
+                    inset = strokeWidthPx / 2f + index * (strokeWidthPx + ringGapPx)
                 )
             }
         }
 
-        Surface(
+        Box(
             modifier = Modifier.size(centerSize),
-            shape = CircleShape,
-            color = homePalette().surface,
-            shadowElevation = 6.dp
+            contentAlignment = Alignment.Center
         ) {
             HomeRingCenter(
                 state = centerState,
@@ -191,7 +186,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawHomeRing(
         useCenter = false,
         topLeft = Offset(inset, inset),
         size = Size(width = size.width - inset * 2, height = size.height - inset * 2),
-        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        style = Stroke(width = strokeWidth)
     )
     drawArc(
         color = color,
