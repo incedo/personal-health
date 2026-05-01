@@ -109,6 +109,18 @@ internal fun DashboardContent(
                 onOpenHeartRateDetail = onOpenHeartRateDetail,
                 onOpenWeightDetail = onOpenWeightDetail
             )
+            DashboardPanelGrid(
+                expanded = expanded,
+                steps = steps,
+                stepsTimeline = stepsTimeline,
+                weightSummary = weightSummary,
+                activityMinutesToday = activityMinutesToday,
+                heartRateBpm = heartRateBpm,
+                dailyRecommendation = dailyRecommendation,
+                activityOptions = activityOptions,
+                activeActivity = activeActivity,
+                activityClockEpochMillis = activityClockEpochMillis
+            )
         }
     }
 }
