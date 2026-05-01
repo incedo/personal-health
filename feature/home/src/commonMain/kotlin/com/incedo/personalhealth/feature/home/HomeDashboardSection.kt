@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
@@ -255,10 +256,16 @@ private fun VitalityHeader(
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
+    val compactSubtitle = "Welkom terug, $profileName."
+    val fullSubtitle = "$compactSubtitle ${dailyRecommendation.summary}"
+    val compactTitle = dailyRecommendation.title.substringBefore(' ').ifBlank { dailyRecommendation.title }
+    val titleStyle = if (compact) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.displaySmall
+    val subtitleStyle = if (compact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge
+    val guidanceStyle = if (compact) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp)
     ) {
         Text(
             text = "TODAY",
@@ -266,21 +273,25 @@ private fun VitalityHeader(
             color = palette.textSecondary
         )
         Text(
-            text = dailyRecommendation.title,
-            style = MaterialTheme.typography.displaySmall,
+            text = if (compact) compactTitle else dailyRecommendation.title,
+            style = titleStyle,
             color = palette.textPrimary,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip
         )
         Text(
-            text = "Welkom terug, $profileName. ${dailyRecommendation.summary}",
-            style = MaterialTheme.typography.bodyLarge,
+            text = if (compact) compactSubtitle else fullSubtitle,
+            style = subtitleStyle,
             color = palette.textSecondary
         )
         Text(
             text = dailyRecommendation.guidance,
-            style = MaterialTheme.typography.titleMedium,
+            style = guidanceStyle,
             color = palette.textPrimary,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            maxLines = if (compact) 2 else Int.MAX_VALUE,
+            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip
         )
     }
 }
