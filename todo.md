@@ -48,26 +48,26 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Fase 3: Design System Componenten
 
-- [ ] Voeg `PhButton` toe.
-- [ ] Voeg `PhIconButton` toe.
-- [ ] Voeg `PhTextField` toe.
-- [ ] Voeg `PhToggle` toe.
-- [ ] Voeg `PhTag` toe.
-- [ ] Voeg `PhCard` toe.
-- [ ] Voeg `PhSegmentedControl` toe.
-- [ ] Voeg `PhSectionHeader` toe.
-- [ ] Voeg `PhListRow` toe.
-- [ ] Voeg `PhMetricCard` toe.
-- [ ] Voeg chart primitives toe:
-  - [ ] Ring gauge
-  - [ ] Triple ring
-  - [ ] Sparkline
-  - [ ] Bars
-  - [ ] Heatmap
-  - [ ] Zone bar
-- [ ] Zorg dat primary actions touch, pointer en keyboard ondersteunen.
-- [ ] Zorg voor focus, hover en disabled states.
-- [ ] Voeg compacte en expanded previews/tests toe voor nieuwe interactieve componenten.
+- [x] Voeg `PhButton` toe.
+- [x] Voeg `PhIconButton` toe.
+- [x] Voeg `PhTextField` toe.
+- [x] Voeg `PhToggle` toe.
+- [x] Voeg `PhTag` toe.
+- [x] Voeg `PhCard` toe.
+- [x] Voeg `PhSegmentedControl` toe.
+- [x] Voeg `PhSectionHeader` toe.
+- [x] Voeg `PhListRow` toe.
+- [x] Voeg `PhMetricCard` toe.
+- [x] Voeg chart primitives toe:
+  - [x] Ring gauge
+  - [x] Triple ring
+  - [x] Sparkline
+  - [x] Bars
+  - [x] Heatmap
+  - [x] Zone bar
+- [x] Zorg dat primary actions touch, pointer en keyboard ondersteunen.
+- [x] Zorg voor focus, hover en disabled states.
+- [x] Voeg compacte en expanded previews/tests toe voor nieuwe interactieve componenten.
 
 ## Fase 4: Home/Dashboard Refactor
 
