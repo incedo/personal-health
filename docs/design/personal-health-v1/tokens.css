@@ -1,0 +1,215 @@
+/* =========================================================================
+   Personal Health — Design tokens
+   Calm, spa-like, longevity-focused. Light & dark.
+   Ported from Compose AppTheme.kt + HomeChrome.kt palettes,
+   extended into a full token system for KMP/Compose + web.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root, [data-theme="light"] {
+  /* ---- Brand & accent (single-hue muted teal-green) ---- */
+  --ph-primary:           #2F6F4E;   /* deep forest — primary actions, focus */
+  --ph-primary-hover:     #275E42;
+  --ph-primary-pressed:   #1F4F37;
+  --ph-primary-soft:      #E2EEE7;   /* tint surface for chips, banners */
+  --ph-primary-on:        #FFFFFF;
+
+  --ph-accent:            #7AB89A;   /* sage — highlight, secondary lines */
+  --ph-accent-soft:       #DBEDE2;
+
+  /* ---- Surfaces (neutral, cool warm-white) ---- */
+  --ph-bg:                #F4F7F5;   /* app background */
+  --ph-bg-soft:           #ECF1ED;
+  --ph-surface:           #FFFFFF;   /* cards, sheets */
+  --ph-surface-raised:    #FFFFFF;
+  --ph-surface-muted:     #EEF2EF;   /* table headers, chip backs, inputs */
+  --ph-surface-sunken:    #E4EAE6;
+
+  --ph-divider:           #DDE4DF;
+  --ph-border:            #CFD8D2;
+  --ph-border-strong:     #1F2A24;
+
+  /* ---- Text ---- */
+  --ph-text:              #1F2A24;   /* near-ink */
+  --ph-text-muted:        #5A6B62;
+  --ph-text-faint:        #8A9991;
+  --ph-text-on-primary:   #FFFFFF;
+  --ph-text-on-dark:      #F4F7F5;
+
+  /* ---- Semantic (longevity-tuned, not loud) ---- */
+  --ph-success:           #2F6F4E;
+  --ph-success-soft:      #E2EEE7;
+  --ph-warning:           #C7873A;
+  --ph-warning-soft:      #F6EBD9;
+  --ph-danger:            #B14A4A;
+  --ph-danger-soft:       #F4DEDE;
+  --ph-info:              #3A6F8A;
+  --ph-info-soft:         #E0EBF1;
+
+  /* ---- Data viz scale (sleep / readiness / load / recovery / nutrition) ---- */
+  --ph-data-1:            #2F6F4E;   /* primary forest */
+  --ph-data-2:            #7AB89A;   /* sage */
+  --ph-data-3:            #C7873A;   /* terracotta — load */
+  --ph-data-4:            #3A6F8A;   /* slate blue — sleep */
+  --ph-data-5:            #8E6FA8;   /* heather — HRV */
+  --ph-data-6:            #B14A4A;   /* clay — strain */
+  --ph-data-7:            #4F6B5C;   /* moss */
+
+  /* zones (heart-rate / training-load) */
+  --ph-zone-1:            #B5CFC0;
+  --ph-zone-2:            #7AB89A;
+  --ph-zone-3:            #4E9C77;
+  --ph-zone-4:            #C7873A;
+  --ph-zone-5:            #B14A4A;
+
+  /* ---- Elevation ---- */
+  --ph-elev-0:            none;
+  --ph-elev-1:            0 1px 2px rgba(31,42,36,.06), 0 0 0 1px rgba(31,42,36,.04);
+  --ph-elev-2:            0 2px 6px rgba(31,42,36,.06), 0 1px 2px rgba(31,42,36,.04);
+  --ph-elev-3:            0 6px 16px rgba(31,42,36,.08), 0 2px 4px rgba(31,42,36,.04);
+  --ph-elev-4:            0 16px 32px rgba(31,42,36,.10), 0 4px 8px rgba(31,42,36,.04);
+
+  /* ---- State overlays (alpha tokens, applied over fg) ---- */
+  --ph-opacity-hover:     0.06;
+  --ph-opacity-focus:     0.10;
+  --ph-opacity-pressed:   0.14;
+  --ph-opacity-disabled:  0.38;
+
+  /* ---- Focus ring ---- */
+  --ph-focus-ring:        0 0 0 2px var(--ph-bg), 0 0 0 4px var(--ph-primary);
+}
+
+[data-theme="dark"] {
+  /* lifted from HomeChrome.kt HomeDarkPalette, retuned for green */
+  --ph-primary:           #7AB89A;
+  --ph-primary-hover:     #8DC4A8;
+  --ph-primary-pressed:   #69A88A;
+  --ph-primary-soft:      #1A3329;
+  --ph-primary-on:        #0E1F17;
+
+  --ph-accent:            #A6D6BA;
+  --ph-accent-soft:       #1F3B2D;
+
+  --ph-bg:                #0E1714;
+  --ph-bg-soft:           #131E1A;
+  --ph-surface:           #16221E;
+  --ph-surface-raised:    #1B2A24;
+  --ph-surface-muted:     #1F302A;
+  --ph-surface-sunken:    #0B1411;
+
+  --ph-divider:           #233129;
+  --ph-border:            #2C3D34;
+  --ph-border-strong:     #E6EDE8;
+
+  --ph-text:              #E6EDE8;
+  --ph-text-muted:        #9AAAA0;
+  --ph-text-faint:        #6E7E74;
+  --ph-text-on-primary:   #0E1F17;
+  --ph-text-on-dark:      #E6EDE8;
+
+  --ph-success:           #7AB89A;
+  --ph-success-soft:      #1F3B2D;
+  --ph-warning:           #E1A75A;
+  --ph-warning-soft:      #3A2C12;
+  --ph-danger:            #E27A7A;
+  --ph-danger-soft:       #3A1E1E;
+  --ph-info:              #7DA9C0;
+  --ph-info-soft:         #1B2C36;
+
+  --ph-data-1:            #7AB89A;
+  --ph-data-2:            #A6D6BA;
+  --ph-data-3:            #E1A75A;
+  --ph-data-4:            #7DA9C0;
+  --ph-data-5:            #B8A0D0;
+  --ph-data-6:            #E27A7A;
+  --ph-data-7:            #99B0A4;
+
+  --ph-zone-1:            #2C3D34;
+  --ph-zone-2:            #4F8467;
+  --ph-zone-3:            #7AB89A;
+  --ph-zone-4:            #E1A75A;
+  --ph-zone-5:            #E27A7A;
+
+  --ph-elev-1:            0 1px 2px rgba(0,0,0,.5),  0 0 0 1px rgba(255,255,255,.04);
+  --ph-elev-2:            0 2px 6px rgba(0,0,0,.5),  0 1px 2px rgba(0,0,0,.4);
+  --ph-elev-3:            0 6px 16px rgba(0,0,0,.55), 0 2px 4px rgba(0,0,0,.4);
+  --ph-elev-4:            0 16px 32px rgba(0,0,0,.6), 0 4px 8px rgba(0,0,0,.4);
+
+  --ph-focus-ring:        0 0 0 2px var(--ph-bg), 0 0 0 4px var(--ph-primary);
+}
+
+/* ---- Type scale (Inter, geometric sans) ---- */
+:root {
+  --ph-font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --ph-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* sizes / line-heights / weights */
+  --ph-display-size:   40px; --ph-display-lh:   48px; --ph-display-w:   600;
+  --ph-h1-size:        28px; --ph-h1-lh:        36px; --ph-h1-w:        600;
+  --ph-h2-size:        22px; --ph-h2-lh:        30px; --ph-h2-w:        600;
+  --ph-h3-size:        18px; --ph-h3-lh:        26px; --ph-h3-w:        600;
+  --ph-body-size:      15px; --ph-body-lh:      22px; --ph-body-w:      400;
+  --ph-body-sm-size:   13px; --ph-body-sm-lh:   18px; --ph-body-sm-w:   400;
+  --ph-label-size:     12px; --ph-label-lh:     16px; --ph-label-w:     500;
+  --ph-caption-size:   11px; --ph-caption-lh:   14px; --ph-caption-w:   400;
+  --ph-button-size:    14px; --ph-button-lh:    20px; --ph-button-w:    600;
+  --ph-metric-size:    44px; --ph-metric-lh:    48px; --ph-metric-w:    600;
+
+  /* spacing — 4pt grid w/ 12 emphasis */
+  --ph-s-2:   2px;
+  --ph-s-4:   4px;
+  --ph-s-8:   8px;
+  --ph-s-12:  12px;
+  --ph-s-16:  16px;
+  --ph-s-20:  20px;
+  --ph-s-24:  24px;
+  --ph-s-32:  32px;
+  --ph-s-40:  40px;
+  --ph-s-56:  56px;
+  --ph-s-72:  72px;
+
+  /* radius */
+  --ph-r-xs:   4px;
+  --ph-r-sm:   8px;
+  --ph-r-md:   12px;
+  --ph-r-lg:   16px;
+  --ph-r-xl:   24px;
+  --ph-r-pill: 999px;
+
+  /* motion */
+  --ph-motion-fast:   140ms;
+  --ph-motion-normal: 240ms;
+  --ph-motion-slow:   420ms;
+  --ph-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ph-ease-emph:     cubic-bezier(0.3, 0, 0, 1);
+
+  /* sizes */
+  --ph-icon-xs: 14px;
+  --ph-icon-sm: 16px;
+  --ph-icon-md: 20px;
+  --ph-icon-lg: 24px;
+  --ph-icon-xl: 32px;
+}
+
+/* element defaults */
+html, body { background: var(--ph-bg); color: var(--ph-text); font-family: var(--ph-font-sans); }
+* { box-sizing: border-box; }
+body {
+  font-size: var(--ph-body-size);
+  line-height: var(--ph-body-lh);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  margin: 0;
+}
+
+.ph-h1 { font-size: var(--ph-h1-size); line-height: var(--ph-h1-lh); font-weight: var(--ph-h1-w); letter-spacing: -0.01em; }
+.ph-h2 { font-size: var(--ph-h2-size); line-height: var(--ph-h2-lh); font-weight: var(--ph-h2-w); letter-spacing: -0.005em; }
+.ph-h3 { font-size: var(--ph-h3-size); line-height: var(--ph-h3-lh); font-weight: var(--ph-h3-w); }
+.ph-body { font-size: var(--ph-body-size); line-height: var(--ph-body-lh); }
+.ph-body-sm { font-size: var(--ph-body-sm-size); line-height: var(--ph-body-sm-lh); }
+.ph-label { font-size: var(--ph-label-size); line-height: var(--ph-label-lh); font-weight: var(--ph-label-w); color: var(--ph-text-muted); }
+.ph-caption { font-size: var(--ph-caption-size); line-height: var(--ph-caption-lh); color: var(--ph-text-faint); }
+.ph-mono { font-family: var(--ph-font-mono); font-feature-settings: 'tnum' 1, 'cv11' 1; }
+.ph-metric { font-family: var(--ph-font-sans); font-size: var(--ph-metric-size); line-height: var(--ph-metric-lh); font-weight: var(--ph-metric-w); letter-spacing: -0.02em; font-feature-settings: 'tnum' 1; }

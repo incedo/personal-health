@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Personal Health — Design System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  /* page chrome */
+  .canvas-bg { background: var(--ph-bg); min-height: 100vh; }
+  .swatch { display:flex; flex-direction:column; gap:6px; }
+  .swatch .chip { height: 56px; border-radius: var(--ph-r-md); border: 1px solid var(--ph-border); }
+  .swatch .name { font-size: 12px; color: var(--ph-text); font-weight: 500; }
+  .swatch .hex { font-family: var(--ph-font-mono); font-size: 11px; color: var(--ph-text-muted); }
+
+  .grid { display: grid; gap: 14px; }
+  .row { display:flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .panel { background: var(--ph-surface); border-radius: var(--ph-r-lg); padding: 24px; box-shadow: var(--ph-elev-1); }
+  .divider { height:1px; background: var(--ph-divider); margin: 16px 0; }
+
+  /* responsive frame for dashboard */
+  .device-frame {
+    width: 100%; height: 100%; overflow: auto;
+    background: var(--ph-bg); border-radius: var(--ph-r-lg);
+  }
+  .dashboard-page { padding: 28px; max-width: 1280px; margin: 0 auto; }
+  .dashboard-grid { display: grid; gap: 20px; grid-template-columns: 2fr 1fr; }
+  @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+  .vital-grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 720px) { .vital-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .vital-grid { grid-template-columns: 1fr; } }
+
+  .sidebar-grid { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 1100px) { .sidebar-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .sidebar-grid { grid-template-columns: 1fr; } }
+
+  /* app shell preview */
+  .shell {
+    display: grid; grid-template-columns: 220px 1fr; height: 100%;
+    background: var(--ph-bg);
+  }
+  .nav {
+    padding: 24px 14px; background: var(--ph-surface); border-right: 1px solid var(--ph-divider);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .nav .brand {
+    display:flex; align-items:center; gap:10px; padding: 0 10px 20px;
+  }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--ph-primary), var(--ph-accent));
+    display:flex; align-items:center; justify-content:center; color:#fff;
+  }
+  .nav-item {
+    display:flex; align-items:center; gap: 12px;
+    padding: 10px 12px; border-radius: var(--ph-r-md);
+    color: var(--ph-text-muted); font-size: 14px; font-weight: 500;
+    cursor: pointer;
+  }
+  .nav-item:hover { background: var(--ph-surface-muted); }
+  .nav-item.active { background: var(--ph-primary-soft); color: var(--ph-primary); }
+  .nav-foot { margin-top: auto; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="dashboard.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="onboarding.jsx"></script>
+<script type="text/babel" src="profile-plan.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Tweakable defaults
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "accent": "#2F6F4E",
+  "simplify": false,
+  "density": "comfortable",
+  "lang": "nl",
+  "units": "imperial",
+  "showSleep": true,
+  "showSteps": true,
+  "showHrv": true,
+  "showPlan": true,
+  "showVolume": true,
+  "showMuscleBalance": true,
+  "showConsistency": true,
+  "showBodyTrend": true
+}/*EDITMODE-END*/;
+
+/* ──────────────── Foundations card ──────────────── */
+function ColorTokens() {
+  const groups = [
+    {
+      title: "Brand & primary",
+      swatches: [
+        ["Primary", "#2F6F4E", "--ph-primary"],
+        ["Primary hover", "#275E42", "--ph-primary-hover"],
+        ["Primary soft", "#E2EEE7", "--ph-primary-soft"],
+        ["Accent (sage)", "#7AB89A", "--ph-accent"],
+      ]
+    },
+    {
+      title: "Surfaces & text",
+      swatches: [
+        ["BG", "#F4F7F5", "--ph-bg"],
+        ["Surface", "#FFFFFF", "--ph-surface"],
+        ["Surface muted", "#EEF2EF", "--ph-surface-muted"],
+        ["Text", "#1F2A24", "--ph-text"],
+        ["Text muted", "#5A6B62", "--ph-text-muted"],
+        ["Divider", "#DDE4DF", "--ph-divider"],
+      ]
+    },
+    {
+      title: "Semantic",
+      swatches: [
+        ["Success", "#2F6F4E", "--ph-success"],
+        ["Warning", "#C7873A", "--ph-warning"],
+        ["Danger", "#B14A4A", "--ph-danger"],
+        ["Info", "#3A6F8A", "--ph-info"],
+      ]
+    },
+    {
+      title: "Data viz",
+      swatches: [
+        ["Forest", "#2F6F4E", "--ph-data-1"],
+        ["Sage", "#7AB89A", "--ph-data-2"],
+        ["Terracotta", "#C7873A", "--ph-data-3"],
+        ["Slate", "#3A6F8A", "--ph-data-4"],
+        ["Heather", "#8E6FA8", "--ph-data-5"],
+        ["Clay", "#B14A4A", "--ph-data-6"],
+        ["Moss", "#4F6B5C", "--ph-data-7"],
+      ]
+    },
+    {
+      title: "Heart-rate zones",
+      swatches: [
+        ["Z1 recovery", "", "--ph-zone-1"],
+        ["Z2 endurance", "", "--ph-zone-2"],
+        ["Z3 tempo", "", "--ph-zone-3"],
+        ["Z4 threshold", "", "--ph-zone-4"],
+        ["Z5 max", "", "--ph-zone-5"],
+      ]
+    }
+  ];
+  return (
+    <div className="grid" style={{ gridTemplateColumns: "1fr", gap: 28 }}>
+      {groups.map(g => (
+        <div key={g.title}>
+          <div className="ph-label" style={{ marginBottom: 12 }}>{g.title.toUpperCase()}</div>
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))" }}>
+            {g.swatches.map(([n, h, v]) => (
+              <div key={n} className="swatch">
+                <div className="chip" style={{ background: `var(${v})` }} />
+                <div className="name">{n}</div>
+                <div className="hex">{h || `var(${v})`}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TypeTokens() {
+  const items = [
+    ["Display · 40/48 · 600", "ph-h1", "Live longer, stronger.", { fontSize: 40, lineHeight: "48px", fontWeight: 600, letterSpacing: "-0.02em" }],
+    ["H1 · 28/36 · 600", "ph-h1", "Goedemorgen, Martijn"],
+    ["H2 · 22/30 · 600", "ph-h2", "Vandaag aanbevolen"],
+    ["H3 · 18/26 · 600", "ph-h3", "Zone 2 duurloop"],
+    ["Body · 15/22 · 400", "ph-body", "Houd je hartslag onder 142 bpm en bouw rustig op."],
+    ["Body small · 13/18 · 400", "ph-body-sm", "38 min · 6.4 km · 6'04 / km"],
+    ["Label · 12/16 · 500", "ph-label", "READINESS"],
+    ["Caption · 11/14 · 400", "ph-caption", "Bron: Health Connect"],
+    ["Metric · 44/48 · 600", "ph-metric", "78.4"],
+    ["Mono · numerals", "ph-mono", "52 bpm · 68 ms"],
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {items.map(([label, cls, text, st]) => (
+        <div key={label} style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 24, alignItems: "baseline" }}>
+          <div className="ph-caption" style={{ paddingTop: 6 }}>{label}</div>
+          <div className={cls} style={st}>{text}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SpacingShadowTokens() {
+  const sp = [["2",2],["4",4],["8",8],["12",12],["16",16],["20",20],["24",24],["32",32],["40",40],["56",56]];
+  const r = [["xs",4],["sm",8],["md",12],["lg",16],["xl",24],["pill","pill"]];
+  const sh = ["1","2","3","4"];
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: 32 }}>
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>SPACING (4PT GRID)</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          {sp.map(([name, v]) => (
+            <div key={name} style={{ display:"flex", alignItems:"center", gap: 12 }}>
+              <div style={{ width: 64, fontSize: 12, color: "var(--ph-text-muted)", fontFamily:"var(--ph-font-mono)" }}>s-{name}</div>
+              <div style={{ height: 12, width: v, background: "var(--ph-primary)", borderRadius: 4 }} />
+              <div className="ph-caption">{v}px</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>RADIUS</div>
+        <div style={{ display:"flex", flexDirection:"column", gap: 12 }}>
+          {r.map(([name, v]) => (
+            <div key={name} style={{ display:"flex", alignItems:"center", gap: 14 }}>
+              <div style={{
+                width: 64, height: 36, background:"var(--ph-primary-soft)",
+                border: "1px solid var(--ph-primary)",
+                borderRadius: v === "pill" ? 999 : v
+              }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>r-{name}</div>
+                <div className="ph-caption">{v === "pill" ? "999px" : `${v}px`}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>ELEVATION</div>
+        <div style={{ display:"flex", flexDirection:"column", gap: 14 }}>
+          {sh.map(n => (
+            <div key={n} style={{
+              padding: 14, background: "var(--ph-surface)", borderRadius: "var(--ph-r-md)",
+              boxShadow: `var(--ph-elev-${n})`, fontSize: 13
+            }}>elev-{n}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── Components showcase ──────────────── */
+function ComponentsShow() {
+  const [seg, setSeg] = useState("week");
+  const [tx, setTx] = useState("");
+  const [on, setOn] = useState(true);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>BUTTONS</div>
+        <div className="row">
+          <Button>Save</Button>
+          <Button variant="secondary">Cancel</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="danger">Delete</Button>
+          <Button icon="plus">New session</Button>
+          <Button iconRight="chevronRight" variant="ghost">Continue</Button>
+          <Button disabled>Disabled</Button>
+        </div>
+        <div className="row" style={{ marginTop: 10 }}>
+          <Button size="sm">Small</Button>
+          <Button size="md">Medium</Button>
+          <Button size="lg">Large</Button>
+        </div>
+      </div>
+
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>INPUTS &amp; CONTROLS</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: 16, maxWidth: 640 }}>
+          <TextField label="Body weight" value={tx} onChange={setTx} placeholder="78.4" suffix="kg" hint="Trend over 30 days" />
+          <TextField label="Resting HR" value="" placeholder="52" suffix="bpm" />
+        </div>
+        <div className="row" style={{ marginTop: 16 }}>
+          <Segmented value={seg} onChange={setSeg} options={[
+            { value: "day", label: "Day" }, { value: "week", label: "Week" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }
+          ]} />
+          <Toggle on={on} onChange={setOn} label="Sync with Health Connect" />
+        </div>
+      </div>
+
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>TAGS &amp; BADGES</div>
+        <div className="row">
+          <Tag>Neutral</Tag>
+          <Tag tone="primary" icon="trending">+12%</Tag>
+          <Tag tone="success" icon="check">Recovered</Tag>
+          <Tag tone="warning" icon="bell">Heavy load</Tag>
+          <Tag tone="danger" icon="x">Overtraining</Tag>
+          <Tag tone="info" icon="moon">7u 42m</Tag>
+        </div>
+      </div>
+
+      <div>
+        <div className="ph-label" style={{ marginBottom: 12 }}>ICONOGRAPHY · 1.5px STROKE · 20PX DEFAULT</div>
+        <div className="row">
+          {["activity","heart","moon","flame","footprints","droplet","bike","waves","dumbbell","leaf","apple","target","trending","bell","sparkles","user","home","map","settings","sun"].map(n => (
+            <div key={n} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap: 6, width: 64 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "var(--ph-r-md)",
+                background: "var(--ph-surface-muted)", color: "var(--ph-text)",
+                display:"flex", alignItems:"center", justifyContent:"center"
+              }}><Icon name={n} /></div>
+              <div className="ph-caption">{n}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+/* ──────────────── Charts showcase ──────────────── */
+function ChartsShow() {
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: 20 }}>
+      <Card>
+        <div className="ph-label">READINESS RING</div>
+        <div style={{ marginTop: 14 }}><RingGauge value={84} /></div>
+      </Card>
+      <Card>
+        <div className="ph-label">SLEEP SCORE</div>
+        <div style={{ marginTop: 14 }}><RingGauge value={72} color="var(--ph-data-4)" label="SLAAP" sublabel="7u 12m" /></div>
+      </Card>
+      <Card>
+        <div className="ph-label">HRV TREND · 14D</div>
+        <div className="ph-metric" style={{ fontSize: 28, marginTop: 4 }}>68 <span style={{ fontSize: 12, color: "var(--ph-text-muted)" }}>ms</span></div>
+        <Sparkline data={[58,62,60,64,66,63,65,67,64,68,70,69,68,72]} width={360} height={70} color="var(--ph-data-5)" fill="color-mix(in oklab, var(--ph-data-5) 18%, transparent)" showDots />
+      </Card>
+      <Card>
+        <div className="ph-label">WEEKLY VOLUME</div>
+        <Bars data={[42, 65, 0, 58, 30, 72, 90]} width={360} height={90} labelFor={i => ["M","T","W","T","F","S","S"][i]} />
+      </Card>
+      <Card>
+        <div className="ph-label">HEART-RATE ZONES</div>
+        <div style={{ marginTop: 12 }}><ZoneBar zones={[12, 65, 18, 4, 1]} /></div>
+        <div className="ph-caption" style={{ marginTop: 10 }}>Verdeling tijd · laatste run</div>
+      </Card>
+      <Card>
+        <div className="ph-label">CONSISTENCY · 12 WEEKS</div>
+        <div style={{ marginTop: 12 }}><Heatmap rows={7} cols={12} /></div>
+      </Card>
+    </div>
+  );
+}
+
+/* ──────────────── App shell + Today dashboard ──────────────── */
+function AppShell({ simplify, cards = {} }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--ph-bg)" }}>
+      {/* Top menu bar — desktop nav (5 items + profile right) */}
+      <header style={{
+        display: "flex", alignItems: "center", gap: 28,
+        padding: "0 32px", height: 64,
+        background: "var(--ph-surface)", borderBottom: "1px solid var(--ph-divider)",
+        position: "sticky", top: 0, zIndex: 10,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, var(--ph-primary), var(--ph-accent))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+            <Icon name="leaf" size={14} />
+          </div>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>Personal Health</div>
+        </div>
+        <nav style={{ display: "flex", alignItems: "center", gap: 4, flex: 1 }}>
+          {[
+            ["home","Today",true],
+            ["activity","Track",false],
+            ["target","Plan",false],
+            ["trending","Progress",false],
+            ["users","Community",false],
+          ].map(([icon,label,active]) => (
+            <div key={label} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 14px", borderRadius: "var(--ph-r-pill)",
+              fontSize: 13, fontWeight: active ? 600 : 500,
+              color: active ? "var(--ph-primary)" : "var(--ph-text-muted)",
+              background: active ? "var(--ph-primary-soft)" : "transparent",
+              cursor: "pointer",
+            }}>
+              <Icon name={icon} size={16} />
+              <span>{label}</span>
+            </div>
+          ))}
+        </nav>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <IconButton icon="bell" label="notifications" />
+          <IconButton icon="settings" label="settings" />
+          <div style={{ width: 1, height: 24, background: "var(--ph-divider)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--ph-primary-soft)", color: "var(--ph-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 13 }}>M</div>
+          </div>
+        </div>
+      </header>
+
+      <main className="dashboard-page" style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 20 }}>
+          <div className="ph-h2" style={{ margin: 0 }}>Today</div>
+          <div style={{ display:"flex", gap: 12, alignItems:"center" }}>
+            <Segmented value="week" onChange={()=>{}} options={[{value:"day",label:"Dag"},{value:"week",label:"Week"},{value:"month",label:"Maand"}]} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <TodayHero simplify={simplify} />
+        </div>
+
+        <div className="vital-grid" style={{ marginBottom: 20 }}>
+          {cards.showHrv !== false && <Vital icon="heart" label="HRV" value="68" unit="ms" trend={4} data={[58,62,60,64,66,63,65,67,64,68,70,69,68,72]} tone="primary" />}
+          {cards.showSleep !== false && <Vital icon="moon" label="SLAAP" value="7u 42m" trend={2} data={[6.5,7.1,6.8,7.4,7.2,7.0,7.6,7.7]} tone="info" />}
+          {cards.showSteps !== false && <Vital icon="footprints" label="STAPPEN" value="8,420" unit="vandaag" data={[6800,7200,8100,7600,9100,7800,8420]} tone="primary" />}
+        </div>
+
+        <div className="dashboard-grid">
+          <div style={{ display:"flex", flexDirection:"column", gap: 20 }}>
+            {cards.showBodyTrend !== false && <BodyTrend />}
+            <RecentSessions />
+            {!simplify && cards.showConsistency !== false && <ConsistencyCard />}
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap: 20 }}>
+            {cards.showPlan !== false && <PlanCard />}
+            {cards.showSleep !== false && <SleepPanel />}
+            {cards.showVolume !== false && <WeeklyVolume />}
+            {!simplify && cards.showMuscleBalance !== false && <MuscleBalanceCard />}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* ──────────────── Mobile preview (Today) ──────────────── */
+function MobileToday({ simplify, cards = {} }) {
+  return (
+    <div style={{ background: "var(--ph-bg)", height: "100%", overflow: "auto", padding: 18 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 16 }}>
+        <div>
+          <div className="ph-caption">Vrijdag · 1 mei</div>
+          <div className="ph-h2" style={{ margin: 0 }}>Today</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <IconButton icon="bell" label="notifications" />
+          <div style={{ width: 36, height: 36, borderRadius: 999, background: "var(--ph-primary-soft)", display:"flex", alignItems:"center", justifyContent:"center", color: "var(--ph-primary)", fontWeight: 600, cursor: "pointer" }}>M</div>
+        </div>
+      </div>
+
+      <Card padding={20} style={{ background: "linear-gradient(160deg, var(--ph-primary-soft), var(--ph-surface))", marginBottom: 16 }}>
+        <div style={{ display:"flex", alignItems:"center", gap: 16 }}>
+          <TripleRing size={108} stroke={9} gap={4} label="READY" sublabel="84" rings={[
+            { value: 84, max: 100, color: "var(--ph-primary)" },
+            { value: 72, max: 100, color: "var(--ph-data-4)" },
+            { value: 58, max: 100, color: "var(--ph-data-3)" },
+          ]} />
+          <div style={{ flex: 1 }}>
+            <div className="ph-h3">Goed hersteld</div>
+            <div className="ph-body-sm" style={{ color: "var(--ph-text-muted)", marginTop: 4 }}>Recovery 84 · Sleep 72 · Load 58</div>
+          </div>
+        </div>
+      </Card>
+
+      {!simplify && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: 10, marginBottom: 16 }}>
+          <Button icon="footprints" full>Run</Button>
+          <Button icon="dumbbell" variant="secondary" full>Workout</Button>
+          <Button icon="bike" variant="secondary" full>Bike</Button>
+          <Button icon="apple" variant="secondary" full>Meal</Button>
+        </div>
+      )}
+      {simplify && (
+        <Button icon="activity" full size="lg" style={{ marginBottom: 16 }}>Start vandaag</Button>
+      )}
+
+      <div style={{ display:"flex", flexDirection:"column", gap: 14 }}>
+        {cards.showPlan !== false && <PlanCard />}
+        {cards.showSleep !== false && <SleepPanel />}
+        <Card>
+          <SectionHead title="Recent" />
+          <ListRow icon="footprints" title="Ochtendloop" meta="38 min · Z2" value="6.4 km" />
+          <div style={{ height: 1, background: "var(--ph-divider)" }} />
+          <ListRow icon="dumbbell" title="Push sessie" meta="52 min" value="12.4 t" accent="var(--ph-warning-soft)" />
+        </Card>
+      </div>
+
+      {/* bottom nav */}
+      <div style={{
+        position:"sticky", bottom: 0, marginTop: 20, marginInline: -18,
+        padding: "10px 20px 18px",
+        background: "var(--ph-surface)", borderTop: "1px solid var(--ph-divider)",
+        display:"flex", justifyContent:"space-around"
+      }}>
+        {[["home","Today",true],["activity","Track"],["target","Plan"],["trending","Progress"],["users","Community"]].map(([i,l,a]) => (
+          <div key={l} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap: 4, color: a ? "var(--ph-primary)" : "var(--ph-text-faint)" }}>
+            <Icon name={i} size={20} />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>{l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── App ──────────────── */
+function App() {
+  const [tw, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // apply theme
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", tw.theme);
+    document.documentElement.style.setProperty("--ph-primary", tw.accent);
+  }, [tw.theme, tw.accent]);
+
+  return (
+    <>
+      <DesignCanvas title="Personal Health — Design System" subtitle="Calm, longevity-focused. Built on the existing Compose AppTheme.">
+        <DCSection id="today" title="Today · all sizes">
+          <DCArtboard id="today-mobile" label="Mobile · 390" width={390} height={844}>
+            <MobileToday simplify={tw.simplify} cards={tw} />
+          </DCArtboard>
+          <DCArtboard id="today-tablet" label="Tablet · 834" width={834} height={1180}>
+            <TabletToday lang={tw.lang} simplify={tw.simplify} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="today-desktop" label="Desktop · 1280" width={1280} height={1100}>
+            <div className="device-frame">
+              <AppShell simplify={tw.simplify} cards={tw} />
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="strength" title="Track · Strength · all sizes">
+          <DCArtboard id="strength-mobile" label="Mobile · 390" width={390} height={1100}>
+            <MobileFrame width={390} height={1100}>
+              <StrengthScreen lang={tw.lang} units={tw.units} density="compact" />
+            </MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="strength-tablet" label="Tablet · 834" width={834} height={1300}>
+            <StrengthScreen lang={tw.lang} units={tw.units} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="strength-desktop" label="Desktop · 1100" width={1100} height={1400}>
+            <StrengthScreen lang={tw.lang} units={tw.units} density={tw.density} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="food" title="Track · Nutrition · all sizes">
+          <DCArtboard id="food-mobile" label="Mobile · 390" width={390} height={1500}>
+            <MobileFrame width={390} height={1500}>
+              <FoodScreen lang={tw.lang} units={tw.units} density="compact" />
+            </MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="food-tablet" label="Tablet · 834" width={834} height={1500}>
+            <FoodScreen lang={tw.lang} units={tw.units} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="food-desktop" label="Desktop · 1100" width={1100} height={1500}>
+            <FoodScreen lang={tw.lang} units={tw.units} density={tw.density} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="community" title="Community · all sizes">
+          <DCArtboard id="community-mobile" label="Mobile · 390" width={390} height={1600}>
+            <MobileFrame width={390} height={1600}>
+              <CommunityScreen lang={tw.lang} density="compact" />
+            </MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="community-tablet" label="Tablet · 834" width={834} height={1500}>
+            <CommunityScreen lang={tw.lang} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="community-desktop" label="Desktop · 1280" width={1280} height={1300}>
+            <CommunityScreen lang={tw.lang} density={tw.density} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="plan" title="Plan · all sizes">
+          <DCArtboard id="plan-mobile" label="Mobile · 390" width={390} height={1700}>
+            <MobileFrame width={390} height={1700}>
+              <PlanScreen lang={tw.lang} density="compact" />
+            </MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="plan-tablet" label="Tablet · 834" width={834} height={1500}>
+            <PlanScreen lang={tw.lang} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="plan-desktop" label="Desktop · 1180" width={1180} height={1500}>
+            <PlanScreen lang={tw.lang} density={tw.density} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="profile" title="Profile · all sizes">
+          <DCArtboard id="profile-mobile" label="Mobile · 390" width={390} height={1700}>
+            <MobileFrame width={390} height={1700}>
+              <ProfileScreen lang={tw.lang} units={tw.units} density="compact" />
+            </MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="profile-tablet" label="Tablet · 834" width={834} height={1400}>
+            <ProfileScreen lang={tw.lang} units={tw.units} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="profile-desktop" label="Desktop · 1100" width={1100} height={1300}>
+            <ProfileScreen lang={tw.lang} units={tw.units} density={tw.density} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="onboarding" title="Onboarding · 9-step flow">
+          <DCArtboard id="onb-1" label="1 · Welcome" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={1} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-2" label="2 · Goals" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={2} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-3" label="3 · About you" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={3} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-4" label="4 · Activity" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={4} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-5" label="5 · Availability" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={5} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-6" label="6 · Devices" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={6} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-7" label="7 · Diet" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={7} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-8" label="8 · Baseline" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={8} /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="onb-9" label="9 · Done" width={390} height={844}>
+            <MobileFrame width={390} height={844}><OnboardingFlow lang={tw.lang} initial={9} /></MobileFrame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="adaptive" title="Other adaptive variants">
+          <DCArtboard id="tablet-rail" label="Tablet · rail nav" width={900} height={1100}>
+            <TabletRail lang={tw.lang} simplify={tw.simplify} density={tw.density} />
+          </DCArtboard>
+          <DCArtboard id="foldable" label="Foldable open · 1080×720 · list+detail" width={1080} height={720}>
+            <Foldable lang={tw.lang} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="foundations" title="Foundations">
+          <DCArtboard id="colors" label="Color tokens" width={1100} height={1300}>
+            <div className="canvas-bg" style={{ padding: 32, height: "100%" }}>
+              <ColorTokens />
+            </div>
+          </DCArtboard>
+          <DCArtboard id="type" label="Type scale" width={900} height={780}>
+            <div className="canvas-bg" style={{ padding: 32, height: "100%" }}>
+              <TypeTokens />
+            </div>
+          </DCArtboard>
+          <DCArtboard id="space" label="Spacing · radius · elevation" width={900} height={520}>
+            <div className="canvas-bg" style={{ padding: 32, height: "100%" }}>
+              <SpacingShadowTokens />
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="components" title="Components">
+          <DCArtboard id="atoms" label="Atoms · buttons, inputs, tags, icons" width={1100} height={920}>
+            <div className="canvas-bg" style={{ padding: 32, height: "100%" }}>
+              <ComponentsShow />
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="charts" title="Charts &amp; data viz">
+          <DCArtboard id="dataviz" label="Charts" width={900} height={900}>
+            <div className="canvas-bg" style={{ padding: 24, height: "100%" }}>
+              <ChartsShow />
+            </div>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Theme">
+          <TweakRadio label="Mode" value={tw.theme} options={[
+            { value: "light", label: "Light" }, { value: "dark", label: "Dark" }
+          ]} onChange={v => setTweak("theme", v)} />
+          <TweakColor label="Primary accent" value={tw.accent} onChange={v => setTweak("accent", v)} />
+        </TweakSection>
+        <TweakSection title="Personalisation">
+          <TweakToggle label="Simplify UX (one CTA)" value={tw.simplify} onChange={v => setTweak("simplify", v)} />
+          <TweakRadio label="Density" value={tw.density} options={[
+            { value: "compact", label: "Compact" },
+            { value: "comfortable", label: "Comfy" },
+            { value: "spacious", label: "Spacious" },
+          ]} onChange={v => setTweak("density", v)} />
+          <TweakRadio label="Language" value={tw.lang} options={[
+            { value: "nl", label: "NL" },
+            { value: "en", label: "EN" },
+          ]} onChange={v => setTweak("lang", v)} />
+          <TweakRadio label="Units" value={tw.units} options={[
+            { value: "metric", label: "Metric" },
+            { value: "imperial", label: "Imperial" },
+          ]} onChange={v => setTweak("units", v)} />
+        </TweakSection>
+        <TweakSection title="Today cards">
+          <TweakToggle label="HRV" value={tw.showHrv} onChange={v => setTweak("showHrv", v)} />
+          <TweakToggle label="Sleep" value={tw.showSleep} onChange={v => setTweak("showSleep", v)} />
+          <TweakToggle label="Steps" value={tw.showSteps} onChange={v => setTweak("showSteps", v)} />
+          <TweakToggle label="Plan" value={tw.showPlan} onChange={v => setTweak("showPlan", v)} />
+          <TweakToggle label="Weekly volume" value={tw.showVolume} onChange={v => setTweak("showVolume", v)} />
+          <TweakToggle label="Body trend" value={tw.showBodyTrend} onChange={v => setTweak("showBodyTrend", v)} />
+          <TweakToggle label="Muscle balance" value={tw.showMuscleBalance} onChange={v => setTweak("showMuscleBalance", v)} />
+          <TweakToggle label="Consistency" value={tw.showConsistency} onChange={v => setTweak("showConsistency", v)} />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
