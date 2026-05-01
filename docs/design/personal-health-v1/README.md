@@ -5,7 +5,7 @@ This folder stores the design input from `Personal Health.zip` so UI refactor wo
 ## Source Files
 
 - `tokens.css`: canonical color, typography, spacing, radius, motion, and visualization token reference.
-- `kotlin/PersonalHealthTheme.kt`: generated Kotlin theme reference to translate into `core/designsystem`.
+- `kotlin/PersonalHealthTheme.kt.reference`: generated Kotlin theme reference to translate into `core/designsystem`. It keeps a non-source extension so repository line-count checks do not treat the generated reference as production Kotlin.
 - `components.jsx`: component behavior and visual examples for shared design-system primitives.
 - `dashboard.jsx`: dashboard/home screen reference.
 - `onboarding.jsx`: onboarding flow reference.
