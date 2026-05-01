@@ -24,7 +24,7 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 - [x] Pak de design input uit naar een vaste referentielocatie, bijvoorbeeld `docs/design/personal-health-v1/`.
 - [x] Documenteer welke bestanden leidend zijn:
   - [x] `tokens.css`
-  - [x] `kotlin/PersonalHealthTheme.kt`
+  - [x] `kotlin/PersonalHealthTheme.kt.reference`
   - [x] `components.jsx`
   - [x] `dashboard.jsx`
   - [x] `onboarding.jsx`
@@ -35,15 +35,15 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Fase 2: Design System Tokens
 
-- [ ] Vervang de minimale `PersonalHealthTheme` in `core/designsystem` door een volledige tokenlaag.
-- [ ] Voeg `PhTheme.colors` toe.
-- [ ] Voeg `PhTheme.typography` toe.
-- [ ] Voeg `PhTheme.spacing` toe.
-- [ ] Voeg `PhTheme.shapes` toe.
-- [ ] Voeg `PhTheme.elevation` toe.
-- [ ] Voeg `PhTheme.motion` toe.
-- [ ] Map de tokens naar Material 3 `ColorScheme` en `Typography`.
-- [ ] Ondersteun light en dark theme.
+- [x] Vervang de minimale `PersonalHealthTheme` in `core/designsystem` door een volledige tokenlaag.
+- [x] Voeg `PhTheme.colors` toe.
+- [x] Voeg `PhTheme.typography` toe.
+- [x] Voeg `PhTheme.spacing` toe.
+- [x] Voeg `PhTheme.shapes` toe.
+- [x] Voeg `PhTheme.elevation` toe.
+- [x] Voeg `PhTheme.motion` toe.
+- [x] Map de tokens naar Material 3 `ColorScheme` en `Typography`.
+- [x] Ondersteun light en dark theme.
 - [ ] Verwijder of migreer feature-lokale palettes waar ze overlappen met het design system.
 
 ## Fase 3: Design System Componenten
