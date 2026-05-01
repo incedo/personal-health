@@ -71,11 +71,11 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Fase 4: Home/Dashboard Refactor
 
-- [ ] Migreer `HomeChrome.kt` naar `PhTheme`.
-- [ ] Verwijder lokale kleuren waar design-system tokens bestaan.
+- [x] Migreer `HomeChrome.kt` naar `PhTheme`.
+- [x] Verwijder lokale kleuren waar design-system tokens bestaan.
 - [ ] Bouw dashboarddelen uit `dashboard.jsx` na in Compose:
-  - [ ] Today hero
-  - [ ] Vitals
+  - [x] Today hero
+  - [x] Vitals
   - [ ] Weekly volume
   - [ ] Sleep panel
   - [ ] Plan card
@@ -83,10 +83,10 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
   - [ ] Body trend
   - [ ] Recent sessions
   - [ ] Consistency card
-- [ ] Houd bestaande home state, callbacks en domeinmodellen intact.
+- [x] Houd bestaande home state, callbacks en domeinmodellen intact.
 - [ ] Splits grote composables per verantwoordelijkheid.
-- [ ] Behoud compact, medium en expanded layouts als een adaptief codepad.
-- [ ] Voeg of update home layout smoke tests.
+- [x] Behoud compact, medium en expanded layouts als een adaptief codepad.
+- [x] Voeg of update home layout smoke tests.
 
 ## Fase 5: Onboarding Refactor
 

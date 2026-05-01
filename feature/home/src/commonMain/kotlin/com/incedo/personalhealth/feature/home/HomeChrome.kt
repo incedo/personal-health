@@ -33,11 +33,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.designsystem.PhCard
+import com.incedo.personalhealth.core.designsystem.PhTheme
 
 internal data class HomePalette(
     val backdropTop: Color,
@@ -56,45 +57,25 @@ internal data class HomePalette(
     val buttonContent: Color
 )
 
-private val HomeDarkPalette = HomePalette(
-    backdropTop = Color(0xFF071A29),
-    backdropBottom = Color(0xFF0B2234),
-    surface = Color(0xFF10293D),
-    surfaceRaised = Color(0xFF15354B),
-    surfaceMuted = Color(0xFF1D425B),
-    accent = Color(0xFF19C7B4),
-    accentSoft = Color(0xFF124C57),
-    warm = Color(0xFFF5C451),
-    warmSoft = Color(0xFF4A3A13),
-    warning = Color(0xFFFF6F7D),
-    warningSoft = Color(0xFF4D2130),
-    textPrimary = Color(0xFFF5F7FA),
-    textSecondary = Color(0xFFA6B5C4),
-    buttonContent = Color(0xFF05262A)
-)
-
-private val HomeLightPalette = HomePalette(
-    backdropTop = Color(0xFFF5FBFF),
-    backdropBottom = Color(0xFFE6F2F7),
-    surface = Color(0xFFFFFFFF),
-    surfaceRaised = Color(0xFFF3F8FB),
-    surfaceMuted = Color(0xFFD4E2EA),
-    accent = Color(0xFF0FA897),
-    accentSoft = Color(0xFFD9F5F1),
-    warm = Color(0xFFE0A800),
-    warmSoft = Color(0xFFF8EDC8),
-    warning = Color(0xFFE26376),
-    warningSoft = Color(0xFFFADCE1),
-    textPrimary = Color(0xFF10293D),
-    textSecondary = Color(0xFF5F7488),
-    buttonContent = Color(0xFFFFFFFF)
-)
-
 @Composable
-internal fun homePalette(): HomePalette = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) {
-    HomeDarkPalette
-} else {
-    HomeLightPalette
+internal fun homePalette(): HomePalette {
+    val colors = PhTheme.colors
+    return HomePalette(
+        backdropTop = colors.background,
+        backdropBottom = colors.backgroundSoft,
+        surface = colors.surface,
+        surfaceRaised = colors.surfaceRaised,
+        surfaceMuted = colors.surfaceMuted,
+        accent = colors.primary,
+        accentSoft = colors.primarySoft,
+        warm = colors.warning,
+        warmSoft = colors.warningSoft,
+        warning = colors.danger,
+        warningSoft = colors.dangerSoft,
+        textPrimary = colors.text,
+        textSecondary = colors.textMuted,
+        buttonContent = colors.onPrimary
+    )
 }
 
 @Composable
@@ -260,16 +241,12 @@ internal fun HomePanel(
     contentPadding: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val palette = homePalette()
-    Card(
+    PhCard(
         modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = palette.surface)
+        padding = contentPadding
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(contentPadding),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(0.dp),
             content = content
         )

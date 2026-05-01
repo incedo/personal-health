@@ -17,10 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.designsystem.PhButton
+import com.incedo.personalhealth.core.designsystem.PhButtonVariant
+import com.incedo.personalhealth.core.designsystem.PhMetricCard
+import com.incedo.personalhealth.core.designsystem.PhSparkline
+import com.incedo.personalhealth.core.designsystem.PhTagTone
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
 import com.incedo.personalhealth.core.recommendations.DailyRecommendationInsight
 import com.incedo.personalhealth.core.recommendations.RecommendationInsightTone
@@ -96,8 +98,102 @@ internal fun DashboardContent(
                 onOpenHealthDataDetail = onOpenHealthDataDetail,
                 onLogNutrition = onLogNutrition
             )
-
+            DashboardMetricsGrid(
+                expanded = expanded,
+                steps = steps,
+                stepsTimeline = stepsTimeline,
+                weightSummary = weightSummary,
+                activityMinutesToday = activityMinutesToday,
+                heartRateBpm = heartRateBpm,
+                onOpenStepsDetail = onOpenStepsDetail,
+                onOpenHeartRateDetail = onOpenHeartRateDetail,
+                onOpenWeightDetail = onOpenWeightDetail
+            )
         }
+    }
+}
+
+@Composable
+private fun DashboardMetricsGrid(
+    expanded: Boolean,
+    steps: Int,
+    stepsTimeline: List<StepTimelinePoint>,
+    weightSummary: String,
+    activityMinutesToday: Int,
+    heartRateBpm: Int,
+    onOpenStepsDetail: () -> Unit,
+    onOpenHeartRateDetail: () -> Unit,
+    onOpenWeightDetail: () -> Unit
+) {
+    val sparklineData = stepsTimeline.map { it.steps.toFloat() }.ifEmpty { listOf(0f, steps.toFloat()) }
+    val cards = listOf<@Composable (Modifier) -> Unit>(
+        { modifier ->
+            PhMetricCard(
+                label = "Stappen",
+                value = formatSteps(steps),
+                trend = "Vandaag",
+                tone = PhTagTone.Primary,
+                chart = { PhSparkline(data = sparklineData, modifier = Modifier.fillMaxWidth()) },
+                modifier = modifier.clickable(onClick = onOpenStepsDetail)
+            )
+        },
+        { modifier ->
+            PhMetricCard(
+                label = "Hartslag",
+                value = heartRateBpm.toString(),
+                unit = "bpm",
+                trend = "Herstel",
+                tone = PhTagTone.Danger,
+                modifier = modifier.clickable(onClick = onOpenHeartRateDetail)
+            )
+        },
+        { modifier ->
+            PhMetricCard(
+                label = "Activiteit",
+                value = activityMinutesToday.toString(),
+                unit = "min",
+                trend = "Training load",
+                tone = PhTagTone.Warning,
+                modifier = modifier
+            )
+        },
+        { modifier ->
+            PhMetricCard(
+                label = "Gewicht",
+                value = weightSummary,
+                trend = "Trend",
+                tone = PhTagTone.Info,
+                modifier = modifier.clickable(onClick = onOpenWeightDetail)
+            )
+        }
+    )
+
+    if (expanded) {
+        var cursor = 0
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            dashboardMetricRowSizes(expanded = true, cardCount = cards.size).forEach { rowSize ->
+                val rowCards = cards.drop(cursor).take(rowSize)
+                cursor += rowSize
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    rowCards.forEach { card -> card(Modifier.weight(1f)) }
+                }
+            }
+        }
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            cards.forEach { card -> card(Modifier.fillMaxWidth()) }
+        }
+    }
+}
+
+internal fun dashboardMetricRowSizes(expanded: Boolean, cardCount: Int): List<Int> {
+    if (cardCount <= 0) return emptyList()
+    return if (expanded) {
+        List((cardCount + 1) / 2) { index ->
+            if (index == cardCount / 2 && cardCount % 2 == 1) 1 else 2
+        }
+    } else {
+        List(cardCount) { 1 }
     }
 }
 
@@ -540,22 +636,13 @@ private fun HomeActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Button(
+    val variant = if (containerColor == homePalette().warm) PhButtonVariant.Warning else PhButtonVariant.Primary
+    PhButton(
+        text = text,
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        shape = RoundedCornerShape(22.dp)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(vertical = 6.dp),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
+        variant = variant
+    )
 }
 
 @Composable
@@ -660,7 +747,12 @@ private fun QuickActivityLogCard(
             }
             Spacer(modifier = Modifier.height(10.dp))
         }
-        Button(
+        PhButton(
+            text = if (selectedType == QuickActivityType.FITNESS) {
+                "Open fitness detail"
+            } else {
+                "Log ${selectedType.label.lowercase()}"
+            },
             onClick = {
                 if (selectedType == QuickActivityType.FITNESS) {
                     onOpenFitnessDetail()
@@ -669,22 +761,8 @@ private fun QuickActivityLogCard(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = palette.accent,
-                contentColor = palette.buttonContent
-            ),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text(
-                text = if (selectedType == QuickActivityType.FITNESS) {
-                    "Open fitness detail"
-                } else {
-                    "Log ${selectedType.label.lowercase()}"
-                },
-                modifier = Modifier.padding(vertical = 4.dp),
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+            variant = PhButtonVariant.Primary
+        )
         if (activityEntries.isNotEmpty()) {
             Spacer(modifier = Modifier.height(18.dp))
             activityEntries.take(4).forEachIndexed { index, entry ->
