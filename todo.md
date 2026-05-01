@@ -21,17 +21,17 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Fase 1: Design Input Canoniseren
 
-- [ ] Pak de design input uit naar een vaste referentielocatie, bijvoorbeeld `docs/design/personal-health-v1/`.
-- [ ] Documenteer welke bestanden leidend zijn:
-  - [ ] `tokens.css`
-  - [ ] `kotlin/PersonalHealthTheme.kt`
-  - [ ] `components.jsx`
-  - [ ] `dashboard.jsx`
-  - [ ] `onboarding.jsx`
-  - [ ] `profile-plan.jsx`
-  - [ ] `screens.jsx`
+- [x] Pak de design input uit naar een vaste referentielocatie, bijvoorbeeld `docs/design/personal-health-v1/`.
+- [x] Documenteer welke bestanden leidend zijn:
+  - [x] `tokens.css`
+  - [x] `kotlin/PersonalHealthTheme.kt`
+  - [x] `components.jsx`
+  - [x] `dashboard.jsx`
+  - [x] `onboarding.jsx`
+  - [x] `profile-plan.jsx`
+  - [x] `screens.jsx`
 - [ ] Leg in `docs/kmp-compose-best-practices.md` vast hoe designs naar Compose worden vertaald.
-- [ ] Noteer dat JSX-designs referentie zijn, geen code die blind wordt overgenomen.
+- [x] Noteer dat JSX-designs referentie zijn, geen code die blind wordt overgenomen.
 
 ## Fase 2: Design System Tokens
 
