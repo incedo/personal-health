@@ -105,6 +105,7 @@ Android phone/tablet behavior is handled in shared Compose UI with width-based a
 
 - Project rules for contributors and coding agents: `AGENTS.md`
 - Kotlin MPP + Compose best practices: `docs/kmp-compose-best-practices.md`
+- Architecture diagram and integration overview: `docs/architecture-overview.md`
 - Includes adaptive generation rules for desktop/tablet/mobile/foldables with touch + mouse support
 - Canonical navigation guidance: `docs/navigation-principles.md`
 - Requirements: `docs/requirements.md`
