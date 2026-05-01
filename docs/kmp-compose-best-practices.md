@@ -106,6 +106,7 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 ## 14. Documentation maintenance
 - Update README module layout when adding, removing, or renaming modules.
 - Keep this guide aligned with actual build configuration.
+- Keep `docs/architecture-overview.md` aligned with the real module wiring, integration points, and event/API boundaries.
 - Current feature modules in this repository include `feature/home` and `feature/onboarding`.
 - Current core domain modules in this repository include `core/health`, `core/wellbeing`, `core/goals`, `core/coaches`, and `core/onboarding`.
 - Recommendation contracts and deterministic fallback logic should live in `core/recommendations`, while the feature layer only renders the returned recommendation payload.
