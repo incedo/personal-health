@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
+import com.incedo.personalhealth.core.newssocial.NewsSocialFeed
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
 
 @Composable
@@ -37,6 +38,7 @@ fun HomeScreen(
     fitnessBodyProfile: FitnessBodyProfile,
     heartRateBpm: Int,
     dailyRecommendation: DailyRecommendation,
+    newsSocialFeed: NewsSocialFeed,
     onboardingFocusGoal: CoachFocusGoal?,
     profileName: String,
     themeMode: HomeThemeMode,
@@ -164,6 +166,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_INTAKE -> CoachSectionScreen(
                         page = CoachPage.INTAKE,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -178,6 +183,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_GOALS -> CoachSectionScreen(
                         page = CoachPage.GOALS,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -192,6 +200,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_DETAILS -> CoachSectionScreen(
                         page = CoachPage.DETAILS,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -206,6 +217,9 @@ fun HomeScreen(
                     HomeDetailDestination.COACH_TRAINING_PROGRAM -> CoachSectionScreen(
                         page = CoachPage.TRAINING_PROGRAM,
                         compact = compact,
+                        fitScore = fitScore,
+                        steps = steps,
+                        heartRateBpm = heartRateBpm,
                         onboardingFocusGoal = onboardingFocusGoal,
                         onCloseCoachDetail = onCloseDetail,
                         onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },
@@ -227,6 +241,7 @@ fun HomeScreen(
                             activityMinutesToday = activityMinutesToday,
                             heartRateBpm = heartRateBpm,
                             dailyRecommendation = dailyRecommendation,
+                            newsSocialFeed = newsSocialFeed,
                             onboardingFocusGoal = onboardingFocusGoal,
                             profileName = profileName,
                             themeMode = themeMode,

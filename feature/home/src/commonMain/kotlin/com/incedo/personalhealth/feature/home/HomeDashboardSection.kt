@@ -1,6 +1,5 @@
 package com.incedo.personalhealth.feature.home
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -35,14 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -103,37 +96,6 @@ internal fun DashboardContent(
                 onLogNutrition = onLogNutrition
             )
 
-            if (expanded) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(spacing)
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(spacing)
-                    ) {
-                        SummaryStrip(
-                            steps = steps,
-                            heartRateBpm = heartRateBpm,
-                            weightSummary = weightSummary,
-                            fitScore = fitScore,
-                            onStepsClick = onOpenStepsDetail,
-                            onHeartRateClick = onOpenHeartRateDetail,
-                            onWeightClick = onOpenWeightDetail
-                        )
-                    }
-                }
-            } else {
-                SummaryStrip(
-                    steps = steps,
-                    heartRateBpm = heartRateBpm,
-                    weightSummary = weightSummary,
-                    fitScore = fitScore,
-                    onStepsClick = onOpenStepsDetail,
-                    onHeartRateClick = onOpenHeartRateDetail,
-                    onWeightClick = onOpenWeightDetail
-                )
-            }
         }
     }
 }
@@ -189,22 +151,32 @@ private fun VitalityLandingCard(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                VitalityHeader(
-                    dailyRecommendation = dailyRecommendation,
-                    profileName = profileName,
-                    compact = true
-                )
-                Box(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    VitalityScoreRings(
-                        fitScore = fitScore,
-                        activityMinutesToday = activityMinutesToday,
-                        heartRateBpm = heartRateBpm,
-                        onOpenHealthDataDetail = onOpenHealthDataDetail,
-                        modifier = Modifier.size(240.dp)
+                    VitalityHeader(
+                        dailyRecommendation = dailyRecommendation,
+                        profileName = profileName,
+                        compact = true,
+                        modifier = Modifier.weight(1f)
                     )
+                    BoxWithConstraints(
+                        modifier = Modifier,
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        val ringSize = homeRingSize(compact = true)
+                        VitalityScoreRings(
+                            fitScore = fitScore,
+                            steps = steps,
+                            activityMinutesToday = activityMinutesToday,
+                            heartRateBpm = heartRateBpm,
+                            onOpenHealthDataDetail = onOpenHealthDataDetail,
+                            ringSize = ringSize,
+                            modifier = Modifier.size(ringSize)
+                        )
+                    }
                 }
                 VitalityInsightList(insights = dailyRecommendation.insights)
                 VitalityActions(
@@ -239,31 +211,22 @@ private fun VitalityLandingCard(
                             dailyRecommendation = dailyRecommendation,
                             profileName = profileName,
                             compact = false,
-                            modifier = Modifier.weight(1.15f)
+                            modifier = Modifier.weight(1f)
                         )
-                        SummaryStrip(
-                            steps = steps,
-                            heartRateBpm = heartRateBpm,
-                            weightSummary = weightSummary,
-                            fitScore = fitScore,
-                            onStepsClick = { },
-                            onHeartRateClick = { },
-                            onWeightClick = onOpenWeightDetail,
-                            compact = false,
-                            modifier = Modifier.weight(0.95f)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        VitalityScoreRings(
-                            fitScore = fitScore,
-                            activityMinutesToday = activityMinutesToday,
-                            heartRateBpm = heartRateBpm,
-                            onOpenHealthDataDetail = onOpenHealthDataDetail,
-                            modifier = Modifier.size(280.dp)
-                        )
+                        BoxWithConstraints(
+                            contentAlignment = Alignment.TopEnd
+                        ) {
+                            val ringSize = homeRingSize(compact = false)
+                            VitalityScoreRings(
+                                fitScore = fitScore,
+                                steps = steps,
+                                activityMinutesToday = activityMinutesToday,
+                                heartRateBpm = heartRateBpm,
+                                onOpenHealthDataDetail = onOpenHealthDataDetail,
+                                ringSize = ringSize,
+                                modifier = Modifier.size(ringSize)
+                            )
+                        }
                     }
                     VitalityInsightList(
                         insights = dailyRecommendation.insights,
@@ -325,193 +288,44 @@ private fun VitalityHeader(
 @Composable
 private fun VitalityScoreRings(
     fitScore: Int,
+    steps: Int,
     activityMinutesToday: Int,
     heartRateBpm: Int,
     onOpenHealthDataDetail: () -> Unit,
+    ringSize: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
     val vitalityProgress = fitScore.coerceIn(0, 100) / 100f
-    val movementProgress = (activityMinutesToday / 60f).coerceIn(0f, 1f)
+    val movementProgress = (steps / 6000f).coerceIn(0f, 1f)
     val recoveryProgress = ((84 - heartRateBpm).coerceIn(0, 28) / 28f).coerceIn(0f, 1f)
+    val centerSize = homeRingCenterSize(ringSize)
 
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .clickable(onClick = onOpenHealthDataDetail),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val ringGap = 24.dp.toPx()
-            val outerStroke = 18.dp.toPx()
-
-            drawRing(
-                progress = vitalityProgress,
-                color = palette.accent,
-                trackColor = palette.accentSoft.copy(alpha = 0.6f),
-                strokeWidth = outerStroke,
-                inset = 0f
-            )
-            drawRing(
-                progress = movementProgress,
-                color = palette.warm,
-                trackColor = palette.warmSoft.copy(alpha = 0.7f),
-                strokeWidth = outerStroke,
-                inset = ringGap
-            )
-            drawRing(
-                progress = recoveryProgress,
-                color = palette.warning,
-                trackColor = palette.warningSoft.copy(alpha = 0.7f),
-                strokeWidth = outerStroke,
-                inset = ringGap * 2
-            )
-        }
-
-        Surface(
-            modifier = Modifier.size(148.dp),
-            shape = CircleShape,
-            color = palette.surface,
-            shadowElevation = 6.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    VitalityHeart(
-                        progress = vitalityProgress,
-                        modifier = Modifier.size(92.dp)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color.Black.copy(alpha = 0.34f))
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = fitScore.coerceIn(0, 100).toString(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun VitalityHeart(
-    progress: Float,
-    modifier: Modifier = Modifier
-) {
-    val palette = homePalette()
-    val clampedProgress = progress.coerceIn(0f, 1f)
-    val heartTrack = palette.warningSoft.copy(alpha = 0.95f)
-    val heartFill = palette.warning
-    val heartStroke = palette.warning.copy(alpha = 0.9f)
-
-    Canvas(modifier = modifier) {
-        val heartPath = Path().apply {
-            val width = size.width
-            val height = size.height
-
-            moveTo(width * 0.5f, height * 0.92f)
-            cubicTo(
-                width * 0.1f,
-                height * 0.68f,
-                width * 0.02f,
-                height * 0.34f,
-                width * 0.28f,
-                height * 0.2f
-            )
-            cubicTo(
-                width * 0.43f,
-                height * 0.11f,
-                width * 0.5f,
-                height * 0.19f,
-                width * 0.5f,
-                height * 0.28f
-            )
-            cubicTo(
-                width * 0.5f,
-                height * 0.19f,
-                width * 0.57f,
-                height * 0.11f,
-                width * 0.72f,
-                height * 0.2f
-            )
-            cubicTo(
-                width * 0.98f,
-                height * 0.34f,
-                width * 0.9f,
-                height * 0.68f,
-                width * 0.5f,
-                height * 0.92f
-            )
-            close()
-        }
-
-        drawPath(
-            path = heartPath,
-            color = heartTrack
-        )
-
-        clipPath(heartPath) {
-            val fillHeight = size.height * clampedProgress
-            drawRect(
-                color = heartFill,
-                topLeft = Offset(x = 0f, y = size.height - fillHeight),
-                size = Size(width = size.width, height = fillHeight)
-            )
-        }
-
-        drawPath(
-            path = heartPath,
-            color = heartStroke,
-            style = Stroke(width = size.minDimension * 0.06f)
-        )
-    }
-}
-
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRing(
-    progress: Float,
-    color: Color,
-    trackColor: Color,
-    strokeWidth: Float,
-    inset: Float
-) {
-    drawArc(
-        color = trackColor,
-        startAngle = -90f,
-        sweepAngle = 360f,
-        useCenter = false,
-        topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
-        size = androidx.compose.ui.geometry.Size(
-            width = size.width - inset * 2,
-            height = size.height - inset * 2
+    HomeRingCluster(
+        progressValues = listOf(vitalityProgress, movementProgress, recoveryProgress),
+        colors = listOf(palette.accent, palette.warm, palette.warning),
+        trackColors = listOf(
+            palette.accentSoft.copy(alpha = 0.75f),
+            palette.warmSoft.copy(alpha = 0.75f),
+            palette.warningSoft.copy(alpha = 0.75f)
         ),
-        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-    )
-    drawArc(
-        color = color,
-        startAngle = -90f,
-        sweepAngle = 360f * progress,
-        useCenter = false,
-        topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
-        size = androidx.compose.ui.geometry.Size(
-            width = size.width - inset * 2,
-            height = size.height - inset * 2
-        ),
-        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        modifier = modifier,
+        onClick = onOpenHealthDataDetail,
+        centerSizeFraction = centerSize / ringSize,
+        centerState = HomeRingCenterState(
+            heartProgress = vitalityProgress,
+            scoreText = fitScore.coerceIn(0, 100).toString(),
+            heartSizeFraction = 0.62f,
+            scoreTextStyle = MaterialTheme.typography.headlineMedium
+        )
     )
 }
+
+private fun homeRingSize(compact: Boolean): androidx.compose.ui.unit.Dp =
+    if (compact) 116.dp else 144.dp
+
+private fun homeRingCenterSize(ringSize: androidx.compose.ui.unit.Dp): androidx.compose.ui.unit.Dp =
+    (ringSize * 0.46f).coerceIn(104.dp, 128.dp)
 
 @Composable
 private fun VitalityInsightList(

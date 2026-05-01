@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
+import com.incedo.personalhealth.core.newssocial.NewsSocialFeed
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
 
 @Composable
@@ -21,6 +22,7 @@ internal fun HomeTabContent(
     activityMinutesToday: Int,
     heartRateBpm: Int,
     dailyRecommendation: DailyRecommendation,
+    newsSocialFeed: NewsSocialFeed,
     onboardingFocusGoal: CoachFocusGoal?,
     profileName: String,
     themeMode: HomeThemeMode,
@@ -79,26 +81,29 @@ internal fun HomeTabContent(
             leadingContent = {
                 HomeHeroCard(
                     eyebrow = "Nieuws & social",
-                    title = "Wat speelt er vandaag",
-                    subtitle = "Een lichte feed met inspiratie, communitymomenten en health-updates in plaats van test-imports.",
+                    title = newsSocialFeed.heroTitle,
+                    subtitle = newsSocialFeed.heroSubtitle,
                     accent = homePalette().warm,
                     compact = compact,
                     sideContent = {
                         HomeStatusBadge(
-                            label = "Live",
-                            value = "3 updates"
+                            label = newsSocialFeed.statusLabel,
+                            value = newsSocialFeed.statusValue
                         )
                     }
                 )
             },
             bodyContent = {
-                NewsSocialSection()
+                NewsSocialSection(feed = newsSocialFeed)
             }
         )
 
         HomeTab.COACH -> CoachSectionScreen(
             page = CoachPage.OVERVIEW,
             compact = compact,
+            fitScore = fitScore,
+            steps = steps,
+            heartRateBpm = heartRateBpm,
             onboardingFocusGoal = onboardingFocusGoal,
             onCloseCoachDetail = {},
             onOpenCoachIntake = { onOpenCoachDetail(HomeDetailDestination.COACH_INTAKE) },

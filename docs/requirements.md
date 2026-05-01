@@ -418,3 +418,9 @@
 ## Coding tips
   - https://www.youtube.com/watch?v=Ae3SPjsXETc
   - https://learnopencv.com/ai-fitness-trainer-using-mediapipe/
+## News & Social 
+  - https://www.hardlopen.nl/evenementen/ evenement kalender
+    - deze integreren met nieuws & social 
+  - social part uitbreiden me wie sport er mee
+    - profiel kan je jouw sport vestiging opgeven, jouw sport voorkeur 
+    - wie mag je volgen

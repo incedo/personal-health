@@ -1,0 +1,168 @@
+package com.incedo.personalhealth.core.newssocial
+
+class StubNewsSocialFeedApi : NewsSocialFeedApi {
+    private var callCount: Int = 0
+
+    override suspend fun getFeed(request: NewsSocialFeedRequest): NewsSocialFeed {
+        return stubNewsSocialFeed(request, callCount++)
+    }
+}
+
+fun defaultNewsSocialFeed(request: NewsSocialFeedRequest): NewsSocialFeed = stubNewsSocialFeed(
+    request = request,
+    rotation = 0
+)
+
+private val heroTitles = listOf(
+    "Wat speelt er vandaag",
+    "Nieuws dat beweegt",
+    "Social en training nu"
+)
+
+private fun heroSubtitles(profileName: String) = listOf(
+    "Een lichte feed voor $profileName met communitymomenten, video-updates en health-content uit een stub API.",
+    "Vandaag rouleert de feed met posts, beelden en video-links zodat de nieuws-tab al backend-ready wordt opgebouwd.",
+    "Deze feed combineert inspiratie, social proof en coachbare video’s in data die later direct uit backend en client kan komen."
+)
+
+private val highlights = listOf(
+    NewsSocialHighlight(
+        id = "community-run-vondelpark",
+        title = "Community run in Vondelpark",
+        summary = "Een vroege groep start zaterdag om 08:30 voor een rustige 5 km met koffiestop na afloop.",
+        metadata = "24 mensen geïnteresseerd",
+        author = NewsSocialAuthor("Mila Janssen", "@mila.moves", "Community host"),
+        imageUrl = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+        accent = NewsSocialAccent.ACCENT
+    ),
+    NewsSocialHighlight(
+        id = "mobility-reset-desk-athletes",
+        title = "Mobility reset voor bureau-atleten",
+        summary = "Een korte flow van 8 minuten blijft populair bij lopers en lifters die veel zitten overdag.",
+        metadata = "Past goed na krachttraining",
+        author = NewsSocialAuthor("Noor de Vries", "@noor.recovers", "Recovery coach"),
+        imageUrl = "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
+        accent = NewsSocialAccent.WARNING
+    ),
+    NewsSocialHighlight(
+        id = "protein-breakfast-checkin",
+        title = "Eiwitrijk ontbijt blijft winnen",
+        summary = "Steeds meer gebruikers delen ontbijtcombinaties met yoghurt, fruit en extra eiwitten voor stabielere energie.",
+        metadata = "Bekijk wat vandaag werkt",
+        author = NewsSocialAuthor("Jurre Bakker", "@jurre.fuels", "Nutrition editor"),
+        imageUrl = "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80",
+        accent = NewsSocialAccent.WARM
+    )
+)
+
+private val imagePosts = listOf(
+    NewsSocialImagePost(
+        id = "recovery-photo-dump",
+        title = "Recovery photo dump na de avondrun",
+        description = "Een voorbeeldpost met meerdere beelden uit dezelfde sessie, zodat de nieuws-tab ook image carrousels kan tonen.",
+        sourceLabel = "Community gallery",
+        engagementLabel = "8 foto's · 41 saves",
+        author = NewsSocialAuthor("Tess de Bruin", "@tess.runs", "Runner"),
+        images = listOf(
+            NewsSocialImage("https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80", "Start op de brug"),
+            NewsSocialImage("https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80", "Cooling down stretch"),
+            NewsSocialImage("https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&w=1200&q=80", "Teammoment na afloop"),
+            NewsSocialImage("https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80", "Avondlicht in het park"),
+            NewsSocialImage("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80", "Foam roll station"),
+            NewsSocialImage("https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80", "Rustmoment op het gras"),
+            NewsSocialImage("https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=1200&q=80", "Groepsfoto voor vertrek"),
+            NewsSocialImage("https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=1200&q=80", "Water en herstel"),
+            NewsSocialImage("https://images.unsplash.com/photo-1517837016564-bfcf6ca84b2a?auto=format&fit=crop&w=1200&q=80", "Tempo blok onderweg"),
+            NewsSocialImage("https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1200&q=80", "Laatste ronde"),
+            NewsSocialImage("https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&w=1200&q=80", "Reservebeeld dat wordt afgekapt")
+        )
+    ),
+    NewsSocialImagePost(
+        id = "meal-prep-carousel",
+        title = "Meal prep shots voor trainingsdagen",
+        description = "Een tweede voorbeeld met minder beelden, zodat je compact en expanded gedrag allebei ziet in dezelfde carousel-opzet.",
+        sourceLabel = "Nutrition snapshots",
+        engagementLabel = "4 foto's · 19 reacties",
+        author = NewsSocialAuthor("Jurre Bakker", "@jurre.fuels", "Nutrition editor"),
+        images = listOf(
+            NewsSocialImage("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80", "Ontbijt met yoghurt en fruit"),
+            NewsSocialImage("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80", "Lunch bowl met granen"),
+            NewsSocialImage("https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80", "Snack box voor later"),
+            NewsSocialImage("https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80", "Diner na training")
+        )
+    )
+)
+
+private val videoPosts = listOf(
+    NewsSocialVideoPost(
+        id = "mobility-hips-lower-back",
+        category = "Herstel",
+        sourceLabel = "Nieuwsfeed video",
+        title = "Mobility flow voor heupen en onderrug",
+        description = "Een korte sessie die vaak wordt gedeeld na lange zitdagen en lower-body training.",
+        cue = "Ideaal na zitten of na een lower body sessie.",
+        duration = "8 min",
+        engagementLabel = "Veel opgeslagen door runners",
+        author = NewsSocialAuthor("Sara Kuiper", "@sara.moves", "Movement coach"),
+        imageUrl = "https://img.youtube.com/vi/4BOTvaRaDjI/hqdefault.jpg",
+        video = NewsSocialVideoLink.YouTube(
+            videoId = "4BOTvaRaDjI",
+            launchUrl = "https://www.youtube.com/watch?v=4BOTvaRaDjI"
+        )
+    ),
+    NewsSocialVideoPost(
+        id = "deadlift-setup-brace",
+        category = "Kracht",
+        sourceLabel = "Coach uitleg",
+        title = "Deadlift setup en brace stap voor stap",
+        description = "Een technische walkthrough die gebruikers delen wanneer ze hun pulling mechanics willen opschonen.",
+        cue = "Focust op houding, spanning en veilige uitvoering.",
+        duration = "12 min",
+        engagementLabel = "Trending in strength",
+        author = NewsSocialAuthor("Daan Post", "@daan.lifts", "Strength coach"),
+        imageUrl = "https://img.youtube.com/vi/MBbyAqvTNkU/hqdefault.jpg",
+        video = NewsSocialVideoLink.YouTube(
+            videoId = "MBbyAqvTNkU",
+            launchUrl = "https://www.youtube.com/watch?v=MBbyAqvTNkU"
+        )
+    ),
+    NewsSocialVideoPost(
+        id = "hosted-breath-reset",
+        category = "Focus",
+        sourceLabel = "App video",
+        title = "Breathing reset voor tussen meetings",
+        description = "Een korte hosted clip voor gebruikers die even uit stress en schermfocus willen stappen.",
+        cue = "Gebruik deze tussen werkblokken of voor je avondwandeling.",
+        duration = "45 sec",
+        engagementLabel = "Nieuw in de feed",
+        author = NewsSocialAuthor("Lena Vos", "@lena.balance", "Breathwork coach"),
+        imageUrl = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
+        video = NewsSocialVideoLink.Hosted(
+            uri = "https://samplelib.com/lib/preview/mp4/sample-5s.mp4",
+            previewImageUrl = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80"
+        )
+    )
+)
+
+private fun stubNewsSocialFeed(
+    request: NewsSocialFeedRequest,
+    rotation: Int
+): NewsSocialFeed {
+    val subtitles = heroSubtitles(request.profileName)
+    return NewsSocialFeed(
+        heroTitle = heroTitles[rotation.mod(heroTitles.size)],
+        heroSubtitle = subtitles[rotation.mod(subtitles.size)],
+        statusLabel = "Live",
+        statusValue = "${imagePosts.size + videoPosts.size} updates",
+        highlights = rotate(highlights, rotation),
+        imagePosts = rotate(imagePosts, rotation).map { it.copy(images = it.images.take(10)) },
+        videoPosts = rotate(videoPosts, rotation),
+        source = NewsSocialSource.STUB
+    )
+}
+
+private fun <T> rotate(items: List<T>, amount: Int): List<T> {
+    if (items.isEmpty()) return items
+    val pivot = amount.mod(items.size)
+    return items.drop(pivot) + items.take(pivot)
+}

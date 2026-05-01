@@ -42,6 +42,9 @@ import com.incedo.personalhealth.core.goals.defaultCoachGoals
 internal fun CoachSectionScreen(
     page: CoachPage,
     compact: Boolean,
+    fitScore: Int,
+    steps: Int,
+    heartRateBpm: Int,
     onboardingFocusGoal: CoachFocusGoal?,
     onCloseCoachDetail: () -> Unit,
     onOpenCoachIntake: () -> Unit,
@@ -79,12 +82,6 @@ internal fun CoachSectionScreen(
     }
     val selectedProtocol = coachProtocolById(selectedProtocolId ?: recommendation.protocolId)
     val selectedCoachCount = selectedCoachProfiles(coachProfiles).size
-    val focusProgress = coachFocusProgress(intakeProfile)
-    val goalsProgress = coachGoalsProgress(goalsState.goals.size)
-    val coachProgress = coachSelectionProgress(
-        totalCoaches = coachProfiles.size,
-        selectedCoaches = selectedCoachCount
-    )
     fun applySuggestedProtocol(updatedProfile: CoachIntakeProfile) {
         val suggested = buildCoachRecommendation(
             CoachRecommendationInput(
@@ -238,9 +235,9 @@ internal fun CoachSectionScreen(
                 CoachHeaderCard(
                     compact = compact,
                     title = "Coach",
-                    focusProgress = focusProgress,
-                    goalsProgress = goalsProgress,
-                    coachProgress = coachProgress
+                    fitScore = fitScore,
+                    steps = steps,
+                    heartRateBpm = heartRateBpm
                 )
             },
             bodyContent = {

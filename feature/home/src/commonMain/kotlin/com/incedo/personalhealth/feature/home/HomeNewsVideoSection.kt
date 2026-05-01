@@ -32,12 +32,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.media.MediaVideoContent
-import com.incedo.personalhealth.core.media.MediaVideoItem
-import com.incedo.personalhealth.core.media.StubMediaVideoRepository
+import com.incedo.personalhealth.core.newssocial.NewsSocialVideoLink
+import com.incedo.personalhealth.core.newssocial.NewsSocialVideoPost
 
 @Composable
 internal fun NewsTrainingVideoStrip(
-    videos: List<MediaVideoItem> = remember { StubMediaVideoRepository.newsAndSupportVideos() }
+    videos: List<NewsSocialVideoPost>
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         videos.forEachIndexed { index, video ->
@@ -48,16 +48,17 @@ internal fun NewsTrainingVideoStrip(
 
 @Composable
 private fun NewsVideoCard(
-    video: MediaVideoItem,
+    video: NewsSocialVideoPost,
     index: Int
 ) {
     val palette = homePalette()
     val openVideo = rememberPlatformVideoLauncher()
-    val isNativeVideo = video.content is MediaVideoContent.Native
+    val content = video.video.toMediaVideoContent()
+    val isNativeVideo = content is MediaVideoContent.Native
     var expanded by remember(video.title) { mutableStateOf(false) }
-    val sourceBadge = when (video.content) {
-        is MediaVideoContent.Native -> "APP"
-        is MediaVideoContent.YouTube -> "YT"
+    val sourceBadge = when (video.video) {
+        is NewsSocialVideoLink.Hosted -> "APP"
+        is NewsSocialVideoLink.YouTube -> "YT"
     }
     val brush = when (index % 3) {
         0 -> Brush.linearGradient(listOf(palette.warning, palette.warm))
@@ -75,7 +76,7 @@ private fun NewsVideoCard(
                 if (isNativeVideo) {
                     expanded = !expanded
                 } else {
-                    openVideo(video.content.launchUrl)
+                    openVideo(content.launchUrl)
                 }
             },
         color = palette.surfaceRaised,
@@ -144,7 +145,7 @@ private fun NewsVideoCard(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "${video.category.uppercase()} · ${video.source}",
+                        text = "${video.category.uppercase()} · ${video.sourceLabel}",
                         style = MaterialTheme.typography.labelMedium,
                         color = palette.textSecondary
                     )
@@ -155,7 +156,22 @@ private fun NewsVideoCard(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = video.cue,
+                        text = video.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.textPrimary
+                    )
+                    Text(
+                        text = "${video.author.name} · ${video.author.role}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.textSecondary
+                    )
+                    Text(
+                        text = "${video.cue} · ${video.engagementLabel}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.textSecondary
+                    )
+                    Text(
+                        text = "Beeld: ${video.imageUrl.imageLabel()}",
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.textSecondary
                     )
@@ -164,7 +180,7 @@ private fun NewsVideoCard(
                             if (isNativeVideo) {
                                 expanded = !expanded
                             } else {
-                                openVideo(video.content.launchUrl)
+                                openVideo(content.launchUrl)
                             }
                         },
                         shape = RoundedCornerShape(16.dp),
@@ -185,7 +201,7 @@ private fun NewsVideoCard(
             }
             if (isNativeVideo && expanded) {
                 PlatformEmbeddedVideoPlayer(
-                    content = video.content,
+                    content = content,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp)
@@ -193,7 +209,7 @@ private fun NewsVideoCard(
                 )
             } else if (isNativeVideo) {
                 Button(
-                    onClick = { openVideo(video.content.launchUrl) },
+                    onClick = { openVideo(content.launchUrl) },
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = palette.surface,
@@ -206,3 +222,14 @@ private fun NewsVideoCard(
         }
     }
 }
+
+private fun NewsSocialVideoLink.toMediaVideoContent(): MediaVideoContent = when (this) {
+    is NewsSocialVideoLink.Hosted -> MediaVideoContent.Native(uri = uri, previewImageUrl = previewImageUrl)
+    is NewsSocialVideoLink.YouTube -> MediaVideoContent.YouTube(
+        videoId = videoId,
+        launchUrl = launchUrl,
+        previewImageUrl = previewImageUrl
+    )
+}
+
+private fun String.imageLabel(): String = substringAfter("://").substringBefore("/").ifBlank { this }
