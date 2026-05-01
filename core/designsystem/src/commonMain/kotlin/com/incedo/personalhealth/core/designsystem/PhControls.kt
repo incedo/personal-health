@@ -31,7 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-enum class PhButtonVariant { Primary, Secondary, Ghost, Outline, Danger }
+enum class PhButtonVariant { Primary, Secondary, Ghost, Outline, Warning, Danger }
 enum class PhButtonSize { Small, Medium, Large }
 enum class PhToggleSize { Medium }
 
@@ -237,6 +237,7 @@ private fun buttonPalette(variant: PhButtonVariant): PhButtonPalette {
         PhButtonVariant.Secondary -> PhButtonPalette(colors.surfaceMuted, colors.surfaceSunken, colors.text, null)
         PhButtonVariant.Ghost -> PhButtonPalette(Color.Transparent, colors.surfaceMuted, colors.text, null)
         PhButtonVariant.Outline -> PhButtonPalette(Color.Transparent, colors.surfaceMuted, colors.text, colors.border)
+        PhButtonVariant.Warning -> PhButtonPalette(colors.warning, colors.warning, colors.text, null)
         PhButtonVariant.Danger -> PhButtonPalette(colors.danger, colors.danger, colors.onPrimary, null)
     }
 }
