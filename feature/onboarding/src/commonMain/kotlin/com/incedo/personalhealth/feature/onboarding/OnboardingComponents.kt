@@ -72,7 +72,10 @@ internal fun OnboardingHero(
                     contentColor = stepVisual.accent,
                     size = if (compact) 56.dp else 64.dp
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(spacing.xs)
+                ) {
                     Text(text = stepVisual.eyebrow, style = PhTheme.typography.label, color = stepVisual.accent)
                     Text(
                         text = step.title,

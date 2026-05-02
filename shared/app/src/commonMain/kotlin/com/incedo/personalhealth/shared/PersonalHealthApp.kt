@@ -73,14 +73,9 @@ fun PersonalHealthApp() {
     val recommendationApi = remember { StubRecommendationOfDayApi() }
     val initialDashboardHealthState = remember { readPersistedDashboardHealthUiState() }
     remember { runHomeStorageMaintenance(fitnessActivityStore = fitnessActivityStore, activityTrackingStore = activityTrackingStore) }
+    val onboardingPreviewRequested = isOnboardingPreviewRequested()
     var onboardingComplete by remember { mutableStateOf(OnboardingPreferenceStore.isCompleted()) }
-    val initialOnboardingState = remember {
-        OnboardingUiState(
-            stepIndex = OnboardingPreferenceStore.stepIndex(),
-            selectedGoal = onboardingGoalFromId(OnboardingPreferenceStore.selectedGoalId()),
-            completed = OnboardingPreferenceStore.isCompleted()
-        )
-    }
+    val initialOnboardingState = remember { buildInitialOnboardingState(onboardingPreviewRequested) }
     var onboardingGoal by remember { mutableStateOf(initialOnboardingState.selectedGoal) }; var healthSyncState by remember { mutableStateOf(SyncState.IDLE) }
     var healthSyncChannel by remember { mutableStateOf("health-history-import") }
     var lastReadSummary by remember { mutableStateOf("Nog geen health records gelezen") }
@@ -260,7 +255,7 @@ fun PersonalHealthApp() {
         ).sortedByDescending { it.createdAtEpochMillis }
 
     PersonalHealthTheme(darkTheme = darkTheme) {
-        if (onboardingComplete && !isOnboardingPreviewRequested()) {
+        if (onboardingComplete && !onboardingPreviewRequested) {
             fun openDetail(destination: HomeDetailDestination, fromRoute: String = "home") {
                 activeDetailDestination = destination
                 publishNavigationChange(appScope, fromRoute = fromRoute, toRoute = destination.routeName())
@@ -417,13 +412,12 @@ fun PersonalHealthApp() {
                 initialState = initialOnboardingState,
                 onStateChanged = { state ->
                     onboardingGoal = state.selectedGoal
-                    OnboardingPreferenceStore.setStepIndex(state.stepIndex)
-                    OnboardingPreferenceStore.setSelectedGoalId(state.selectedGoal?.name)
-                    OnboardingPreferenceStore.setCompleted(state.completed)
+                    persistOnboardingState(onboardingPreviewRequested, state)
                 },
                 onFinished = {
-                    onboardingComplete = true
-                    OnboardingPreferenceStore.setCompleted(true)
+                    persistOnboardingFinished(onboardingPreviewRequested) {
+                        onboardingComplete = true
+                    }
                 }
             )
         }

@@ -15,6 +15,11 @@ class OnboardingStateTest {
     }
 
     @Test
+    fun onboardingSteps_matchDesignFlowLength() {
+        assertEquals(9, onboardingSteps.size)
+    }
+
+    @Test
     fun reducer_preservesSelectedGoalAcrossNext() {
         val selected = reduceOnboardingState(
             state = OnboardingUiState(),

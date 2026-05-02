@@ -35,8 +35,8 @@ internal fun CompactOnboardingLayout(
             stepVisual = currentVisual,
             compact = true
         )
-        GoalSelector(
-            selectedGoal = state.selectedGoal,
+        OnboardingStepDetails(
+            state = state,
             onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) }
         )
         FooterActions(state = state, onEvent = onEvent)
@@ -76,8 +76,8 @@ internal fun MediumOnboardingLayout(
                 stepVisual = currentVisual,
                 compact = false
             )
-            GoalSelector(
-                selectedGoal = state.selectedGoal,
+            OnboardingStepDetails(
+                state = state,
                 onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) }
             )
             FooterActions(state = state, onEvent = onEvent)
@@ -120,8 +120,8 @@ internal fun ExpandedOnboardingLayout(
             )
             FooterActions(state = state, onEvent = onEvent)
         }
-        GoalSelectorPanel(
-            selectedGoal = state.selectedGoal,
+        OnboardingStepDetails(
+            state = state,
             onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) },
             modifier = Modifier
                 .weight(0.30f)
