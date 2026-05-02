@@ -37,15 +37,39 @@ sealed interface OnboardingEvent {
 val onboardingSteps: List<OnboardingStep> = listOf(
     OnboardingStep(
         title = "Welcome",
-        description = "Track daily habits and build routines that improve your energy and focus."
+        description = "A calm, personal guide for long-term health, trained on your data and your pace."
     ),
     OnboardingStep(
-        title = "Insights",
-        description = "See clear trends for activity, sleep, and hydration in one shared dashboard."
+        title = "Goals",
+        description = "Choose the direction for your first plan so the dashboard can prioritize what matters."
     ),
     OnboardingStep(
-        title = "Your Goal",
-        description = "Pick your current focus so the app can prioritize the metrics that matter most."
+        title = "About You",
+        description = "Add the basics we need for accurate calorie, strength and cardio calculations."
+    ),
+    OnboardingStep(
+        title = "Activity Level",
+        description = "Set a realistic starting point so recommendations match your current load."
+    ),
+    OnboardingStep(
+        title = "Availability",
+        description = "Build a weekly rhythm around the days and hours you can actually train."
+    ),
+    OnboardingStep(
+        title = "Devices",
+        description = "Connect data sources when you are ready, or continue with manual tracking first."
+    ),
+    OnboardingStep(
+        title = "Nutrition",
+        description = "Tell us how you eat so the plan can stay practical instead of theoretical."
+    ),
+    OnboardingStep(
+        title = "Baseline",
+        description = "Capture your starting point for weight, sleep and recovery signals."
+    ),
+    OnboardingStep(
+        title = "Ready",
+        description = "Review the starting plan and open your dashboard."
     )
 )
 

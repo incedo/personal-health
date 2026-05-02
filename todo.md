@@ -49,6 +49,7 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 ## Fase 3: Design System Componenten
 
 - [x] Voeg `PhButton` toe.
+- [x] Voeg `PhChoiceCard` toe.
 - [x] Voeg `PhIconButton` toe.
 - [x] Voeg `PhTextField` toe.
 - [x] Voeg `PhToggle` toe.
@@ -90,13 +91,13 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Fase 5: Onboarding Refactor
 
-- [ ] Gebruik `onboarding.jsx` als flow- en layoutreferentie.
-- [ ] Houd bestaande `OnboardingUiState` en reducer zoveel mogelijk intact.
-- [ ] Refactor onboarding shell naar design-system componenten.
-- [ ] Refactor progress, choice cards, footer actions en step layouts.
-- [ ] Ondersteun compact, medium en expanded zonder aparte device-specifieke schermen.
-- [ ] Behoud keyboard bediening voor primary action.
-- [ ] Voeg of update compact en expanded layout checks.
+- [x] Gebruik `onboarding.jsx` als flow- en layoutreferentie.
+- [x] Houd bestaande `OnboardingUiState` en reducer zoveel mogelijk intact.
+- [x] Refactor onboarding shell naar design-system componenten.
+- [x] Refactor progress, choice cards, footer actions en step layouts.
+- [x] Ondersteun compact, medium en expanded zonder aparte device-specifieke schermen.
+- [x] Behoud keyboard bediening voor primary action.
+- [x] Voeg of update compact en expanded layout checks.
 
 ## Fase 6: Profile en Plan Refactor
 
