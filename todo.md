@@ -73,18 +73,18 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 - [x] Migreer `HomeChrome.kt` naar `PhTheme`.
 - [x] Verwijder lokale kleuren waar design-system tokens bestaan.
-- [ ] Bouw dashboarddelen uit `dashboard.jsx` na in Compose:
+- [x] Bouw dashboarddelen uit `dashboard.jsx` na in Compose:
   - [x] Today hero
   - [x] Vitals
-  - [ ] Weekly volume
-  - [ ] Sleep panel
-  - [ ] Plan card
-  - [ ] Muscle balance
-  - [ ] Body trend
-  - [ ] Recent sessions
-  - [ ] Consistency card
+  - [x] Weekly volume
+  - [x] Sleep panel
+  - [x] Plan card
+  - [x] Muscle balance
+  - [x] Body trend
+  - [x] Recent sessions
+  - [x] Consistency card
 - [x] Houd bestaande home state, callbacks en domeinmodellen intact.
-- [ ] Splits grote composables per verantwoordelijkheid.
+- [x] Splits grote composables per verantwoordelijkheid.
 - [x] Behoud compact, medium en expanded layouts als een adaptief codepad.
 - [x] Voeg of update home layout smoke tests.
 
