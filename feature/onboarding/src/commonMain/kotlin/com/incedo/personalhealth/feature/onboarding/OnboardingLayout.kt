@@ -37,7 +37,7 @@ internal fun CompactOnboardingLayout(
         )
         OnboardingStepDetails(
             state = state,
-            onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) }
+            onEvent = onEvent
         )
         FooterActions(state = state, onEvent = onEvent)
     }
@@ -78,7 +78,7 @@ internal fun MediumOnboardingLayout(
             )
             OnboardingStepDetails(
                 state = state,
-                onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) }
+                onEvent = onEvent
             )
             FooterActions(state = state, onEvent = onEvent)
         }
@@ -122,7 +122,7 @@ internal fun ExpandedOnboardingLayout(
         }
         OnboardingStepDetails(
             state = state,
-            onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) },
+            onEvent = onEvent,
             modifier = Modifier
                 .weight(0.30f)
                 .fillMaxHeight()

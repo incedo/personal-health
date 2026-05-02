@@ -7,4 +7,6 @@ expect object OnboardingPreferenceStore {
     fun setStepIndex(stepIndex: Int)
     fun selectedGoalId(): String?
     fun setSelectedGoalId(goalId: String?)
+    fun statePayload(): String?
+    fun setStatePayload(payload: String?)
 }

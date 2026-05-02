@@ -3,6 +3,7 @@ package com.incedo.personalhealth.shared
 private const val ONBOARDING_COMPLETED_KEY = "personal-health.onboarding.completed"
 private const val ONBOARDING_STEP_INDEX_KEY = "personal-health.onboarding.step-index"
 private const val ONBOARDING_GOAL_ID_KEY = "personal-health.onboarding.goal-id"
+private const val ONBOARDING_STATE_PAYLOAD_KEY = "personal-health.onboarding.state-payload"
 
 @JsFun("key => globalThis.localStorage.getItem(key)")
 private external fun localStorageGetItem(key: String): String?
@@ -33,6 +34,17 @@ actual object OnboardingPreferenceStore {
             localStorageRemoveItem(ONBOARDING_GOAL_ID_KEY)
         } else {
             localStorageSetItem(ONBOARDING_GOAL_ID_KEY, goalId)
+        }
+    }
+
+    actual fun statePayload(): String? = localStorageGetItem(ONBOARDING_STATE_PAYLOAD_KEY)
+        ?.takeIf { it.isNotBlank() }
+
+    actual fun setStatePayload(payload: String?) {
+        if (payload.isNullOrBlank()) {
+            localStorageRemoveItem(ONBOARDING_STATE_PAYLOAD_KEY)
+        } else {
+            localStorageSetItem(ONBOARDING_STATE_PAYLOAD_KEY, payload)
         }
     }
 }
