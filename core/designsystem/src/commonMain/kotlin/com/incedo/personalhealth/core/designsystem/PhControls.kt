@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -72,8 +73,10 @@ fun PhButton(
         contentColor = palette.content.copy(alpha = if (enabled) 1f else 0.38f)
     ) {
         Row(
-            modifier = Modifier.padding(size.contentPadding),
-            horizontalArrangement = Arrangement.spacedBy(PhTheme.spacing.sm),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(size.contentPadding),
+            horizontalArrangement = Arrangement.spacedBy(PhTheme.spacing.sm, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {
             leadingIcon?.let { PhContentIcon(contentColor = palette.content, content = it) }
