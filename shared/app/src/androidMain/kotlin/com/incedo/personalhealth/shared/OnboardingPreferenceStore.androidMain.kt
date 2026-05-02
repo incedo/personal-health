@@ -31,10 +31,19 @@ actual object OnboardingPreferenceStore {
         }
     }
 
+    actual fun statePayload(): String? = runCatching { readState().statePayload }.getOrNull()
+
+    actual fun setStatePayload(payload: String?) {
+        runCatching {
+            writeState(readState().copy(statePayload = payload))
+        }
+    }
+
     private data class OnboardingPreferenceState(
         val completed: Boolean = false,
         val stepIndex: Int = 0,
-        val goalId: String? = null
+        val goalId: String? = null,
+        val statePayload: String? = null
     )
 
     private fun readState(): OnboardingPreferenceState {
@@ -42,10 +51,12 @@ actual object OnboardingPreferenceStore {
         val completed = lines.getOrNull(0)?.trim()?.toBooleanStrictOrNull() ?: false
         val stepIndex = lines.getOrNull(1)?.trim()?.toIntOrNull() ?: 0
         val goalId = lines.getOrNull(2)?.trim()?.takeIf { it.isNotBlank() }
+        val statePayload = lines.drop(3).joinToString("\n").takeIf { it.isNotBlank() }
         return OnboardingPreferenceState(
             completed = completed,
             stepIndex = stepIndex,
-            goalId = goalId
+            goalId = goalId,
+            statePayload = statePayload
         )
     }
 
@@ -55,7 +66,8 @@ actual object OnboardingPreferenceStore {
             buildString {
                 appendLine(state.completed)
                 appendLine(state.stepIndex)
-                append(state.goalId.orEmpty())
+                appendLine(state.goalId.orEmpty())
+                append(state.statePayload.orEmpty())
             }
         )
     }

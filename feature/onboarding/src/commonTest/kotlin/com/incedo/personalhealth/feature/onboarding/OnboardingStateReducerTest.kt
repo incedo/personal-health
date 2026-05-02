@@ -44,4 +44,43 @@ class OnboardingStateReducerTest {
         assertEquals(OnboardingGoal.BetterSleep, moved.selectedGoal)
         assertFalse(moved.completed)
     }
+
+    @Test
+    fun reducer_bridgesFullOnboardingStateEvents() {
+        val profile = OnboardingProfile(
+            gender = OnboardingGender.Male,
+            ageYears = "42",
+            heightCm = "184",
+            weightKg = "86"
+        )
+        val baseline = OnboardingBaseline(
+            sleepHours = "7",
+            restingHeartRateBpm = "62",
+            bodyWeightKg = "86"
+        )
+
+        val result = listOf(
+            OnboardingEvent.ProfileChanged(profile),
+            OnboardingEvent.ActivityLevelSelected(OnboardingActivityLevel.Regular),
+            OnboardingEvent.AvailabilityChanged(
+                OnboardingAvailability(days = listOf(OnboardingDay.Tuesday), weeklyHours = 6)
+            ),
+            OnboardingEvent.DeviceToggled(OnboardingDevice.HealthConnect),
+            OnboardingEvent.NutritionChanged(
+                OnboardingNutrition(
+                    style = OnboardingNutritionStyle.HighProtein,
+                    restrictions = listOf(OnboardingDietaryRestriction.DairyFree)
+                )
+            ),
+            OnboardingEvent.BaselineChanged(baseline)
+        ).fold(OnboardingUiState()) { state, event -> reduceOnboardingState(state, event) }
+
+        assertEquals(profile, result.profile)
+        assertEquals(OnboardingActivityLevel.Regular, result.activityLevel)
+        assertEquals(listOf(OnboardingDay.Tuesday), result.availability.days)
+        assertEquals(listOf(OnboardingDevice.HealthConnect), result.devices)
+        assertEquals(OnboardingNutritionStyle.HighProtein, result.nutrition.style)
+        assertEquals(listOf(OnboardingDietaryRestriction.DairyFree), result.nutrition.restrictions)
+        assertEquals(baseline, result.baseline)
+    }
 }

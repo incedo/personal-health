@@ -15,14 +15,88 @@ enum class OnboardingGoal {
     Nutrition
 }
 
+enum class OnboardingGender {
+    Female,
+    Male,
+    Other
+}
+
+enum class OnboardingActivityLevel {
+    Starter,
+    Recreational,
+    Regular,
+    Athletic
+}
+
+enum class OnboardingDay {
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday
+}
+
+enum class OnboardingDevice {
+    AppleHealth,
+    HealthConnect,
+    Wearable,
+    Manual
+}
+
+enum class OnboardingNutritionStyle {
+    Balanced,
+    HighProtein,
+    PlantForward,
+    Flexible
+}
+
+enum class OnboardingDietaryRestriction {
+    Vegetarian,
+    Vegan,
+    GlutenFree,
+    DairyFree,
+    NutFree
+}
+
 data class OnboardingStep(
     val title: String,
     val description: String
 )
 
+data class OnboardingProfile(
+    val gender: OnboardingGender? = null,
+    val ageYears: String = "",
+    val heightCm: String = "",
+    val weightKg: String = ""
+)
+
+data class OnboardingAvailability(
+    val days: List<OnboardingDay> = emptyList(),
+    val weeklyHours: Int = 4
+)
+
+data class OnboardingNutrition(
+    val style: OnboardingNutritionStyle? = null,
+    val restrictions: List<OnboardingDietaryRestriction> = emptyList()
+)
+
+data class OnboardingBaseline(
+    val sleepHours: String = "",
+    val restingHeartRateBpm: String = "",
+    val bodyWeightKg: String = ""
+)
+
 data class OnboardingUiState(
     val stepIndex: Int = 0,
     val selectedGoal: OnboardingGoal? = null,
+    val profile: OnboardingProfile = OnboardingProfile(),
+    val activityLevel: OnboardingActivityLevel? = null,
+    val availability: OnboardingAvailability = OnboardingAvailability(),
+    val devices: List<OnboardingDevice> = emptyList(),
+    val nutrition: OnboardingNutrition = OnboardingNutrition(),
+    val baseline: OnboardingBaseline = OnboardingBaseline(),
     val completed: Boolean = false
 )
 
@@ -32,6 +106,12 @@ sealed interface OnboardingEvent {
     data object Skip : OnboardingEvent
     data object Finish : OnboardingEvent
     data class GoalSelected(val goal: OnboardingGoal) : OnboardingEvent
+    data class ProfileChanged(val profile: OnboardingProfile) : OnboardingEvent
+    data class ActivityLevelSelected(val activityLevel: OnboardingActivityLevel) : OnboardingEvent
+    data class AvailabilityChanged(val availability: OnboardingAvailability) : OnboardingEvent
+    data class DeviceToggled(val device: OnboardingDevice) : OnboardingEvent
+    data class NutritionChanged(val nutrition: OnboardingNutrition) : OnboardingEvent
+    data class BaselineChanged(val baseline: OnboardingBaseline) : OnboardingEvent
 }
 
 val onboardingSteps: List<OnboardingStep> = listOf(
@@ -104,5 +184,23 @@ fun reduceOnboardingState(
         OnboardingEvent.Skip,
         OnboardingEvent.Finish -> state.copy(completed = true)
         is OnboardingEvent.GoalSelected -> state.copy(selectedGoal = event.goal)
+        is OnboardingEvent.ProfileChanged -> state.copy(profile = event.profile)
+        is OnboardingEvent.ActivityLevelSelected -> state.copy(activityLevel = event.activityLevel)
+        is OnboardingEvent.AvailabilityChanged -> state.copy(availability = event.availability.normalized())
+        is OnboardingEvent.DeviceToggled -> state.copy(devices = state.devices.toggle(event.device))
+        is OnboardingEvent.NutritionChanged -> state.copy(nutrition = event.nutrition.normalized())
+        is OnboardingEvent.BaselineChanged -> state.copy(baseline = event.baseline)
     }
+}
+
+private fun OnboardingAvailability.normalized(): OnboardingAvailability {
+    return copy(days = days.distinct(), weeklyHours = weeklyHours.coerceIn(1, 20))
+}
+
+private fun OnboardingNutrition.normalized(): OnboardingNutrition {
+    return copy(restrictions = restrictions.distinct())
+}
+
+private fun <T> List<T>.toggle(value: T): List<T> {
+    return if (contains(value)) filterNot { it == value } else this + value
 }

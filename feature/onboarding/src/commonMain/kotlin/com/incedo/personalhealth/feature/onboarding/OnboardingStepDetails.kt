@@ -20,15 +20,21 @@ import com.incedo.personalhealth.core.designsystem.PhTheme
 @Composable
 internal fun OnboardingStepDetails(
     state: OnboardingUiState,
-    onGoalSelected: (OnboardingGoal) -> Unit,
+    onEvent: (OnboardingEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (state.stepIndex) {
         1 -> GoalSelectorPanel(
             selectedGoal = state.selectedGoal,
-            onGoalSelected = onGoalSelected,
+            onGoalSelected = { onEvent(OnboardingEvent.GoalSelected(it)) },
             modifier = modifier
         )
+        2 -> ProfilePanel(state.profile, onEvent, modifier)
+        3 -> ActivityPanel(state.activityLevel, onEvent, modifier)
+        4 -> AvailabilityPanel(state.availability, onEvent, modifier)
+        5 -> DevicesPanel(state.devices, onEvent, modifier)
+        6 -> NutritionPanel(state.nutrition, onEvent, modifier)
+        7 -> BaselinePanel(state.baseline, onEvent, modifier)
         else -> OnboardingInfoPanel(
             title = detailTitle(state),
             description = detailDescription(state),
