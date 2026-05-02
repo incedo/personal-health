@@ -260,7 +260,7 @@ fun PersonalHealthApp() {
         ).sortedByDescending { it.createdAtEpochMillis }
 
     PersonalHealthTheme(darkTheme = darkTheme) {
-        if (onboardingComplete) {
+        if (onboardingComplete && !isOnboardingPreviewRequested()) {
             fun openDetail(destination: HomeDetailDestination, fromRoute: String = "home") {
                 activeDetailDestination = destination
                 publishNavigationChange(appScope, fromRoute = fromRoute, toRoute = destination.routeName())
