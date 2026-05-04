@@ -143,6 +143,16 @@ internal fun HomeTabContent(
             }
         )
 
+        HomeTab.PROGRESS -> ProgressPlaceholderContent(
+            fitScore = fitScore,
+            steps = steps,
+            activityMinutesToday = activityMinutesToday,
+            heartRateBpm = heartRateBpm,
+            healthMetricCards = healthMetricCards,
+            compact = compact,
+            onOpenHealthDataDetail = onOpenHealthDataDetail
+        )
+
         HomeTab.PROFILE -> HomeSectionScreen(
             tab = HomeTab.PROFILE,
             compact = compact,

@@ -21,10 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.designsystem.PhAvatar
+import com.incedo.personalhealth.core.designsystem.PhAvatarVariant
 
 @Composable
 internal fun HomeTopTabs(
     selectedTab: HomeTab,
+    avatarVariant: PhAvatarVariant,
     onTabSelected: (HomeTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -48,7 +51,7 @@ internal fun HomeTopTabs(
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.width(12.dp))
-            HomeTab.bottomBarTabs.forEach { tab ->
+            HomeTab.primaryTabs.forEach { tab ->
                 HomeTopTabButton(
                     tab = tab,
                     selected = tab == selectedTab,
@@ -56,6 +59,12 @@ internal fun HomeTopTabs(
                     modifier = Modifier.weight(1f)
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            HomeMobileProfileShortcut(
+                selected = selectedTab == HomeTab.PROFILE,
+                avatarVariant = avatarVariant,
+                onClick = { onTabSelected(HomeTab.PROFILE) }
+            )
         }
     }
 }
@@ -63,6 +72,7 @@ internal fun HomeTopTabs(
 @Composable
 internal fun HomeMobileProfileShortcut(
     selected: Boolean,
+    avatarVariant: PhAvatarVariant,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -85,10 +95,10 @@ internal fun HomeMobileProfileShortcut(
         shadowElevation = 4.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
-            HomeTabIcon(
-                tab = HomeTab.PROFILE,
-                color = if (selected) tabAccent(HomeTab.PROFILE) else palette.textPrimary,
-                modifier = Modifier.size(22.dp)
+            PhAvatar(
+                variant = avatarVariant,
+                size = 38.dp,
+                selected = selected
             )
         }
     }

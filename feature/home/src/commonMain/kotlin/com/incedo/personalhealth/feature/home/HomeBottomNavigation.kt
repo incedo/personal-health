@@ -4,15 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,91 +28,28 @@ import androidx.compose.ui.unit.dp
 internal fun HomeBottomTabs(
     selectedTab: HomeTab,
     compact: Boolean,
-    includeProfile: Boolean,
     onTabSelected: (HomeTab) -> Unit
 ) {
     val desktopWebStyle = HomeBuildFlags.usesDesktopBottomBarStyle && !compact
-    val regularTabs = if (includeProfile) HomeTab.regularTabs else HomeTab.mobileBottomTabs
-    val centerGap = when {
-        compact -> 88.dp
-        desktopWebStyle -> 72.dp
-        else -> 116.dp
-    }
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
+    HomeBottomTabsPanel(
+        desktopWebStyle = desktopWebStyle,
+        contentPadding = if (desktopWebStyle) 8.dp else 10.dp
     ) {
-        HomeBottomTabsPanel(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = when {
-                    compact -> 26.dp
-                    desktopWebStyle -> 18.dp
-                    else -> 34.dp
-                }),
-            desktopWebStyle = desktopWebStyle,
-            contentPadding = if (desktopWebStyle) 8.dp else 12.dp
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HomeBottomTabGroup(
-                    tabs = regularTabs.take(2),
-                    selectedTab = selectedTab,
+            HomeTab.primaryTabs.forEach { tab ->
+                HomeBottomTabButton(
+                    tab = tab,
+                    selected = tab == selectedTab,
                     compact = compact,
                     desktopWebStyle = desktopWebStyle,
-                    onTabSelected = onTabSelected,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(centerGap))
-                HomeBottomTabGroup(
-                    tabs = regularTabs.drop(2),
-                    selectedTab = selectedTab,
-                    compact = compact,
-                    desktopWebStyle = desktopWebStyle,
-                    onTabSelected = onTabSelected,
+                    onClick = { onTabSelected(tab) },
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
-        CoachBottomBarButton(
-            modifier = Modifier.padding(top = when {
-                compact -> 0.dp
-                desktopWebStyle -> 2.dp
-                else -> 6.dp
-            }),
-            selected = selectedTab == HomeTab.COACH,
-            compact = compact,
-            desktopWebStyle = desktopWebStyle,
-            onClick = { onTabSelected(HomeTab.COACH) }
-        )
-    }
-}
-
-@Composable
-private fun HomeBottomTabGroup(
-    tabs: List<HomeTab>,
-    selectedTab: HomeTab,
-    compact: Boolean,
-    desktopWebStyle: Boolean,
-    onTabSelected: (HomeTab) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        tabs.forEach { tab ->
-            HomeBottomTabButton(
-                tab = tab,
-                selected = tab == selectedTab,
-                compact = compact,
-                desktopWebStyle = desktopWebStyle,
-                onClick = { onTabSelected(tab) },
-                modifier = Modifier.weight(1f)
-            )
         }
     }
 }
@@ -130,36 +64,37 @@ private fun HomeBottomTabButton(
     modifier: Modifier = Modifier
 ) {
     val palette = homePalette()
-    val background = if (selected) tabAccentSoft(tab) else palette.surface
+    val background = if (selected) tabAccentSoft(tab) else Color.Transparent
     Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable(
                 interactionSource = MutableInteractionSource(),
                 indication = null
             ) { onClick() },
         color = background,
-        shape = RoundedCornerShape(20.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            width = if (selected) 2.dp else 1.dp,
-            color = if (selected) tabAccent(tab) else palette.surfaceMuted
-        )
+        shape = RoundedCornerShape(16.dp),
+        border = if (selected) {
+            androidx.compose.foundation.BorderStroke(1.dp, tabAccent(tab))
+        } else {
+            null
+        }
     ) {
         Column(
             modifier = Modifier.padding(
                 vertical = when {
-                    compact -> 14.dp
+                    compact -> 8.dp
                     desktopWebStyle -> 7.dp
-                    else -> 14.dp
+                    else -> 10.dp
                 },
-                horizontal = if (desktopWebStyle) 10.dp else 12.dp
+                horizontal = if (compact) 4.dp else 10.dp
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(
                 when {
-                    compact -> 0.dp
+                    compact -> 3.dp
                     desktopWebStyle -> 3.dp
-                    else -> 6.dp
+                    else -> 4.dp
                 }
             )
         ) {
@@ -168,21 +103,20 @@ private fun HomeBottomTabButton(
                 color = if (selected) tabAccent(tab) else palette.textPrimary,
                 modifier = Modifier.size(
                     when {
-                        compact -> 28.dp
+                        compact -> 20.dp
                         desktopWebStyle -> 24.dp
-                        else -> 30.dp
+                        else -> 24.dp
                     }
                 )
             )
-            if (!compact) {
-                Text(
-                    text = tab.label,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = palette.textPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center
-                )
-            }
+            Text(
+                text = tab.label,
+                style = if (compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                color = if (selected) tabAccent(tab) else palette.textSecondary,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
         }
     }
 }
