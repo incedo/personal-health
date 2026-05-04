@@ -5,11 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -90,6 +87,7 @@ fun HomeScreen(
             .background(brush = Brush.verticalGradient(colors = listOf(palette.backdropTop, palette.backdropBottom)))
     ) {
         val compact = maxWidth < 720.dp
+        val expanded = maxWidth >= 1040.dp
         val outerPadding = if (compact) 16.dp else 24.dp
 
         Column(
@@ -97,6 +95,12 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(horizontal = outerPadding, vertical = 12.dp)
         ) {
+            HomeNavigationHeader(
+                selectedTab = selectedTab,
+                compact = compact,
+                expanded = expanded,
+                onTabSelected = switchToTab
+            )
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -279,10 +283,10 @@ fun HomeScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            HomeBottomTabs(
+            HomeNavigationFooter(
                 selectedTab = selectedTab,
                 compact = compact,
+                expanded = expanded,
                 onTabSelected = switchToTab
             )
         }
