@@ -1,19 +1,23 @@
 package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,7 +36,6 @@ internal fun CoachTrainingProgramContent(
     recommendation: CoachRecommendation,
     selectedProtocol: CoachProtocol
 ) {
-    val palette = homePalette()
     RecoveryAdaptPanel(recommendation = recommendation, selectedProtocol = selectedProtocol)
     Spacer(modifier = Modifier.height(18.dp))
     if (compact) {
@@ -40,27 +43,22 @@ internal fun CoachTrainingProgramContent(
             WeekPlanPanel(selectedProtocol = selectedProtocol, compact = true)
             TodaySessionPanel(selectedProtocol = selectedProtocol)
             MesocyclePanel(selectedProtocol = selectedProtocol)
+            FeelTodayPanel()
             VolumeTargetPanel(selectedProtocol = selectedProtocol)
         }
     } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            Column(modifier = Modifier.weight(1.55f), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                WeekPlanPanel(selectedProtocol = selectedProtocol, compact = false)
-                TodaySessionPanel(selectedProtocol = selectedProtocol)
-            }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                MesocyclePanel(selectedProtocol = selectedProtocol)
-                FeelTodayPanel()
-                VolumeTargetPanel(selectedProtocol = selectedProtocol)
+        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            WeekPlanPanel(selectedProtocol = selectedProtocol, compact = false)
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                TodaySessionPanel(selectedProtocol = selectedProtocol, modifier = Modifier.weight(1.4f))
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                    MesocyclePanel(selectedProtocol = selectedProtocol)
+                    FeelTodayPanel()
+                    VolumeTargetPanel(selectedProtocol = selectedProtocol)
+                }
             }
         }
     }
-    Spacer(modifier = Modifier.height(2.dp))
-    Text(
-        text = "Plan gebruikt bestaande coach-state en protocolkeuze; dit is nog geen backend-gestuurde feature toggle.",
-        style = MaterialTheme.typography.bodySmall,
-        color = palette.textSecondary
-    )
 }
 
 @Composable
@@ -85,23 +83,19 @@ private fun RecoveryAdaptPanel(
                     PhTag("Actief protocol", tone = PhTagTone.Primary)
                 }
                 Text(
-                    text = "Goed hersteld. ${trainingFocusLabel(selectedProtocol)} blijft staan; coach verlaagt alleen volume als slaap, HRV of logboekdruk terugvalt.",
+                    text = "Goed hersteld. ${trainingFocusLabel(selectedProtocol)} blijft staan; coach verlaagt volume alleen als herstel terugvalt.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.textSecondary
                 )
-                Text(
-                    text = recommendation.rationale.firstOrNull().orEmpty(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = palette.textSecondary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                recommendation.rationale.firstOrNull()?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.textSecondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
-            PhButton(
-                text = "Details",
-                onClick = {},
-                variant = PhButtonVariant.Outline,
-                size = PhButtonSize.Small
-            )
         }
     }
 }
@@ -124,27 +118,21 @@ private fun WeekPlanPanel(
         )
         if (compact) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                days.forEach { PlanDayRow(day = it, compact = true) }
+                days.forEach { PlanDayRow(day = it) }
             }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                days.forEach { day ->
-                    PlanDayTile(day = day, modifier = Modifier.weight(1f))
-                }
+                days.forEach { PlanDayTile(day = it, modifier = Modifier.weight(1f)) }
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        WeekLoadBar(current = 62, target = 80)
+        ProgressBar(label = "Belasting deze week", current = 62, max = 80, color = homePalette().warning)
     }
 }
 
 @Composable
-private fun PlanDayTile(
-    day: PlanDay,
-    modifier: Modifier = Modifier
-) {
+private fun PlanDayTile(day: PlanDay, modifier: Modifier = Modifier) {
     val palette = homePalette()
-    val accent = day.kind.accent()
     Surface(
         modifier = modifier.height(154.dp),
         color = if (day.today) palette.warningSoft else palette.surfaceMuted,
@@ -156,14 +144,14 @@ private fun PlanDayTile(
                 Text(day.label, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
                 Text(day.date, style = MaterialTheme.typography.labelMedium, color = palette.textPrimary, fontWeight = FontWeight.Bold)
             }
-            PlanKindMark(text = day.kind.short, color = accent)
+            PlanKindMark(day.kind.short, day.kind.accent())
             Text(day.title, style = MaterialTheme.typography.labelLarge, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
             Text(day.meta, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = if (day.done) "Klaar" else if (day.today) "Vandaag" else day.status,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (day.done) palette.accent else if (day.today) palette.warning else palette.textSecondary,
+                color = if (day.today) palette.warning else palette.textSecondary,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -171,61 +159,28 @@ private fun PlanDayTile(
 }
 
 @Composable
-private fun PlanDayRow(
-    day: PlanDay,
-    compact: Boolean
-) {
+private fun PlanDayRow(day: PlanDay) {
     val palette = homePalette()
-    val accent = day.kind.accent()
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = if (day.today) palette.warningSoft else palette.surfaceMuted,
         shape = RoundedCornerShape(18.dp),
         border = BorderStroke(if (day.today) 2.dp else 1.dp, if (day.today) palette.warning else Color.Transparent)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp)
-        ) {
-            Column {
-                Text(day.label, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
-                Text(day.date, style = MaterialTheme.typography.titleMedium, color = palette.textPrimary, fontWeight = FontWeight.Bold)
-            }
-            PlanKindMark(text = day.kind.short, color = accent)
+        Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            PlanKindMark(day.kind.short, day.kind.accent())
             Column(modifier = Modifier.weight(1f)) {
-                Text(day.title, style = MaterialTheme.typography.titleSmall, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
+                Text("${day.label} ${day.date} · ${day.title}", style = MaterialTheme.typography.titleSmall, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
                 Text(day.meta, style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
             }
-            PhTag(
-                text = if (day.done) "Klaar" else if (day.today) "Vandaag" else day.status,
-                tone = if (day.done) PhTagTone.Success else if (day.today) PhTagTone.Warning else PhTagTone.Neutral
-            )
+            PhTag(if (day.today) "Vandaag" else if (day.done) "Klaar" else day.status)
         }
     }
 }
 
 @Composable
-private fun PlanKindMark(
-    text: String,
-    color: Color
-) {
-    Surface(color = color, shape = RoundedCornerShape(10.dp)) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 7.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = homePalette().buttonContent,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun TodaySessionPanel(
-    selectedProtocol: CoachProtocol
-) {
-    val blocks = todaySessionBlocks(selectedProtocol)
-    HomePanel(modifier = Modifier.fillMaxWidth()) {
+private fun TodaySessionPanel(selectedProtocol: CoachProtocol, modifier: Modifier = Modifier) {
+    HomePanel(modifier = modifier.fillMaxWidth()) {
         PhSectionHeader(kicker = "Vandaag", title = trainingFocusLabel(selectedProtocol)) {
             PhButton("Start", onClick = {}, size = PhButtonSize.Small, variant = PhButtonVariant.Warning)
         }
@@ -235,10 +190,8 @@ private fun TodaySessionPanel(
             SessionMetric("DUR", "60 min", Modifier.weight(1f))
             SessionMetric("RPE", "7", Modifier.weight(1f))
         }
-        Column {
-            blocks.forEachIndexed { index, block ->
-                SessionBlockRow(index = index + 1, block = block)
-            }
+        todaySessionBlocks(selectedProtocol).forEachIndexed { index, block ->
+            SessionBlockRow(index = index + 1, block = block)
         }
     }
 }
@@ -256,17 +209,41 @@ private fun SessionMetric(label: String, value: String, modifier: Modifier = Mod
 @Composable
 private fun SessionBlockRow(index: Int, block: TodayBlock) {
     val palette = homePalette()
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        PlanKindMark(text = index.toString(), color = palette.warning)
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        PlanKindMark(index.toString(), palette.warning)
         Column(modifier = Modifier.weight(1f)) {
             Text(block.name, style = MaterialTheme.typography.titleSmall, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
             Text(block.note, style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
         }
-        PhTag(block.sets, tone = PhTagTone.Neutral)
+        PhTag(block.sets)
         Text(block.load, style = MaterialTheme.typography.labelLarge, color = palette.textSecondary, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun PlanKindMark(text: String, color: Color) {
+    Surface(color = color, shape = RoundedCornerShape(10.dp)) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 7.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = homePalette().buttonContent,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun ProgressBar(label: String, current: Int, max: Int, color: Color) {
+    val palette = homePalette()
+    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
+        Text("$current / $max", style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
+    }
+    Box(
+        modifier = Modifier.fillMaxWidth().height(10.dp).padding(top = 6.dp).clip(RoundedCornerShape(999.dp)).background(palette.surfaceMuted)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth(current / max.toFloat()).height(10.dp).background(color))
     }
 }
 
