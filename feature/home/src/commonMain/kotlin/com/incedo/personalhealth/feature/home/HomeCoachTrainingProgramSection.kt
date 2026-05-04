@@ -1,144 +1,282 @@
 package com.incedo.personalhealth.feature.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.designsystem.PhButton
+import com.incedo.personalhealth.core.designsystem.PhButtonSize
+import com.incedo.personalhealth.core.designsystem.PhButtonVariant
+import com.incedo.personalhealth.core.designsystem.PhSectionHeader
+import com.incedo.personalhealth.core.designsystem.PhTag
+import com.incedo.personalhealth.core.designsystem.PhTagTone
 import com.incedo.personalhealth.core.goals.CoachProtocol
 import com.incedo.personalhealth.core.goals.CoachRecommendation
 
 @Composable
 internal fun CoachTrainingProgramContent(
+    compact: Boolean,
     recommendation: CoachRecommendation,
     selectedProtocol: CoachProtocol
 ) {
+    val palette = homePalette()
+    RecoveryAdaptPanel(recommendation = recommendation, selectedProtocol = selectedProtocol)
+    Spacer(modifier = Modifier.height(18.dp))
+    if (compact) {
+        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            WeekPlanPanel(selectedProtocol = selectedProtocol, compact = true)
+            TodaySessionPanel(selectedProtocol = selectedProtocol)
+            MesocyclePanel(selectedProtocol = selectedProtocol)
+            VolumeTargetPanel(selectedProtocol = selectedProtocol)
+        }
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+            Column(modifier = Modifier.weight(1.55f), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                WeekPlanPanel(selectedProtocol = selectedProtocol, compact = false)
+                TodaySessionPanel(selectedProtocol = selectedProtocol)
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                MesocyclePanel(selectedProtocol = selectedProtocol)
+                FeelTodayPanel()
+                VolumeTargetPanel(selectedProtocol = selectedProtocol)
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Text(
+        text = "Plan gebruikt bestaande coach-state en protocolkeuze; dit is nog geen backend-gestuurde feature toggle.",
+        style = MaterialTheme.typography.bodySmall,
+        color = palette.textSecondary
+    )
+}
+
+@Composable
+private fun RecoveryAdaptPanel(
+    recommendation: CoachRecommendation,
+    selectedProtocol: CoachProtocol
+) {
+    val palette = homePalette()
+    HomePanel(modifier = Modifier.fillMaxWidth(), contentPadding = 24.dp) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Surface(color = palette.warning, shape = RoundedCornerShape(16.dp)) {
+                Text(
+                    text = "AI",
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = palette.buttonContent,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                PhSectionHeader(kicker = "Recovery adapt", title = "Plan past zich aan") {
+                    PhTag("Actief protocol", tone = PhTagTone.Primary)
+                }
+                Text(
+                    text = "Goed hersteld. ${trainingFocusLabel(selectedProtocol)} blijft staan; coach verlaagt alleen volume als slaap, HRV of logboekdruk terugvalt.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.textSecondary
+                )
+                Text(
+                    text = recommendation.rationale.firstOrNull().orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = palette.textSecondary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            PhButton(
+                text = "Details",
+                onClick = {},
+                variant = PhButtonVariant.Outline,
+                size = PhButtonSize.Small
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeekPlanPanel(
+    selectedProtocol: CoachProtocol,
+    compact: Boolean
+) {
+    val days = weekPlanDays(selectedProtocol)
     HomePanel(modifier = Modifier.fillMaxWidth()) {
+        PhSectionHeader(kicker = "Deze week", title = "Trainingsritme") {
+            PhTag("${days.count { it.kind != PlanDayKind.Rest }} sessies", tone = PhTagTone.Info)
+        }
         Text(
-            text = "Trainingsprogramma",
-            style = MaterialTheme.typography.titleLarge,
-            color = homePalette().textPrimary,
-            fontWeight = FontWeight.SemiBold
+            text = trainingCadenceLabel(selectedProtocol),
+            style = MaterialTheme.typography.bodyMedium,
+            color = homePalette().textSecondary,
+            modifier = Modifier.padding(bottom = 14.dp)
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        if (compact) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                days.forEach { PlanDayRow(day = it, compact = true) }
+            }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                days.forEach { day ->
+                    PlanDayTile(day = day, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        WeekLoadBar(current = 62, target = 80)
+    }
+}
+
+@Composable
+private fun PlanDayTile(
+    day: PlanDay,
+    modifier: Modifier = Modifier
+) {
+    val palette = homePalette()
+    val accent = day.kind.accent()
+    Surface(
+        modifier = modifier.height(154.dp),
+        color = if (day.today) palette.warningSoft else palette.surfaceMuted,
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(if (day.today) 2.dp else 1.dp, if (day.today) palette.warning else Color.Transparent)
+    ) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(day.label, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
+                Text(day.date, style = MaterialTheme.typography.labelMedium, color = palette.textPrimary, fontWeight = FontWeight.Bold)
+            }
+            PlanKindMark(text = day.kind.short, color = accent)
+            Text(day.title, style = MaterialTheme.typography.labelLarge, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
+            Text(day.meta, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (day.done) "Klaar" else if (day.today) "Vandaag" else day.status,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (day.done) palette.accent else if (day.today) palette.warning else palette.textSecondary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlanDayRow(
+    day: PlanDay,
+    compact: Boolean
+) {
+    val palette = homePalette()
+    val accent = day.kind.accent()
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = if (day.today) palette.warningSoft else palette.surfaceMuted,
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(if (day.today) 2.dp else 1.dp, if (day.today) palette.warning else Color.Transparent)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp)
+        ) {
+            Column {
+                Text(day.label, style = MaterialTheme.typography.labelSmall, color = palette.textSecondary)
+                Text(day.date, style = MaterialTheme.typography.titleMedium, color = palette.textPrimary, fontWeight = FontWeight.Bold)
+            }
+            PlanKindMark(text = day.kind.short, color = accent)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(day.title, style = MaterialTheme.typography.titleSmall, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
+                Text(day.meta, style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+            }
+            PhTag(
+                text = if (day.done) "Klaar" else if (day.today) "Vandaag" else day.status,
+                tone = if (day.done) PhTagTone.Success else if (day.today) PhTagTone.Warning else PhTagTone.Neutral
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlanKindMark(
+    text: String,
+    color: Color
+) {
+    Surface(color = color, shape = RoundedCornerShape(10.dp)) {
         Text(
-            text = "Coach koppelt je gekozen protocol direct aan een trainingsritme, zodat je weet hoe vaak, hoe zwaar en met welk doel je deze week traint.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = homePalette().textSecondary
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        CoachProgramMetric(
-            title = "Actief protocol",
-            value = selectedProtocol.title,
-            description = selectedProtocol.summary
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        CoachProgramMetric(
-            title = "Weekritme",
-            value = trainingCadenceLabel(selectedProtocol),
-            description = selectedProtocol.rhythm
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        CoachProgramMetric(
-            title = "Sessie-focus",
-            value = trainingFocusLabel(selectedProtocol),
-            description = recommendation.rationale.firstOrNull().orEmpty()
+            text = text,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 7.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = homePalette().buttonContent,
+            fontWeight = FontWeight.Bold
         )
     }
+}
 
-    Spacer(modifier = Modifier.height(18.dp))
-
+@Composable
+private fun TodaySessionPanel(
+    selectedProtocol: CoachProtocol
+) {
+    val blocks = todaySessionBlocks(selectedProtocol)
     HomePanel(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Programma-opbouw",
-            style = MaterialTheme.typography.titleLarge,
-            color = homePalette().textPrimary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            coachProgramBlocks(selectedProtocol).forEach { block ->
-                CoachProgramMetric(
-                    title = block.title,
-                    value = block.value,
-                    description = block.description
-                )
+        PhSectionHeader(kicker = "Vandaag", title = trainingFocusLabel(selectedProtocol)) {
+            PhButton("Start", onClick = {}, size = PhButtonSize.Small, variant = PhButtonVariant.Warning)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(vertical = 14.dp)) {
+            SessionMetric("VOL", "12.4 t", Modifier.weight(1f))
+            SessionMetric("SETS", "16", Modifier.weight(1f))
+            SessionMetric("DUR", "60 min", Modifier.weight(1f))
+            SessionMetric("RPE", "7", Modifier.weight(1f))
+        }
+        Column {
+            blocks.forEachIndexed { index, block ->
+                SessionBlockRow(index = index + 1, block = block)
             }
         }
     }
 }
 
 @Composable
-private fun CoachProgramMetric(
-    title: String,
-    value: String,
-    description: String
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = homePalette().textSecondary
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = homePalette().textPrimary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = homePalette().textSecondary
-        )
+private fun SessionMetric(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier, color = homePalette().surfaceMuted, shape = RoundedCornerShape(14.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = homePalette().textSecondary)
+            Text(value, style = MaterialTheme.typography.titleMedium, color = homePalette().textPrimary, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
-private data class CoachProgramBlock(
-    val title: String,
-    val value: String,
-    val description: String
-)
-
-private fun trainingCadenceLabel(protocol: CoachProtocol): String = when (protocol.id) {
-    com.incedo.personalhealth.core.goals.CoachProtocolId.BALANCE -> "3 bewegingblokken + dagelijkse walk"
-    com.incedo.personalhealth.core.goals.CoachProtocolId.COMPOSITION -> "3 krachtmomenten + 2 lichte dagen"
-    com.incedo.personalhealth.core.goals.CoachProtocolId.PERFORMANCE -> "4 gerichte trainingsmomenten"
-    com.incedo.personalhealth.core.goals.CoachProtocolId.RECOVERY -> "2 lichte sessies + herstelwandelingen"
+@Composable
+private fun SessionBlockRow(index: Int, block: TodayBlock) {
+    val palette = homePalette()
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        PlanKindMark(text = index.toString(), color = palette.warning)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(block.name, style = MaterialTheme.typography.titleSmall, color = palette.textPrimary, fontWeight = FontWeight.SemiBold)
+            Text(block.note, style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+        }
+        PhTag(block.sets, tone = PhTagTone.Neutral)
+        Text(block.load, style = MaterialTheme.typography.labelLarge, color = palette.textSecondary, fontWeight = FontWeight.SemiBold)
+    }
 }
 
-private fun trainingFocusLabel(protocol: CoachProtocol): String = when (protocol.id) {
-    com.incedo.personalhealth.core.goals.CoachProtocolId.BALANCE -> "Consistentie en ritme"
-    com.incedo.personalhealth.core.goals.CoachProtocolId.COMPOSITION -> "Kracht en body composition"
-    com.incedo.personalhealth.core.goals.CoachProtocolId.PERFORMANCE -> "Prestatie en compliance"
-    com.incedo.personalhealth.core.goals.CoachProtocolId.RECOVERY -> "Herstel en rustige opbouw"
-}
-
-private fun coachProgramBlocks(protocol: CoachProtocol): List<CoachProgramBlock> = when (protocol.id) {
-    com.incedo.personalhealth.core.goals.CoachProtocolId.BALANCE -> listOf(
-        CoachProgramBlock("Dag 1-2", "Zone 2 + mobiliteit", "Open de week met lage intensiteit en houd de dagstructuur stabiel."),
-        CoachProgramBlock("Dag 3-4", "Volledige lichaamssessie", "Een compacte krachtprikkel die past binnen je vaste ritme."),
-        CoachProgramBlock("Dag 5-7", "Wandelen en reset", "Gebruik wandelen als anker om herstel en slaapdruk te ondersteunen.")
-    )
-    com.incedo.personalhealth.core.goals.CoachProtocolId.COMPOSITION -> listOf(
-        CoachProgramBlock("Sessie A", "Lower/Push", "Train grote spiergroepen vroeg in de week en log voeding er strak omheen."),
-        CoachProgramBlock("Sessie B", "Upper/Pull", "Houd de belasting progressief maar beheerst zodat herstel mee kan komen."),
-        CoachProgramBlock("Extra blok", "Steps + core", "Gebruik je niet-krachtdagen voor stappen, core en glucosestabiliteit.")
-    )
-    com.incedo.personalhealth.core.goals.CoachProtocolId.PERFORMANCE -> listOf(
-        CoachProgramBlock("Blok 1", "Power of speed", "Begin fris en plan je zwaarste kwaliteitssessie wanneer compliance het hoogst is."),
-        CoachProgramBlock("Blok 2", "Strength repeat", "Herhaal gericht volume met vaste rust- en meetmomenten."),
-        CoachProgramBlock("Blok 3", "Deload check", "Evalueer herstel en stuur direct bij op basis van signalen.")
-    )
-    com.incedo.personalhealth.core.goals.CoachProtocolId.RECOVERY -> listOf(
-        CoachProgramBlock("Herstel 1", "Wandeling + mobiliteit", "Hou de belasting laag en laat regelmaat belangrijker zijn dan volume."),
-        CoachProgramBlock("Herstel 2", "Lichte full-body", "Een korte sessie om beweging terug op te bouwen zonder stresspiek."),
-        CoachProgramBlock("Herstel 3", "Adem + avondrust", "Gebruik je avondroutine als vast onderdeel van het programma.")
-    )
+@Composable
+private fun PlanDayKind.accent(): Color {
+    val palette = homePalette()
+    return when (this) {
+        PlanDayKind.Strength -> palette.warning
+        PlanDayKind.Cardio -> palette.accent
+        PlanDayKind.Mobility -> palette.warm
+        PlanDayKind.Rest -> palette.textSecondary
+    }
 }

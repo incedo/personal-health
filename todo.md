@@ -113,6 +113,7 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 - [ ] Refactor `HomeProfileSection` naar de nieuwe stijl.
 - [ ] Voeg profile preferences, privacy/export en account sections toe via design-system primitives.
 - [ ] Refactor plan/coach-gerelateerde schermen waar ze visueel bij de nieuwe stijl horen.
+  - [x] Refactor trainingsprogramma/detailplan naar weekplanning, herstel-aanpassing, vandaag-sessie, mesocycle en volume-panelen.
 - [ ] Houd communicatie event-driven en voorkom feature-to-feature calls.
 - [ ] Voeg of update tests voor profile/plan state en layout.
 
