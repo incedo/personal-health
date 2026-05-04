@@ -35,27 +35,27 @@ internal enum class HomeTab(
     val sectionSubtitle: String
 ) {
     DASHBOARD(
-        label = "Home",
+        label = "Vandaag",
         navDescription = "Dagelijkse status en snelle acties",
         sectionTitle = "Vandaag",
         sectionSubtitle = "Je centrale startpunt voor gezondheid en activiteit."
     ),
     NEWS(
-        label = "Nieuws",
+        label = "Community",
         navDescription = "Updates, community en inspiratie",
-        sectionTitle = "Nieuws & social",
+        sectionTitle = "Community",
         sectionSubtitle = "Recente updates, coaching-signalen en communitymomenten."
     ),
     COACH(
-        label = "Coach",
+        label = "Plan",
         navDescription = "Routines, focus en begeleiding",
-        sectionTitle = "Coach",
+        sectionTitle = "Plan",
         sectionSubtitle = "Begeleiding, routines en slimme suggesties op een vaste plek."
     ),
     LOG(
-        label = "Log",
+        label = "Loggen",
         navDescription = "Eten, drinken en activiteit",
-        sectionTitle = "Logboek",
+        sectionTitle = "Loggen",
         sectionSubtitle = "Alles wat je vandaag toevoegt op een vaste plek."
     ),
     PROFILE(
