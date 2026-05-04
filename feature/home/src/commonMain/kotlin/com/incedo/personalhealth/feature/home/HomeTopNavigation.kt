@@ -48,7 +48,7 @@ internal fun HomeTopTabs(
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.width(12.dp))
-            HomeTab.bottomBarTabs.forEach { tab ->
+            HomeTab.primaryTabs.forEach { tab ->
                 HomeTopTabButton(
                     tab = tab,
                     selected = tab == selectedTab,
@@ -56,6 +56,11 @@ internal fun HomeTopTabs(
                     modifier = Modifier.weight(1f)
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            HomeMobileProfileShortcut(
+                selected = selectedTab == HomeTab.PROFILE,
+                onClick = { onTabSelected(HomeTab.PROFILE) }
+            )
         }
     }
 }

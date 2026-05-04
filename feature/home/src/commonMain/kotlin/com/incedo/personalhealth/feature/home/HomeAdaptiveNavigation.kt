@@ -23,7 +23,7 @@ internal fun HomeNavigationHeader(
             onTabSelected = onTabSelected
         )
         Spacer(modifier = Modifier.height(12.dp))
-    } else if (compact) {
+    } else {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
@@ -50,7 +50,6 @@ internal fun HomeNavigationFooter(
         HomeBottomTabs(
             selectedTab = selectedTab,
             compact = compact,
-            includeProfile = !compact,
             onTabSelected = onTabSelected
         )
     }

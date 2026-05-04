@@ -27,16 +27,10 @@ internal enum class HomeTab(
     val sectionSubtitle: String
 ) {
     DASHBOARD(
-        label = "Vandaag",
+        label = "Today",
         navDescription = "Dagelijkse status en snelle acties",
-        sectionTitle = "Vandaag",
+        sectionTitle = "Today",
         sectionSubtitle = "Je centrale startpunt voor gezondheid en activiteit."
-    ),
-    NEWS(
-        label = "Community",
-        navDescription = "Updates, community en inspiratie",
-        sectionTitle = "Community",
-        sectionSubtitle = "Recente updates, coaching-signalen en communitymomenten."
     ),
     COACH(
         label = "Plan",
@@ -45,22 +39,34 @@ internal enum class HomeTab(
         sectionSubtitle = "Begeleiding, routines en slimme suggesties op een vaste plek."
     ),
     LOG(
-        label = "Loggen",
+        label = "Track",
         navDescription = "Eten, drinken en activiteit",
-        sectionTitle = "Loggen",
+        sectionTitle = "Track",
         sectionSubtitle = "Alles wat je vandaag toevoegt op een vaste plek."
     ),
+    PROGRESS(
+        label = "Progress",
+        navDescription = "Trends, metrics en voortgang",
+        sectionTitle = "Progress",
+        sectionSubtitle = "Je trenddata, metingen en voortgang bij elkaar."
+    ),
+    NEWS(
+        label = "Community",
+        navDescription = "Updates, community en inspiratie",
+        sectionTitle = "Community",
+        sectionSubtitle = "Recente updates, coaching-signalen en communitymomenten."
+    ),
     PROFILE(
-        label = "Profiel",
+        label = "Profile",
         navDescription = "Voorkeuren, profiel en privacy",
-        sectionTitle = "Profiel",
+        sectionTitle = "Profile",
         sectionSubtitle = "Instellingen, profielkeuzes en privacy."
     );
 
     companion object {
-        val bottomBarTabs: List<HomeTab> = listOf(DASHBOARD, NEWS, COACH, LOG, PROFILE)
-        val regularTabs: List<HomeTab> = listOf(DASHBOARD, NEWS, LOG, PROFILE)
-        val mobileBottomTabs: List<HomeTab> = listOf(DASHBOARD, NEWS, LOG)
+        val primaryTabs: List<HomeTab> = listOf(DASHBOARD, LOG, COACH, PROGRESS, NEWS)
+        val accountTabs: List<HomeTab> = listOf(PROFILE)
+        val bottomBarTabs: List<HomeTab> = primaryTabs + accountTabs
     }
 }
 
@@ -70,6 +76,7 @@ internal fun tabAccent(tab: HomeTab): Color = when (tab) {
     HomeTab.NEWS -> homePalette().warm
     HomeTab.COACH -> homePalette().warning
     HomeTab.LOG -> homePalette().accent
+    HomeTab.PROGRESS -> homePalette().accent
     HomeTab.PROFILE -> homePalette().warning
 }
 
@@ -79,6 +86,7 @@ internal fun tabAccentSoft(tab: HomeTab): Color = when (tab) {
     HomeTab.NEWS -> homePalette().warmSoft
     HomeTab.COACH -> homePalette().warningSoft
     HomeTab.LOG -> homePalette().accentSoft
+    HomeTab.PROGRESS -> homePalette().accentSoft
     HomeTab.PROFILE -> homePalette().warningSoft
 }
 

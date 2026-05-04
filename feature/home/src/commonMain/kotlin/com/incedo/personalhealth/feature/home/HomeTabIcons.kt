@@ -31,6 +31,13 @@ internal fun HomeTabIcon(
                 drawArc(color = color, startAngle = 20f, sweepAngle = 140f, useCenter = false, topLeft = Offset(size.width * 0.18f, size.height * 0.4f), size = Size(size.width * 0.64f, size.height * 0.28f), style = Stroke(width = stroke, cap = StrokeCap.Round))
                 drawLine(color, Offset(size.width * 0.22f, size.height * 0.5f), Offset(size.width * 0.78f, size.height * 0.5f), strokeWidth = stroke, cap = StrokeCap.Round)
             }
+            HomeTab.PROGRESS -> {
+                drawLine(color, Offset(size.width * 0.18f, size.height * 0.74f), Offset(size.width * 0.38f, size.height * 0.54f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.38f, size.height * 0.54f), Offset(size.width * 0.54f, size.height * 0.62f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.54f, size.height * 0.62f), Offset(size.width * 0.82f, size.height * 0.28f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.66f, size.height * 0.28f), Offset(size.width * 0.82f, size.height * 0.28f), strokeWidth = stroke, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width * 0.82f, size.height * 0.28f), Offset(size.width * 0.82f, size.height * 0.44f), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
             HomeTab.COACH -> {
                 drawCircle(color = color, radius = size.minDimension * 0.14f, center = Offset(size.width * 0.5f, size.height * 0.26f), style = Stroke(width = stroke))
                 drawArc(color = color, startAngle = 200f, sweepAngle = 140f, useCenter = false, topLeft = Offset(size.width * 0.18f, size.height * 0.34f), size = Size(size.width * 0.64f, size.height * 0.42f), style = Stroke(width = stroke, cap = StrokeCap.Round))
