@@ -116,7 +116,27 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 - [ ] Houd communicatie event-driven en voorkom feature-to-feature calls.
 - [ ] Voeg of update tests voor profile/plan state en layout.
 
-## Fase 7: Nieuwe Schermen Later
+## Fase 7: Navigatie Refactor
+
+- [ ] Gebruik de navigatievoorbeelden uit de designreferentie als leidraad voor de gedeelde app-navigatie.
+- [ ] Inventariseer welke navigation primitives in `core/designsystem` nodig zijn, zoals bottom navigation, navigation rail, sidebar/app shell, tab/pill navigation en overflow/menu states.
+- [ ] Refactor mobiele navigatie naar de designreferentie:
+  - [ ] Compacte bottom navigation met duidelijke actieve state.
+  - [ ] Touch targets, focus states en keyboard/pointer ondersteuning.
+  - [ ] Geen dubbele lokale kleuren, spacing of icon states buiten het design system.
+- [ ] Refactor tablet navigatie naar de designreferentie:
+  - [ ] Medium layout met navigation rail of pane-based navigatie waar passend.
+  - [ ] Behoud dezelfde navigatie-state bij resize, rotatie en foldable/posture wijzigingen.
+  - [ ] Controleer list-detail of twee-pane flows waar navigatie en content tegelijk zichtbaar zijn.
+- [ ] Refactor desktop/web/app navigatie naar de designreferentie:
+  - [ ] Expanded layout met sidebar/rail en duidelijke actieve sectie.
+  - [ ] Pointer hover, keyboard focus en shortcuts/enter-activatie voor primaire navigatie.
+  - [ ] Zorg dat web en desktop dezelfde gedeelde navigatie-state gebruiken.
+- [ ] Leg vast welke navigatie-items, labels, iconen en active/disabled/notification states canoniek zijn.
+- [ ] Voeg compact, medium en expanded previews/tests toe voor de navigatie-shell.
+- [ ] Meld vooraf wanneer de navigatie nieuwe design-system componenten of varianten nodig heeft om stijlduplicatie te voorkomen.
+
+## Fase 8: Nieuwe Schermen Later
 
 - [ ] Maak per nieuw scherm een kleine screen recipe.
 - [ ] Noteer welke tokens gebruikt worden.
@@ -141,4 +161,5 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 - [ ] `codex/home-ui-refactor`: dashboard/home naar nieuwe stijl.
 - [ ] `codex/onboarding-ui-refactor`: onboarding flow naar nieuwe stijl.
 - [ ] `codex/profile-plan-ui-refactor`: profile en plan schermen.
+- [ ] `codex/navigation-ui-refactor`: mobiele, tablet en desktop/web/app navigatie naar de designreferentie.
 - [ ] Per later scherm: aparte branch en PR bovenop het design system.
