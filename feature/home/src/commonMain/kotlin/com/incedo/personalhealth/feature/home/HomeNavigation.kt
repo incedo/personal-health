@@ -60,9 +60,9 @@ internal enum class HomeTab(
     ),
     PROFILE(
         label = "Profiel",
-        navDescription = "Voorkeuren, profiel en imports",
+        navDescription = "Voorkeuren, profiel en privacy",
         sectionTitle = "Profiel",
-        sectionSubtitle = "Instellingen, profielkeuzes en handmatige imports."
+        sectionSubtitle = "Instellingen, profielkeuzes en privacy."
     );
 
     companion object {
