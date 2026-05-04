@@ -19,6 +19,14 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 - [ ] Refactor zo'n herbruikbaar stuk eerst naar het design system en rebuild/test daarna de betrokken schermen.
 - [ ] Vermijd lokale palettes, hardcoded hex-kleuren, losse dp/sp-schalen en per-scherm componentvarianten wanneer ze onderdeel zijn van de gedeelde visuele taal.
 
+## Feature Toggles
+
+- [ ] Voeg een gedeelde feature-toggle aanpak toe voor experimentele UI, A/B tests en gefaseerde rollout van nieuwe flows.
+- [ ] Gebruik feature toggles om Dev/Test tools alleen beschikbaar te maken in development/test builds of expliciet ingeschakelde support-modi.
+- [ ] Houd toggle-definities centraal en type-safe, zodat features niet met losse string flags of per-scherm conditionals worden verspreid.
+- [ ] Leg per toggle vast: eigenaar, doel, default per environment, verwachte verwijderdatum of promotiepad.
+- [ ] Voeg testdekking toe voor belangrijke toggle-combinaties, vooral waar navigatie, onboarding, profile of dev/support tools anders renderen.
+
 ## Fase 1: Design Input Canoniseren
 
 - [x] Pak de design input uit naar een vaste referentielocatie, bijvoorbeeld `docs/design/personal-health-v1/`.
