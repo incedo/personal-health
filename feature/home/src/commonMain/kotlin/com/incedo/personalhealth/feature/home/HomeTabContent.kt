@@ -1,13 +1,7 @@
 package com.incedo.personalhealth.feature.home
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.incedo.personalhealth.core.goals.CoachFocusGoal
 import com.incedo.personalhealth.core.newssocial.NewsSocialFeed
 import com.incedo.personalhealth.core.recommendations.DailyRecommendation
@@ -44,6 +38,7 @@ internal fun HomeTabContent(
     onOpenWeightDetail: () -> Unit,
     onOpenHealthDataDetail: () -> Unit,
     onOpenCoachDetail: (HomeDetailDestination) -> Unit,
+    onOpenDevTest: () -> Unit,
     onNavigateToTab: (HomeTab) -> Unit,
     syncContent: @Composable ColumnScope.() -> Unit,
     profileContent: @Composable ColumnScope.() -> Unit,
@@ -154,47 +149,28 @@ internal fun HomeTabContent(
             leadingContent = {
                 HomeHeroCard(
                     eyebrow = "Profiel",
-                    title = "Jouw basis en voorkeuren",
-                    subtitle = "Houd accountinstellingen, profielkeuzes en import/testfuncties op een vaste plek bij elkaar.",
+                    title = profileName,
+                    subtitle = "Identity, vitals, devices, doelen, privacy en voorkeuren op een vaste plek.",
                     accent = homePalette().accent,
                     compact = compact,
                     sideContent = {
                         HomeStatusBadge(
-                            label = "Import",
-                            value = "Beschikbaar"
+                            label = "Streak",
+                            value = "14 dagen"
                         )
                     }
                 )
             },
             bodyContent = {
-                ThemeModeCard(
-                    selectedMode = themeMode,
-                    onThemeModeSelected = onThemeModeSelected
+                ProfileDesignContent(
+                    profileName = profileName,
+                    fitScore = fitScore,
+                    themeMode = themeMode,
+                    onThemeModeSelected = onThemeModeSelected,
+                    fitnessBodyProfile = fitnessBodyProfile,
+                    onFitnessBodyProfileSelected = onFitnessBodyProfileSelected,
+                    onOpenDevTest = onOpenDevTest
                 )
-                Spacer(modifier = androidx.compose.ui.Modifier.height(18.dp))
-                FitnessBodyProfileCard(
-                    selectedProfile = fitnessBodyProfile,
-                    onProfileSelected = onFitnessBodyProfileSelected
-                )
-                Spacer(modifier = androidx.compose.ui.Modifier.height(18.dp))
-                HomePanel(modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
-                    androidx.compose.material3.Text(
-                        text = "Import en test",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = homePalette().textPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = androidx.compose.ui.Modifier.height(6.dp))
-                    androidx.compose.material3.Text(
-                        text = "Hier staan de tijdelijke import- en synctools, zodat ze niet meer in de hoofdnav zitten.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = homePalette().textSecondary
-                    )
-                    Spacer(modifier = androidx.compose.ui.Modifier.height(18.dp))
-                    syncContent()
-                }
-                Spacer(modifier = androidx.compose.ui.Modifier.height(18.dp))
-                profileContent()
             }
         )
     }

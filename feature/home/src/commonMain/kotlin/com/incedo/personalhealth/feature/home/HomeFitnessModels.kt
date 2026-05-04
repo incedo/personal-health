@@ -10,6 +10,7 @@ enum class HomeDetailDestination {
     COACH_GOALS,
     COACH_DETAILS,
     COACH_TRAINING_PROGRAM,
+    DEV_TEST,
     FITNESS_EDITOR_DEBUG
 }
 

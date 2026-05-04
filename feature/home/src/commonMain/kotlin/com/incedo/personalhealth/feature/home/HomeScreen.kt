@@ -163,6 +163,13 @@ fun HomeScreen(
                         compact = compact
                     )
 
+                    HomeDetailDestination.DEV_TEST -> HomeDevTestScreen(
+                        compact = compact,
+                        onBack = onCloseDetail,
+                        syncContent = syncContent,
+                        profileContent = profileContent
+                    )
+
                     HomeDetailDestination.COACH_INTAKE -> CoachSectionScreen(
                         page = CoachPage.INTAKE,
                         compact = compact,
@@ -262,6 +269,7 @@ fun HomeScreen(
                             onOpenStepsDetail = onOpenStepsDetail,
                             onOpenHeartRateDetail = onOpenHeartRateDetail,
                             onOpenWeightDetail = onOpenWeightDetail,
+                            onOpenDevTest = { onOpenCoachDetail(HomeDetailDestination.DEV_TEST) },
                             onNavigateToTab = switchToTab,
                             onOpenCoachDetail = onOpenCoachDetail,
                             syncContent = syncContent,
