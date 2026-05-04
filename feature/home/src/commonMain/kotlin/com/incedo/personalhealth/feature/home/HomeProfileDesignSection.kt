@@ -1,6 +1,5 @@
 package com.incedo.personalhealth.feature.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,8 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,10 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.incedo.personalhealth.core.designsystem.PhAvatar
+import com.incedo.personalhealth.core.designsystem.PhAvatarVariant
 import com.incedo.personalhealth.core.designsystem.PhButton
 import com.incedo.personalhealth.core.designsystem.PhButtonVariant
 import com.incedo.personalhealth.core.designsystem.PhSectionHeader
@@ -40,7 +38,11 @@ internal fun ProfileDesignContent(
     onOpenDevTest: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        ProfileIdentityCard(profileName = profileName, fitScore = fitScore)
+        ProfileIdentityCard(
+            profileName = profileName,
+            fitScore = fitScore,
+            avatarVariant = fitnessBodyProfile.toAvatarVariant()
+        )
         BoxWithConstraints {
             val compact = maxWidth < 840.dp
             if (compact) {
@@ -61,19 +63,18 @@ internal fun ProfileDesignContent(
 }
 
 @Composable
-private fun ProfileIdentityCard(profileName: String, fitScore: Int) {
+private fun ProfileIdentityCard(
+    profileName: String,
+    fitScore: Int,
+    avatarVariant: PhAvatarVariant
+) {
     val colors = PhTheme.colors
     HomePanel(modifier = Modifier.fillMaxWidth(), contentPadding = 24.dp) {
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(88.dp)
-                    .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(colors.primary, colors.accent))),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(profileName.take(1), style = PhTheme.typography.h1, color = colors.onPrimary)
-            }
+            PhAvatar(
+                variant = avatarVariant,
+                size = 88.dp
+            )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Profiel", style = PhTheme.typography.label, color = colors.textMuted)
                 Text(profileName, style = PhTheme.typography.h1, color = colors.text, fontWeight = FontWeight.SemiBold)

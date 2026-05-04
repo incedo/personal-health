@@ -99,6 +99,7 @@ fun HomeScreen(
                 selectedTab = selectedTab,
                 compact = compact,
                 expanded = expanded,
+                avatarVariant = fitnessBodyProfile.toAvatarVariant(),
                 onTabSelected = switchToTab
             )
             Box(
