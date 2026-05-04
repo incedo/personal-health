@@ -52,6 +52,22 @@ This document defines project conventions for Android (phone/tablet), iOS, Deskt
 - Treat `docs/navigation-principles.md` as the canonical navigation source.
 - Keep implementation aligned with that document instead of redefining navigation rules here.
 
+## 6b. Translating design references to Compose
+- Treat `docs/design/personal-health-v1/` as visual reference material, not production code to copy.
+- Translate design files in this order:
+  - tokens first: map colors, typography, spacing, shapes, elevation, and motion into `core/designsystem`.
+  - reusable primitives second: add or extend `Ph*` components before duplicating feature-local styles.
+  - feature layout last: compose feature screens from design-system primitives and existing feature state.
+- Keep JSX references such as `dashboard.jsx`, `onboarding.jsx`, and `profile-plan.jsx` as interaction and layout guidance only.
+- Keep one adaptive Compose code path per screen:
+  - compact: bottom navigation and overlay shortcuts where the reference floats controls.
+  - medium: bottom navigation or rail-like treatment only when the reference and available width support it.
+  - expanded: persistent topbar, rail, or multi-pane layout without changing feature semantics.
+- Floating reference controls, such as profile avatars or support actions, should be implemented as overlays in the screen shell when they are visually anchored to a viewport corner. They must not push primary content down unless the design intentionally reserves layout space.
+- If a new screen requires a repeated card shape, avatar, gauge, tab, toolbar, input state, or navigation state, promote it to `core/designsystem` first and add deterministic tests for non-visual behavior.
+- Preserve existing reducers, events, and domain models while refactoring the visual layer; design translation should change presentation density and hierarchy, not app meaning.
+- Avoid one-off palettes in feature modules. Temporary adapters such as `homePalette()` are allowed only as migration shims and should shrink as design-system coverage grows.
+
 ## 7. Platform boundaries
 - Android/iOS/Desktop/Web entrypoints should only start shared UI.
 - Wrap platform services behind interfaces and inject implementations.

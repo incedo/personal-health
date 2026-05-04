@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
@@ -95,13 +96,11 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(horizontal = outerPadding, vertical = 12.dp)
         ) {
-            HomeNavigationHeader(
-                selectedTab = selectedTab,
-                compact = compact,
-                expanded = expanded,
-                avatarVariant = fitnessBodyProfile.toAvatarVariant(),
-                onTabSelected = switchToTab
-            )
+            if (expanded) {
+                HomeNavigationHeader(
+                    selectedTab = selectedTab, avatarVariant = fitnessBodyProfile.toAvatarVariant(), onTabSelected = switchToTab
+                )
+            }
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -289,6 +288,12 @@ fun HomeScreen(
                 compact = compact,
                 expanded = expanded,
                 onTabSelected = switchToTab
+            )
+        }
+        if (!expanded) {
+            HomeProfileShortcutOverlay(
+                selectedTab = selectedTab, avatarVariant = fitnessBodyProfile.toAvatarVariant(), onTabSelected = switchToTab,
+                modifier = Modifier.align(Alignment.TopEnd)
             )
         }
     }

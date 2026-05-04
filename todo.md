@@ -5,19 +5,20 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Werkafspraken
 
-- [ ] Maak per nieuwe UI-refactor request een aparte `codex/` branch.
-- [ ] Houd de bestaande architectuurlagen aan: `apps -> shared -> feature -> core`.
-- [ ] Plaats gedeelde styling, componenten en primitives in `core/designsystem`.
-- [ ] Plaats feature-specifieke UI in de juiste `feature/*` module.
-- [ ] Houd shared/domain/state logic in `commonMain`, tenzij platform APIs nodig zijn.
-- [ ] Houd Kotlin en Gradle bestanden die we aanraken op maximaal 300 regels.
-- [ ] Update `README.md` en `docs/kmp-compose-best-practices.md` als modulegrenzen of architectuur wijzigen.
+- [x] Maak per nieuwe UI-refactor request een aparte `codex/` branch.
+- [x] Houd de bestaande architectuurlagen aan: `apps -> shared -> feature -> core`.
+- [x] Plaats gedeelde styling, componenten en primitives in `core/designsystem`.
+- [x] Plaats feature-specifieke UI in de juiste `feature/*` module.
+- [x] Houd shared/domain/state logic in `commonMain`, tenzij platform APIs nodig zijn.
+- [x] Houd Kotlin en Gradle bestanden die we aanraken op maximaal 300 regels.
+- [x] Update `README.md` en `docs/kmp-compose-best-practices.md` als modulegrenzen of architectuur wijzigen.
 
 ## Design System Regel
 
-- [ ] Als tijdens implementatie blijkt dat een scherm een stijl, layout primitive, component variant, spacing, shape, typography style, chart/gauge, input state of interactie nodig heeft die nog niet goed in `core/designsystem` zit, meld dit expliciet voordat dezelfde stijl lokaal wordt gedupliceerd.
-- [ ] Refactor zo'n herbruikbaar stuk eerst naar het design system en rebuild/test daarna de betrokken schermen.
+- [x] Als tijdens implementatie blijkt dat een scherm een stijl, layout primitive, component variant, spacing, shape, typography style, chart/gauge, input state of interactie nodig heeft die nog niet goed in `core/designsystem` zit, meld dit expliciet voordat dezelfde stijl lokaal wordt gedupliceerd.
+- [x] Refactor zo'n herbruikbaar stuk eerst naar het design system en rebuild/test daarna de betrokken schermen.
 - [ ] Vermijd lokale palettes, hardcoded hex-kleuren, losse dp/sp-schalen en per-scherm componentvarianten wanneer ze onderdeel zijn van de gedeelde visuele taal.
+  - [ ] Ruim de resterende `homePalette()` overlap met `PhTheme` verder op.
 
 ## Feature Toggles
 
@@ -38,7 +39,7 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
   - [x] `onboarding.jsx`
   - [x] `profile-plan.jsx`
   - [x] `screens.jsx`
-- [ ] Leg in `docs/kmp-compose-best-practices.md` vast hoe designs naar Compose worden vertaald.
+- [x] Leg in `docs/kmp-compose-best-practices.md` vast hoe designs naar Compose worden vertaald.
 - [x] Noteer dat JSX-designs referentie zijn, geen code die blind wordt overgenomen.
 
 ## Fase 2: Design System Tokens
@@ -67,6 +68,7 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 - [x] Voeg `PhSectionHeader` toe.
 - [x] Voeg `PhListRow` toe.
 - [x] Voeg `PhMetricCard` toe.
+- [x] Voeg `PhAvatar` toe met masculine, feminine en neutral placeholder variants.
 - [x] Voeg chart primitives toe:
   - [x] Ring gauge
   - [x] Triple ring
@@ -109,35 +111,42 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Fase 6: Profile en Plan Refactor
 
-- [ ] Gebruik `profile-plan.jsx` als referentie.
-- [ ] Refactor `HomeProfileSection` naar de nieuwe stijl.
+- [x] Gebruik `profile-plan.jsx` als referentie.
+- [x] Refactor `HomeProfileSection` naar de nieuwe stijl.
 - [ ] Voeg profile preferences, privacy/export en account sections toe via design-system primitives.
-- [ ] Refactor plan/coach-gerelateerde schermen waar ze visueel bij de nieuwe stijl horen.
+- [x] Refactor plan/coach-gerelateerde schermen waar ze visueel bij de nieuwe stijl horen.
   - [x] Refactor trainingsprogramma/detailplan naar weekplanning, herstel-aanpassing, vandaag-sessie, mesocycle en volume-panelen.
-- [ ] Houd communicatie event-driven en voorkom feature-to-feature calls.
-- [ ] Voeg of update tests voor profile/plan state en layout.
+- [x] Houd communicatie event-driven en voorkom feature-to-feature calls.
+- [x] Voeg of update tests voor profile/plan state en layout.
 
 ## Fase 7: Navigatie Refactor
 
-- [ ] Gebruik de navigatievoorbeelden uit de designreferentie als leidraad voor de gedeelde app-navigatie.
-- [ ] Inventariseer welke navigation primitives in `core/designsystem` nodig zijn, zoals bottom navigation, navigation rail, sidebar/app shell, tab/pill navigation en overflow/menu states.
-- [ ] Refactor mobiele navigatie naar de designreferentie:
-  - [ ] Compacte bottom navigation met duidelijke actieve state.
-  - [ ] Touch targets, focus states en keyboard/pointer ondersteuning.
+- [x] Gebruik de navigatievoorbeelden uit de designreferentie als leidraad voor de gedeelde app-navigatie.
+- [x] Inventariseer welke navigation primitives in `core/designsystem` nodig zijn, zoals bottom navigation, navigation rail, sidebar/app shell, tab/pill navigation en overflow/menu states.
+- [x] Refactor mobiele navigatie naar de designreferentie:
+  - [x] Compacte bottom navigation met duidelijke actieve state.
+  - [x] Touch targets, focus states en keyboard/pointer ondersteuning.
   - [ ] Geen dubbele lokale kleuren, spacing of icon states buiten het design system.
-- [ ] Refactor tablet navigatie naar de designreferentie:
-  - [ ] Medium layout met navigation rail of pane-based navigatie waar passend.
-  - [ ] Behoud dezelfde navigatie-state bij resize, rotatie en foldable/posture wijzigingen.
+- [x] Refactor tablet navigatie naar de designreferentie:
+  - [x] Medium layout met bottom navigation en zwevende profiel-avatar.
+  - [x] Behoud dezelfde navigatie-state bij resize, rotatie en foldable/posture wijzigingen.
   - [ ] Controleer list-detail of twee-pane flows waar navigatie en content tegelijk zichtbaar zijn.
-- [ ] Refactor desktop/web/app navigatie naar de designreferentie:
-  - [ ] Expanded layout met sidebar/rail en duidelijke actieve sectie.
-  - [ ] Pointer hover, keyboard focus en shortcuts/enter-activatie voor primaire navigatie.
-  - [ ] Zorg dat web en desktop dezelfde gedeelde navigatie-state gebruiken.
-- [ ] Leg vast welke navigatie-items, labels, iconen en active/disabled/notification states canoniek zijn.
-- [ ] Voeg compact, medium en expanded previews/tests toe voor de navigatie-shell.
-- [ ] Meld vooraf wanneer de navigatie nieuwe design-system componenten of varianten nodig heeft om stijlduplicatie te voorkomen.
+- [x] Refactor desktop/web/app navigatie naar de designreferentie:
+  - [x] Expanded layout met topbar en duidelijke actieve sectie.
+  - [x] Pointer hover, keyboard focus en shortcuts/enter-activatie voor primaire navigatie.
+  - [x] Zorg dat web en desktop dezelfde gedeelde navigatie-state gebruiken.
+- [x] Leg vast welke navigatie-items, labels, iconen en active/disabled/notification states canoniek zijn.
+- [x] Voeg compact, medium en expanded previews/tests toe voor de navigatie-shell.
+- [x] Meld vooraf wanneer de navigatie nieuwe design-system componenten of varianten nodig heeft om stijlduplicatie te voorkomen.
 
-## Fase 8: Nieuwe Schermen Later
+## Fase 8: Today Cleanup
+
+- [x] Laat de profiel-avatar op compact/medium als overlay rechtsboven zweven.
+- [x] Voorkom dat de profiel-avatar de Today-content naar beneden duwt.
+- [ ] Breng resterende Today-kaarten verder terug naar gedeelde design-system primitives.
+- [ ] Splits `HomeDashboardSection.kt` verder op zodat legacy dashboard-code niet in een groot bestand blijft hangen.
+
+## Fase 9: Nieuwe Schermen Later
 
 - [ ] Maak per nieuw scherm een kleine screen recipe.
 - [ ] Noteer welke tokens gebruikt worden.
@@ -158,9 +167,9 @@ Gebruik dit bestand als terugvalpunt voor latere schermen in dezelfde stijl.
 
 ## Voorgestelde PR Volgorde
 
-- [ ] `codex/design-system-tokens`: theme, tokens, primitives en docs.
-- [ ] `codex/home-ui-refactor`: dashboard/home naar nieuwe stijl.
-- [ ] `codex/onboarding-ui-refactor`: onboarding flow naar nieuwe stijl.
-- [ ] `codex/profile-plan-ui-refactor`: profile en plan schermen.
-- [ ] `codex/navigation-ui-refactor`: mobiele, tablet en desktop/web/app navigatie naar de designreferentie.
+- [x] `codex/design-system-tokens`: theme, tokens, primitives en docs.
+- [x] `codex/home-ui-refactor`: dashboard/home naar nieuwe stijl.
+- [x] `codex/onboarding-ui-refactor`: onboarding flow naar nieuwe stijl.
+- [x] `codex/profile-plan-ui-refactor`: profile en plan schermen.
+- [x] `codex/navigation-ui-refactor`: mobiele, tablet en desktop/web/app navigatie naar de designreferentie.
 - [ ] Per later scherm: aparte branch en PR bovenop het design system.
