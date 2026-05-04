@@ -28,4 +28,17 @@ class HomeDashboardLayoutTest {
         assertEquals(7, weeklyVolumeBars(activityMinutesToday = 30, stepsTimeline = points).size)
         assertEquals(80, sleepRecoveryScore(heartRateBpm = 68))
     }
+
+    @Test
+    fun todayReadinessKeepsThreeRingValues() {
+        val rings = readinessRingProgressValues(
+            fitScore = 84,
+            steps = 4_500,
+            activityMinutesToday = 30,
+            heartRateBpm = 68
+        )
+
+        assertEquals(3, rings.size)
+        rings.forEach { value -> assertEquals(value, value.coerceIn(0f, 1f)) }
+    }
 }

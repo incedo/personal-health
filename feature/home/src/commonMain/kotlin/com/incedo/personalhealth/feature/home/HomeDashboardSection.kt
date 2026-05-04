@@ -73,55 +73,28 @@ internal fun DashboardContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        val expanded = maxWidth >= 960.dp
-        val spacing = if (compact) 14.dp else 18.dp
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(spacing)
-        ) {
-            VitalityLandingCard(
-                fitScore = fitScore,
-                steps = steps,
-                weightSummary = weightSummary,
-                activityMinutesToday = activityMinutesToday,
-                heartRateBpm = heartRateBpm,
-                dailyRecommendation = dailyRecommendation,
-                profileName = profileName,
-                activityOptions = activityOptions,
-                activeActivity = activeActivity,
-                activityClockEpochMillis = activityClockEpochMillis,
-                compact = compact,
-                onStartWorkout = onStartActivity,
-                onStopActivity = onStopActivity,
-                onOpenWeightDetail = onOpenWeightDetail,
-                onOpenHealthDataDetail = onOpenHealthDataDetail,
-                onLogNutrition = onLogNutrition
-            )
-            DashboardMetricsGrid(
-                expanded = expanded,
-                steps = steps,
-                stepsTimeline = stepsTimeline,
-                weightSummary = weightSummary,
-                activityMinutesToday = activityMinutesToday,
-                heartRateBpm = heartRateBpm,
-                onOpenStepsDetail = onOpenStepsDetail,
-                onOpenHeartRateDetail = onOpenHeartRateDetail,
-                onOpenWeightDetail = onOpenWeightDetail
-            )
-            DashboardPanelGrid(
-                expanded = expanded,
-                steps = steps,
-                stepsTimeline = stepsTimeline,
-                weightSummary = weightSummary,
-                activityMinutesToday = activityMinutesToday,
-                heartRateBpm = heartRateBpm,
-                dailyRecommendation = dailyRecommendation,
-                activityOptions = activityOptions,
-                activeActivity = activeActivity,
-                activityClockEpochMillis = activityClockEpochMillis
-            )
-        }
+        TodayDashboardContent(
+            expanded = maxWidth >= 960.dp,
+            compact = compact,
+            fitScore = fitScore,
+            steps = steps,
+            stepsTimeline = stepsTimeline,
+            weightSummary = weightSummary,
+            activityMinutesToday = activityMinutesToday,
+            heartRateBpm = heartRateBpm,
+            dailyRecommendation = dailyRecommendation,
+            profileName = profileName,
+            activityOptions = activityOptions,
+            activeActivity = activeActivity,
+            activityClockEpochMillis = activityClockEpochMillis,
+            onStartActivity = onStartActivity,
+            onStopActivity = onStopActivity,
+            onLogNutrition = onLogNutrition,
+            onOpenStepsDetail = onOpenStepsDetail,
+            onOpenHeartRateDetail = onOpenHeartRateDetail,
+            onOpenWeightDetail = onOpenWeightDetail,
+            onOpenHealthDataDetail = onOpenHealthDataDetail
+        )
     }
 }
 
