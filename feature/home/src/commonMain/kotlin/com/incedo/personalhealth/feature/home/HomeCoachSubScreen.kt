@@ -130,6 +130,7 @@ internal fun CoachSubScreen(
                     }
                     CoachPage.TRAINING_PROGRAM -> {
                         CoachTrainingProgramContent(
+                            compact = compact,
                             recommendation = recommendation,
                             selectedProtocol = selectedProtocol
                         )
